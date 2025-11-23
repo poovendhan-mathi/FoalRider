@@ -201,12 +201,12 @@ export default async function HomePage() {
               </Badge>
               
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight" style={{ fontFamily: 'Playfair Display, serif', color: '#2c3e50' }}>
-                Classic Denim Shirts
+                Classic Denim Pants
                 <span className="block" style={{ color: '#C5A572' }}>Timeless & Versatile</span>
               </h2>
               
               <p className="text-lg leading-relaxed" style={{ fontFamily: 'Montserrat, sans-serif', color: '#7f8c8d' }}>
-                Our women's denim shirt collection features timeless designs crafted with premium chambray denim. Each piece is a wardrobe essential that effortlessly elevates any look.
+                Our women's denim pants collection features timeless designs crafted with premium denim. Each piece is a wardrobe essential that effortlessly elevates any look.
               </p>
 
               <ul className="space-y-3">
@@ -241,7 +241,7 @@ export default async function HomePage() {
 
               <div className="flex gap-4 pt-4">
                 <Button size="lg" variant="outline" className="border-[#C5A572] text-[#C5A572] hover:bg-[#C5A572] hover:text-white" style={{ fontFamily: 'Montserrat, sans-serif' }} asChild>
-                  <Link href="/products?category=womens-tops">View Denim Shirts</Link>
+                  <Link href="/products?category=womens-bottoms">View Denim Pants</Link>
                 </Button>
                 <Button size="lg" variant="outline" style={{ borderColor: '#C5A572', color: '#C5A572', fontFamily: 'Montserrat, sans-serif' }} asChild>
                   <Link href="/products?category=womens-wear">Explore Collection</Link>

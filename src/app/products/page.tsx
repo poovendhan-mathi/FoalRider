@@ -2,16 +2,15 @@ import { Suspense } from 'react';
 import { Header } from '@/components/layout/Header';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { ProductFilters } from '@/components/products/ProductFilters';
-import { Button } from '@/components/ui/button';
-import { SlidersHorizontal } from 'lucide-react';
+import { MobileFilters } from '@/components/products/MobileFilters';
 
 interface ProductsPageProps {
-  searchParams: Promise<{ 
-    category?: string; 
-    sort?: string; 
-    minPrice?: string; 
-    maxPrice?: string; 
-    search?: string 
+  searchParams: Promise<{
+    category?: string;
+    sort?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    search?: string;
   }>;
 }
 
@@ -34,12 +33,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             </aside>
 
             {/* Mobile Filter Button */}
-            <div className="lg:hidden">
-              <Button variant="outline" className="w-full">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
-            </div>
+            <MobileFilters searchParams={params} />
 
             {/* Products Grid */}
             <div className="flex-1">

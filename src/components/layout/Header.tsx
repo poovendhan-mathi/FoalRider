@@ -47,8 +47,8 @@ export function Header() {
 
         {/* Actions - Right */}
         <div className="flex items-center gap-3">
-          {/* Currency Selector */}
-          <div className="hidden sm:block">
+          {/* Currency Selector - Desktop */}
+          <div className="hidden md:block">
             <CurrencySelectorCompact />
           </div>
 

@@ -105,24 +105,27 @@ export async function getFilteredProducts(filters: {
 
   // Category filter - handle both parent and child categories
   if (filters.category && filters.category !== 'all') {
-    // Get the category ID first to check if products belong to it or its children
-    const { data: categoryData } = await supabase
+    // First, get the parent category by slug
+    const { data: parentCategory } = await supabase
       .from('categories')
       .select('id')
       .eq('slug', filters.category)
       .single();
 
-    if (categoryData) {
-      // Get all child categories of the selected category
+    if (parentCategory) {
+      // Get all child categories of this parent
       const { data: childCategories } = await supabase
         .from('categories')
         .select('id')
-        .or(`id.eq.${categoryData.id},parent_id.eq.${categoryData.id}`);
+        .eq('parent_id', parentCategory.id);
 
+      // Combine parent and child category IDs
+      const categoryIds = [parentCategory.id];
       if (childCategories && childCategories.length > 0) {
-        const categoryIds = childCategories.map(c => c.id);
-        query = query.in('category_id', categoryIds);
+        categoryIds.push(...childCategories.map(c => c.id));
       }
+
+      query = query.in('category_id', categoryIds);
     }
   }
 
