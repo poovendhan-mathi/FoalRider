@@ -125,9 +125,9 @@ export default async function HomePage() {
                   {mensJeansProduct?.name || "Premium Denim Jeans"}
                 </div>
                 {mensJeansProduct && (
-                  <p className="text-lg md:text-xl opacity-90 font-semibold" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                    ₹{mensJeansProduct.price.toLocaleString('en-IN')}
-                  </p>
+                  <div className="text-lg md:text-xl opacity-90 font-semibold" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                    <PriceDisplay priceInINR={mensJeansProduct.price} />
+                  </div>
                 )}
               </div>
             </Link>
@@ -265,9 +265,9 @@ export default async function HomePage() {
                   {womensDenimShirt?.name || "Denim Shirts"}
                 </div>
                 {womensDenimShirt && (
-                  <p className="text-white text-xl font-semibold mt-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                    ₹{womensDenimShirt.price.toLocaleString('en-IN')}
-                  </p>
+                  <div className="text-white text-xl font-semibold mt-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                    <PriceDisplay priceInINR={womensDenimShirt.price} />
+                  </div>
                 )}
               </div>
             </Link>
