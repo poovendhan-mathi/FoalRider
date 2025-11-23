@@ -12,17 +12,26 @@
 
 ## 🎯 Overview
 
-Foal Rider is a premium e-commerce platform specializing in high-quality textiles including fabrics, home decor, and ready-to-wear apparel. Built with Next.js 15, Supabase, and Stripe for a seamless shopping experience.
+Foal Rider is a premium e-commerce platform specializing in high-quality denim products including jeans and jackets for men and women. Built with Next.js 15, Supabase, and Stripe for a seamless shopping experience with multi-currency support.
 
 ---
 
 ## ✨ Key Features
 
-- 🔐 **Authentication** - Email/password & Google OAuth
-- 🛍️ **Product Browsing** - Advanced filtering & sorting
-- 🛒 **Shopping Cart** - Persistent cart with real-time updates
+### 🎉 Currently Live
+- 🔐 **Authentication** - Email/password & Supabase Auth
+- 🛍️ **Product Browsing** - 25+ denim products with advanced filtering
+- 🏷️ **Category System** - Hierarchical categories (parent-child support)
+- 🛒 **Shopping Cart** - Persistent cart with localStorage & real-time updates
+- 💱 **Multi-Currency** - 6 currencies (INR, SGD, USD, EUR, GBP, AUD) with live exchange rates
+- 🖼️ **High-Quality Images** - 8K product photography from Unsplash
+- 📱 **Responsive Design** - Mobile-first approach with Tailwind CSS
+- 🔍 **Product Search** - Advanced filtering by category, price, and search terms
+
+### 🚧 Coming Soon
 - 💳 **Secure Checkout** - Stripe payment integration
 - 📦 **Order Tracking** - Real-time order status
+- ❤️ **Wishlist** - Save favorite products
 - 👤 **User Dashboard** - Profile, orders, and addresses
 - 👨‍💼 **Admin Panel** - Complete product & order management
 
@@ -103,9 +112,29 @@ Complete implementation guide available in `/docs`:
 
 ## 📊 Project Status
 
-**Current Phase:** Phase 1 - Project Setup  
-**Overall Progress:** 12.5%  
+**Current Phase:** Phase 5 - Core Features (40% Complete)  
+**Overall Progress:** 68%  
 **Start Date:** November 23, 2025
+
+### ✅ Completed Phases
+- ✅ Phase 1: Project Setup (100%)
+- ✅ Phase 2: Database Setup (100%)
+- ✅ Phase 3: Authentication (100%)
+- ✅ Phase 4: Frontend Components (100%)
+- 🚀 Phase 5: Core Features (40% - In Progress)
+
+### 🎯 Recent Achievements
+- Multi-currency system with 6 currencies
+- Shopping cart with localStorage persistence
+- Hierarchical category filtering
+- 25+ denim products (jeans & jackets) loaded
+- Homepage showcase with actual product data
+- All category filters working correctly
+
+### 📅 Next Up
+- Phase 6: Stripe Payment Integration
+- Checkout flow implementation
+- Order management system
 
 See [PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) for detailed tracking.
 
@@ -116,14 +145,33 @@ See [PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) for detailed tracking.
 ```
 FoalRider/
 ├── docs/                    # Documentation
+│   ├── phases/             # Phase-by-phase guides
+│   ├── PROJECT_STATUS.md   # Current progress
+│   ├── CATEGORY_HIERARCHY_GUIDE.md
+│   └── WISHLIST_IMPLEMENTATION_PLAN.md
 ├── src/
-│   ├── app/                # Next.js pages
+│   ├── app/                # Next.js App Router pages
+│   │   ├── page.tsx       # Homepage
+│   │   ├── products/      # Products listing & detail
+│   │   ├── login/         # Authentication pages
+│   │   └── signup/
 │   ├── components/         # React components
+│   │   ├── layout/        # Header, Footer, Logo
+│   │   ├── products/      # Product cards, filters, grids
+│   │   ├── cart/          # Cart components
+│   │   └── ui/            # shadcn/ui components
+│   ├── contexts/          # React Contexts
+│   │   ├── CartContext.tsx
+│   │   └── CurrencyContext.tsx
 │   ├── lib/               # Utilities
+│   │   ├── supabase/      # Supabase clients
+│   │   ├── products.ts    # Product queries
+│   │   └── categories.ts  # Category helpers
 │   ├── hooks/             # Custom hooks
 │   ├── types/             # TypeScript types
-│   └── constants/         # Constants
+│   └── middleware.ts      # Auth middleware
 ├── public/                # Static assets
+│   └── assets/logo/      # Brand logos
 ├── .env.local             # Environment variables
 └── package.json
 ```

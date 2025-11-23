@@ -14,6 +14,7 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- PROFILES
@@ -136,27 +137,36 @@ CREATE POLICY "Users can insert own order items"
   );
 
 -- ============================================
--- CART ITEMS
+-- CART ITEMS (Updated for Guest Cart Support)
 -- ============================================
--- Users can view their own cart
+-- Users can view their own cart (authenticated)
 CREATE POLICY "Users can view own cart"
   ON cart_items FOR SELECT
   USING (auth.uid() = user_id);
 
+-- Guest users can view cart by session_id
+CREATE POLICY "Guests can view cart by session"
+  ON cart_items FOR SELECT
+  USING (
+    user_id IS NULL 
+    AND session_id IS NOT NULL
+    -- Frontend must pass session_id in query
+  );
+
 -- Users can insert their own cart items
 CREATE POLICY "Users can insert own cart items"
   ON cart_items FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (auth.uid() = user_id OR (user_id IS NULL AND session_id IS NOT NULL));
 
 -- Users can update their own cart items
 CREATE POLICY "Users can update own cart items"
   ON cart_items FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = user_id OR (user_id IS NULL AND session_id IS NOT NULL));
 
 -- Users can delete their own cart items
 CREATE POLICY "Users can delete own cart items"
   ON cart_items FOR DELETE
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = user_id OR (user_id IS NULL AND session_id IS NOT NULL));
 
 -- ============================================
 -- REVIEWS
@@ -182,8 +192,30 @@ CREATE POLICY "Users can delete own reviews"
   USING (auth.uid() = user_id);
 
 -- ============================================
+-- WISHLISTS
+-- ============================================
+-- Users can view their own wishlist
+CREATE POLICY "Users can view own wishlist"
+  ON wishlists FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Users can add items to their wishlist
+CREATE POLICY "Users can insert own wishlist items"
+  ON wishlists FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Users can remove items from their wishlist
+CREATE POLICY "Users can delete own wishlist items"
+  ON wishlists FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- ============================================
 -- NOTES
 -- ============================================
 -- Admin operations (creating products, approving reviews, etc.)
 -- should be done using the service_role key from backend/API routes
 -- Never expose service_role key to the client!
+
+-- GUEST CART USAGE:
+-- Frontend should generate a session_id (crypto.randomUUID()) and store in localStorage
+-- When user logs in, merge guest cart with user cart using the session_id

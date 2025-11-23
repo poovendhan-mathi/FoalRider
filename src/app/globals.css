@@ -6,8 +6,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -46,11 +46,24 @@
 :root {
   --radius: 0.625rem;
   
-  /* Foal Rider Brand Colors */
-  --brand-primary: #8B4513; /* Saddle Brown - Leather/Horse theme */
-  --brand-secondary: #D4AF37; /* Gold - Premium textile accent */
-  --brand-accent: #2C5F2D; /* Forest Green - Natural/Sustainable */
-  --brand-neutral: #F5F5DC; /* Beige - Fabric/Textile base */
+  /* Figma Design System - Foal Rider Colors */
+  --figma-primary: #2c3e50; /* Midnight Blue */
+  --figma-secondary: #bdc3c7; /* Ash Gray */
+  --figma-accent: #f1c40f; /* Mustard Yellow */
+  --figma-background: #ecf0f1; /* Cloud White */
+  --figma-text-primary: #2c3e50; /* Dark Text */
+  --figma-text-secondary: #7f8c8d; /* Light Text */
+  --figma-text-light: #ecf0f1; /* White Text */
+  --figma-linen-white: #f9f9f9; /* Off-white Linen */
+  --figma-wool-gray: #d3d3d3; /* Soft Wool Gray */
+  --figma-silk-beige: #f5f5dc; /* Silk Beige */
+  --figma-denim-blue: #4169e1; /* Premium Denim */
+  
+  /* Foal Rider Brand Colors - Official Guidelines */
+  --brand-primary: #000000; /* Black - Strength, elegance, timelessness */
+  --brand-accent: #C5A572; /* Gold - Luxury, craftsmanship, refinement */
+  --brand-secondary: #2E2E2E; /* Charcoal - Modernity, depth, subtle power */
+  --brand-neutral: #FFFFFF; /* White - Purity, simplicity, sophistication */
   
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
