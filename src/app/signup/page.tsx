@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -37,7 +38,7 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { error } = await signUp(email, password, fullName);
+    const { error } = await signUp(email, password, fullName, phone);
 
     if (error) {
       setError(error.message);
@@ -99,6 +100,18 @@ export default function SignupPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="9876543210"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 required
                 disabled={loading}
               />

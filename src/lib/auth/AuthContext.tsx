@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await supabase.from('profiles').insert({
               id: session.user.id,
               full_name: session.user.user_metadata.full_name || null,
+              phone: session.user.user_metadata.phone || null,
             });
           }
         }
@@ -69,16 +70,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
+          phone: phone,
         },
       },
     });
+    
+    // Create profile immediately with phone number
+    if (data.user && !error) {
+      await supabase.from('profiles').insert({
+        id: data.user.id,
+        full_name: fullName,
+        phone: phone,
+      });
+    }
+    
     return { error };
   };
 

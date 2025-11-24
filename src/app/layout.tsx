@@ -4,7 +4,11 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
 import { Toaster } from "@/components/ui/sonner";
+import { ClientLayout } from "@/components/layout/ClientLayout";
+import { PageLoader } from "@/components/layout/PageLoader";
+import { Suspense } from "react";
 
 // Figma Design System Fonts
 const playfairDisplay = Playfair_Display({
@@ -48,7 +52,14 @@ export default function RootLayout({
         <AuthProvider>
           <CurrencyProvider>
             <CartProvider>
-              {children}
+              <WishlistProvider>
+                <Suspense fallback={null}>
+                  <PageLoader />
+                </Suspense>
+                <ClientLayout>
+                  {children}
+                </ClientLayout>
+              </WishlistProvider>
             </CartProvider>
           </CurrencyProvider>
         </AuthProvider>

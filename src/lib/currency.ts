@@ -1,7 +1,9 @@
 // ============================================
 // CURRENCY UTILITIES
 // ============================================
-// Handles multi-currency support with dynamic exchange rates
+// Handles multi-currency support with database-managed exchange rates
+
+import { createClient } from '@/lib/supabase/client';
 
 export type SupportedCurrency = 'INR' | 'SGD' | 'USD' | 'EUR' | 'GBP' | 'AUD';
 
@@ -17,22 +19,22 @@ export interface ExchangeRates {
 
 const EXCHANGE_RATES_KEY = 'foalrider_exchange_rates';
 const CURRENCY_PREFERENCE_KEY = 'foalrider_preferred_currency';
-const BASE_CURRENCY = 'INR';
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
-// Fallback rates if API fails
+// Fallback rates if database fails
 const FALLBACK_RATES: ExchangeRates = {
-  INR: 1,
-  SGD: 0.016,    // 1 INR ≈ 0.016 SGD
-  USD: 0.012,    // 1 INR ≈ 0.012 USD
-  EUR: 0.011,    // 1 INR ≈ 0.011 EUR
-  GBP: 0.0095,   // 1 INR ≈ 0.0095 GBP
-  AUD: 0.018,    // 1 INR ≈ 0.018 AUD
+  INR: 1.0,
+  SGD: 62.0,
+  USD: 83.5,
+  EUR: 90.5,
+  GBP: 105.0,
+  AUD: 55.0,
   timestamp: Date.now(),
 };
 
 /**
- * Fetch exchange rates from API with caching
+ * Fetch exchange rates from database with caching
+ * Rates are stored in currency_rates table and can be managed via admin dashboard
  */
 export async function getExchangeRates(): Promise<ExchangeRates> {
   // Check if we're in browser environment
@@ -50,33 +52,44 @@ export async function getExchangeRates(): Promise<ExchangeRates> {
       }
     }
 
-    // Fetch from API (using free exchangerate-api.com)
-    const response = await fetch(
-      `https://api.exchangerate-api.com/v4/latest/${BASE_CURRENCY}`
-    );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch exchange rates');
+    // Fetch from database
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('currency_rates')
+      .select('currency_code, rate_to_inr')
+      .eq('is_active', true);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error('No currency rates found');
     }
 
-    const data = await response.json();
-    
+    // Build rates object
     const rates: ExchangeRates = {
-      INR: 1,
-      SGD: data.rates.SGD || FALLBACK_RATES.SGD,
-      USD: data.rates.USD || FALLBACK_RATES.USD,
-      EUR: data.rates.EUR || FALLBACK_RATES.EUR,
-      GBP: data.rates.GBP || FALLBACK_RATES.GBP,
-      AUD: data.rates.AUD || FALLBACK_RATES.AUD,
+      INR: 1.0,
+      SGD: FALLBACK_RATES.SGD,
+      USD: FALLBACK_RATES.USD,
+      EUR: FALLBACK_RATES.EUR,
+      GBP: FALLBACK_RATES.GBP,
+      AUD: FALLBACK_RATES.AUD,
       timestamp: Date.now(),
     };
+
+    // Update with database values
+    data.forEach((currency) => {
+      const code = currency.currency_code as SupportedCurrency;
+      if (code in rates) {
+        rates[code] = currency.rate_to_inr;
+      }
+    });
 
     // Cache it
     localStorage.setItem(EXCHANGE_RATES_KEY, JSON.stringify(rates));
 
     return rates;
   } catch (error) {
-    console.error('Error fetching exchange rates, using fallback:', error);
+    console.error('Error fetching exchange rates from database, using fallback:', error);
     return FALLBACK_RATES;
   }
 }

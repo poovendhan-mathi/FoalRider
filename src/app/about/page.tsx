@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -9,10 +8,8 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <div className="pt-20">
+    <div className="min-h-screen bg-background pt-16">
+      <div className="pt-4">
         {/* Hero Section */}
         <section className="relative py-20 bg-gradient-to-br from-[#2E2E2E]/5 via-background to-[#C5A572]/5">
           <div className="container mx-auto px-4">

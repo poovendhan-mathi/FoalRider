@@ -4,15 +4,39 @@ import { Logo } from './Logo';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 import { CurrencySelectorCompact } from '@/components/CurrencySelector';
+import { UserDropdown } from './UserDropdown';
 import Link from 'next/link';
-import { ShoppingCart, User, Menu } from 'lucide-react';
-import { useState } from 'react';
+import { ShoppingCart, Menu, Heart } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export function Header() {
   const { user } = useAuth();
   const { totalItems } = useCart();
+  const { totalItems: wishlistCount } = useWishlist();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadProfile() {
+      if (!user) return;
+      
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url, role')
+        .eq('id', user.id)
+        .single();
+      
+      if (data) {
+        setProfile(data);
+      }
+    }
+
+    loadProfile();
+  }, [user]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/75 backdrop-blur-md shadow-lg">
@@ -59,10 +83,15 @@ export function Header() {
               </svg>
             </Link>
           </Button>
-          
-          <Button variant="ghost" size="icon" className="text-white/90 hover:text-[#C5A572] hover:bg-white/10" asChild>
-            <Link href={user ? "/profile" : "/login"}>
-              <User className="h-5 w-5" />
+
+          <Button variant="ghost" size="icon" className="text-white/90 hover:text-[#C5A572] hover:bg-white/10 relative" asChild>
+            <Link href="/wishlist">
+              <Heart className="h-5 w-5" />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#C5A572] text-black text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
           </Button>
 
@@ -76,6 +105,8 @@ export function Header() {
               )}
             </Link>
           </Button>
+          
+          <UserDropdown user={user} profile={profile} showName={true} />
 
           <Button variant="ghost" size="icon" className="md:hidden text-white/90 hover:text-[#C5A572] hover:bg-white/10" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             <Menu className="h-5 w-5" />

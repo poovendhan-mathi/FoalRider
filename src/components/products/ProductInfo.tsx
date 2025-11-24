@@ -6,8 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { WishlistButtonWithLabel } from '@/components/wishlist/WishlistButton';
 import type { Product } from '@/lib/products';
-import { ShoppingCart, Heart, Share2, Truck, Shield, RefreshCw } from 'lucide-react';
+import { ShoppingCart, Share2, Truck, Shield, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ProductInfoProps {
@@ -27,13 +29,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
     toast({
       title: "Added to cart",
       description: `${quantity} × ${product.name} added to your cart`,
-    });
-  };
-
-  const handleWishlist = () => {
-    toast({
-      title: "Added to wishlist",
-      description: `${product.name} added to your wishlist`,
     });
   };
 
@@ -151,7 +146,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
       <div className="space-y-3">
         <Button
           size="lg"
-          className="w-full bg-[#C5A572] hover:bg-[#B08D5B] text-white"
+          className="w-full bg-[#C5A572] hover:bg-[#B08D5B] text-white cursor-pointer"
           disabled={isOutOfStock}
           onClick={handleAddToCart}
         >
@@ -160,18 +155,15 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </Button>
 
         <div className="grid grid-cols-2 gap-3">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleWishlist}
-          >
-            <Heart className="mr-2 h-4 w-4" />
-            Wishlist
-          </Button>
+          <WishlistButtonWithLabel
+            productId={product.id}
+            productName={product.name}
+          />
           <Button
             variant="outline"
             size="lg"
             onClick={handleShare}
+            className="cursor-pointer"
           >
             <Share2 className="mr-2 h-4 w-4" />
             Share

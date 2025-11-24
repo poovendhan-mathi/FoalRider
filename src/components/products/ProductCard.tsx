@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { WishlistButton } from '@/components/wishlist/WishlistButton';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import type { Product } from '@/lib/products';
 
@@ -44,6 +45,11 @@ export function ProductCard({ product }: ProductCardProps) {
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
+          
+          {/* Wishlist Button */}
+          <div className="absolute top-4 right-4 z-10">
+            <WishlistButton productId={product.id} productName={product.name} />
+          </div>
             
           {isOutOfStock && (
             <Badge className="absolute top-4 left-4 bg-red-500">
@@ -93,7 +99,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
       <CardFooter className="p-4 pt-0">
         <Button 
-          className="w-full bg-[#C5A572] hover:bg-[#B08D5B]"
+          className="w-full bg-[#C5A572] hover:bg-[#B08D5B] cursor-pointer"
           disabled={isOutOfStock}
           asChild={!isOutOfStock}
         >

@@ -1,93 +1,462 @@
-import { getUser, getUserProfile } from '@/hooks/useUser';
-import { redirect } from 'next/navigation';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { createClient } from '@/lib/supabase/server';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { 
+  User, 
+  Package, 
+  MapPin, 
+  Settings, 
+  Camera,
+  Mail,
+  Calendar,
+  ShieldCheck,
+  LogOut
+} from 'lucide-react';
+import { toast } from 'sonner';
 
-export default async function ProfilePage() {
-  const user = await getUser();
-  const profile = await getUserProfile();
+interface Profile {
+  full_name?: string;
+  avatar_url?: string;
+  role?: string;
+  phone?: string;
+}
 
-  if (!user) {
-    redirect('/login');
+interface Order {
+  id: string;
+  created_at: string;
+  status: string;
+  total: number;
+  currency: string;
+  items_count: number;
+}
+
+interface Address {
+  id: string;
+  full_name: string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  is_default: boolean;
+}
+
+export default function ProfilePage() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    loadProfileData();
+    
+    // Check for hash navigation
+    const hash = window.location.hash.replace('#', '');
+    if (hash === 'settings') {
+      setActiveTab('settings');
+    }
+  }, [user]);
+
+  const loadProfileData = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const supabase = createClient();
+
+      // Load profile with timeout
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Profile load error:', profileError);
+      } else if (profileData) {
+        setProfile(profileData);
+      }
+
+      // Load orders
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('id, created_at, status, total_amount, currency')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (ordersData) {
+        setOrders(ordersData.map(order => ({
+          id: order.id,
+          created_at: order.created_at,
+          status: order.status,
+          total: order.total_amount,
+          currency: order.currency,
+          items_count: 0 // Can be updated later with proper query
+        })));
+      }
+    } catch (error) {
+      console.error('Error loading profile data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user) return;
+
+    const formData = new FormData(e.currentTarget);
+    const supabase = createClient();
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: formData.get('full_name') as string,
+          phone: formData.get('phone') as string,
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Profile update error:', error);
+        toast.error('Failed to update profile: ' + error.message);
+      } else {
+        toast.success('Profile updated successfully');
+        await loadProfileData();
+      }
+    } catch (error: any) {
+      console.error('Profile update exception:', error);
+      toast.error('Failed to update profile');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-24 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C5A572]"></div>
+      </div>
+    );
   }
+
+  if (!user) return null;
 
   const initials = profile?.full_name
     ?.split(' ')
-    .map((n: string) => n[0])
+    .map((n) => n[0])
     .join('')
-    .toUpperCase() || user.email?.[0].toUpperCase();
+    .toUpperCase() || user.email?.[0].toUpperCase() || 'U';
+
+  const displayName = profile?.full_name || user.email?.split('@')[0] || 'User';
+  const isAdmin = user?.user_metadata?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-muted/40">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">My Profile</h1>
-          <p className="text-muted-foreground">Manage your account settings</p>
-        </div>
-
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-              <CardDescription>Your personal details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-20 w-20">
-                  <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="text-xl font-semibold">{profile?.full_name || 'User'}</h3>
-                  <p className="text-muted-foreground">{user.email}</p>
-                </div>
+    <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-6">
+            <div className="relative">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={profile?.avatar_url} alt={displayName} />
+                <AvatarFallback className="bg-[#C5A572] text-white text-2xl">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <Button
+                size="icon"
+                variant="secondary"
+                className="absolute bottom-0 right-0 rounded-full h-8 w-8"
+              >
+                <Camera className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold">{displayName}</h1>
+                {isAdmin && (
+                  <Badge variant="secondary" className="bg-[#C5A572] text-white">
+                    <ShieldCheck className="h-3 w-3 mr-1" />
+                    Admin
+                  </Badge>
+                )}
               </div>
-
-              <div className="border-t pt-6 space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Email</label>
-                  <p className="text-muted-foreground">{user.email}</p>
+              <div className="flex flex-col gap-1 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  <span>{user.email}</span>
                 </div>
-                <div>
-                  <label className="text-sm font-medium">Member Since</label>
-                  <p className="text-muted-foreground">
-                    {new Date(user.created_at).toLocaleDateString('en-US', {
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    Member since {new Date(user.created_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
                     })}
-                  </p>
+                  </span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Manage your account</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start">
-                View Orders
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                Manage Addresses
-              </Button>
-              <form action={async () => {
-                'use server';
-                const supabase = await createClient();
-                await supabase.auth.signOut();
-                redirect('/login');
-              }}>
-                <Button variant="destructive" className="w-full" type="submit">
-                  Sign Out
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+            </div>
+            
+            <Button
+              variant="outline"
+              onClick={handleSignOut}
+              className="hover:bg-red-50 hover:text-red-600 hover:border-red-600"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="overview">
+              <User className="h-4 w-4 mr-2" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="orders">
+              <Package className="h-4 w-4 mr-2" />
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="addresses">
+              <MapPin className="h-4 w-4 mr-2" />
+              Addresses
+            </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-gray-600">Total Orders</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{orders.length}</div>
+                  <p className="text-xs text-gray-500 mt-1">All time</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-gray-600">Total Spent</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">$0.00</div>
+                  <p className="text-xs text-gray-500 mt-1">Across all orders</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-gray-600">Saved Addresses</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{addresses.length}</div>
+                  <p className="text-xs text-gray-500 mt-1">Shipping addresses</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Orders</CardTitle>
+                <CardDescription>Your latest purchase history</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {orders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Package className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                    <p className="text-gray-600 mb-4">No orders yet</p>
+                    <Button asChild>
+                      <a href="/products">Start Shopping</a>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Orders will be mapped here when implemented */}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders">
+            <Card>
+              <CardHeader>
+                <CardTitle>Order History</CardTitle>
+                <CardDescription>View and track all your orders</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {orders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Package className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">No orders yet</h3>
+                    <p className="text-gray-600 mb-6">
+                      Start shopping to see your orders here
+                    </p>
+                    <Button size="lg" asChild>
+                      <a href="/products">Browse Products</a>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Order list will be implemented here */}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Addresses Tab */}
+          <TabsContent value="addresses">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Shipping Addresses</CardTitle>
+                    <CardDescription>Manage your delivery addresses</CardDescription>
+                  </div>
+                  <Button>
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Add Address
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {addresses.length === 0 ? (
+                  <div className="text-center py-12">
+                    <MapPin className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">No saved addresses</h3>
+                    <p className="text-gray-600 mb-6">
+                      Add a shipping address for faster checkout
+                    </p>
+                    <Button size="lg">Add Your First Address</Button>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {/* Address cards will be mapped here */}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>Update your account details</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdateProfile} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name">Full Name</Label>
+                    <Input
+                      id="full_name"
+                      name="full_name"
+                      defaultValue={profile?.full_name || ''}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={user.email || ''}
+                      disabled
+                      className="bg-gray-50"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Contact support to change your email address
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      defaultValue={profile?.phone || ''}
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <Button type="submit" className="bg-[#C5A572] hover:bg-[#B89968]">
+                    Save Changes
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Password</CardTitle>
+                <CardDescription>Change your account password</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button variant="outline">Change Password</Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-red-600">Danger Zone</CardTitle>
+                <CardDescription>Irreversible account actions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button variant="outline" className="text-red-600 hover:bg-red-50">
+                  Delete Account
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

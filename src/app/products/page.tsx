@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
-import { Header } from '@/components/layout/Header';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { ProductFilters } from '@/components/products/ProductFilters';
 import { MobileFilters } from '@/components/products/MobileFilters';
+import { ProductGridSkeleton } from '@/components/products/ProductSkeleton';
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -18,46 +18,28 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const params = await searchParams;
   
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-
+    <div className="min-h-screen bg-background pt-16">
       {/* Main Content */}
-      <section className="py-12 mt-20">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Filters Sidebar - Desktop */}
-            <aside className="hidden lg:block lg:w-64 shrink-0">
-              <div className="sticky top-24">
-                <ProductFilters searchParams={params} />
-              </div>
+      <section className="h-[calc(100vh-4rem)]">
+        <div className="container mx-auto px-4 h-full">
+          <div className="flex flex-col lg:flex-row gap-8 h-full py-6">
+            {/* Filters Sidebar - Desktop - Fixed height with own scroll */}
+            <aside className="hidden lg:block lg:w-64 shrink-0 h-full overflow-y-auto">
+              <ProductFilters searchParams={params} />
             </aside>
 
             {/* Mobile Filter Button */}
             <MobileFilters searchParams={params} />
 
-            {/* Products Grid */}
-            <div className="flex-1">
-              <Suspense fallback={<ProductGridSkeleton />}>
+            {/* Products Grid - Scrollable */}
+            <div className="flex-1 h-full overflow-y-auto">
+              <Suspense key={JSON.stringify(params)} fallback={<ProductGridSkeleton count={9} />}>
                 <ProductGrid searchParams={params} />
               </Suspense>
             </div>
           </div>
         </div>
       </section>
-    </div>
-  );
-}
-
-function ProductGridSkeleton() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[...Array(6)].map((_, i) => (
-        <div key={i} className="animate-pulse">
-          <div className="bg-muted h-80 rounded-lg mb-4" />
-          <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-          <div className="h-4 bg-muted rounded w-1/2" />
-        </div>
-      ))}
     </div>
   );
 }

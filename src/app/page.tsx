@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -55,9 +54,7 @@ export default async function HomePage() {
                            'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=3840&q=95';
 
   return (
-    <div className="min-h-screen">
-      <Header />
-
+    <div className="min-h-screen pt-16">
       {/* Hero Section */}
       <section className="relative h-[90vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#2E2E2E]/20 via-background to-[#C5A572]/10" />
@@ -520,7 +517,7 @@ export default async function HomePage() {
                         )}
                         <div className="flex items-center justify-between pt-2">
                           <PriceDisplay priceInINR={product.price} className="text-2xl font-bold" />
-                          <Button size="sm" variant="secondary" className="gap-2">
+                          <Button size="sm" variant="secondary" className="gap-2 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors">
                             <ShoppingBag className="h-4 w-4" />
                             View
                           </Button>
