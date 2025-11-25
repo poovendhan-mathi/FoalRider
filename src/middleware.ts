@@ -45,7 +45,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protected routes (require login)
-  const protectedPaths = ["/profile", "/orders", "/admin"];
+  const protectedPaths = ["/profile", "/admin"];
   const isProtectedPath = protectedPaths.some((path) =>
     pathname.startsWith(path)
   );

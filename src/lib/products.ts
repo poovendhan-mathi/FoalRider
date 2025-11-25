@@ -131,6 +131,7 @@ export async function getFilteredProducts(filters: {
 
     if (catError) {
       console.error("❌ Category fetch error:", catError);
+      return [];
     }
 
     if (categoryData) {
@@ -148,8 +149,9 @@ export async function getFilteredProducts(filters: {
       console.log("📁 Category IDs to filter:", categoryIds);
       query = query.in("category_id", categoryIds);
     } else {
-      console.log("⚠️ Category not found, returning empty results");
-      // Category doesn't exist, return empty array
+      console.log("⚠️ Category slug not found in database:", filters.category);
+      // Category doesn't exist in DB - return empty to show no products
+      // This prevents showing all products when an invalid category is selected
       return [];
     }
   }
