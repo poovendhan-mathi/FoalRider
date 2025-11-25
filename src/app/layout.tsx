@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Montserrat } from "next/font/google";
 import "./globals.css";
+import "./globals-override.css";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CartProvider } from "@/contexts/CartContext";
@@ -30,11 +31,11 @@ export const metadata: Metadata = {
   description: "Premium quality textiles and fabrics for all your needs",
   icons: {
     icon: [
-      { url: '/favicon.png', type: 'image/png', sizes: '512x512' },
-      { url: '/assets/logo/Gold.png', sizes: '512x512' },
+      { url: "/favicon.png", type: "image/png", sizes: "512x512" },
+      { url: "/assets/logo/Gold.png", sizes: "512x512" },
     ],
-    apple: '/assets/logo/Gold.png',
-    shortcut: '/favicon.png',
+    apple: "/assets/logo/Gold.png",
+    shortcut: "/favicon.png",
   },
 };
 
@@ -47,7 +48,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${playfairDisplay.variable} ${montserrat.variable} antialiased`}
-        style={{ fontFamily: 'var(--font-body)' }}
+        style={{ fontFamily: "var(--font-body)" }}
       >
         <AuthProvider>
           <CurrencyProvider>
@@ -56,9 +57,7 @@ export default function RootLayout({
                 <Suspense fallback={null}>
                   <PageLoader />
                 </Suspense>
-                <ClientLayout>
-                  {children}
-                </ClientLayout>
+                <ClientLayout>{children}</ClientLayout>
               </WishlistProvider>
             </CartProvider>
           </CurrencyProvider>

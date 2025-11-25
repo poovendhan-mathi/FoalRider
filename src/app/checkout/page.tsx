@@ -1,31 +1,40 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { useCart } from '@/contexts/CartContext';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { useAuth } from '@/lib/auth/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { ShoppingBag, Lock, CreditCard, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { getStripe, createPaymentIntent, toStripeAmount } from '@/lib/stripe/client';
-import { createClient } from '@/lib/supabase/client';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import { useCart } from "@/contexts/CartContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { ShoppingBag, Lock, CreditCard, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  getStripe,
+  createPaymentIntent,
+  toStripeAmount,
+} from "@/lib/stripe/client";
+import { createClient } from "@/lib/supabase/client";
 
 // Payment Form Component
-function CheckoutForm({ 
-  formData, 
-  total, 
-  currency, 
-  onSuccess 
-}: { 
-  formData: any; 
-  total: number; 
+function CheckoutForm({
+  formData,
+  total,
+  currency,
+  onSuccess,
+}: {
+  formData: any;
+  total: number;
   currency: string;
   onSuccess: (orderId: string) => void;
 }) {
@@ -37,7 +46,7 @@ function CheckoutForm({
     e.preventDefault();
 
     if (!stripe || !elements) {
-      toast.error('Payment system not loaded');
+      toast.error("Payment system not loaded");
       return;
     }
 
@@ -53,7 +62,7 @@ function CheckoutForm({
       // Confirm payment
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
-        redirect: 'if_required',
+        redirect: "if_required",
         confirmParams: {
           return_url: `${window.location.origin}/checkout/success`,
           payment_method_data: {
@@ -66,7 +75,7 @@ function CheckoutForm({
                 city: formData.city,
                 state: formData.state,
                 postal_code: formData.zipCode,
-                country: formData.country === 'India' ? 'IN' : 'US',
+                country: formData.country === "India" ? "IN" : "US",
               },
             },
           },
@@ -78,34 +87,42 @@ function CheckoutForm({
         throw new Error(error.message);
       }
 
-      if (paymentIntent && paymentIntent.status === 'succeeded') {
-        console.log('✅ Payment succeeded, creating order...', paymentIntent.id);
-        
+      if (paymentIntent && paymentIntent.status === "succeeded") {
+        console.log(
+          "✅ Payment succeeded, creating order...",
+          paymentIntent.id
+        );
+
         // Payment successful - create order in database
         const supabase = createClient();
-        
-        // Get current user to ensure we have the correct user_id
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        const userId = currentUser?.id || formData.userId;
-        
-        console.log('🔍 Debug - User ID:', userId);
-        console.log('🔍 Debug - Current User:', currentUser?.email);
-        console.log('🔍 Debug - Form Data:', formData);
-        
-        if (!userId) {
-          console.error('❌ No user ID available');
-          toast.error('User not authenticated. Please log in and try again.');
-          setLoading(false);
-          return;
-        }
-        
+
+        // Get current user (may be null for guests)
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser();
+
+        const userId = currentUser?.id || null;
+        const isGuest = !userId;
+
+        // Generate guest ID for tracking
+        const guestId = isGuest
+          ? `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+          : null;
+
+        console.log("🔍 Debug - Is Guest:", isGuest);
+        console.log("🔍 Debug - User ID:", userId);
+        console.log("🔍 Debug - Guest ID:", guestId);
+        console.log("🔍 Debug - Form Data:", formData);
+
         const orderData = {
           user_id: userId,
+          guest_id: guestId,
+          guest_email: isGuest ? formData.email : null,
           total_amount: total,
           currency: currency,
-          payment_status: 'paid',
+          payment_status: "pending", // Will be updated to 'paid' by webhook
           payment_intent_id: paymentIntent.id,
-          status: 'processing',
+          status: "pending", // Will be updated to 'processing' by webhook
           shipping_address: {
             firstName: formData.firstName,
             lastName: formData.lastName,
@@ -118,38 +135,55 @@ function CheckoutForm({
           },
           email: formData.email,
         };
-        
-        console.log('📦 Inserting order:', orderData);
-        
+
+        console.log("📦 Inserting order:", JSON.stringify(orderData, null, 2));
+
         const { data: order, error: orderError } = await supabase
-          .from('orders')
+          .from("orders")
           .insert(orderData)
           .select()
           .single();
 
         if (orderError) {
-          console.error('❌ Order creation error:', orderError);
-          console.error('❌ Error details:', JSON.stringify(orderError, null, 2));
-          toast.error('Payment succeeded but failed to create order. Please contact support.');
+          console.error("❌ Order creation error:", orderError);
+          console.error("❌ Error code:", orderError.code);
+          console.error("❌ Error message:", orderError.message);
+          console.error("❌ Error details:", orderError.details);
+          console.error("❌ Error hint:", orderError.hint);
+
+          // Check if it's a missing column error
+          if (
+            orderError.message?.includes("guest_email") ||
+            orderError.message?.includes("guest_id")
+          ) {
+            toast.error(
+              "Database not configured for guest orders. Please run setup-guest-orders.sql in Supabase."
+            );
+          } else {
+            toast.error(
+              "Payment succeeded but failed to create order. Please contact support with reference: " +
+                paymentIntent.id
+            );
+          }
           setLoading(false);
           return;
         }
 
-        console.log('✅ Order created successfully:', order.id);
-        toast.success('Payment successful! Redirecting...');
-        
+        console.log("✅ Order created successfully:", order.id);
+        toast.success("Payment successful! Redirecting...");
+
         // Small delay to ensure state updates
         setTimeout(() => {
           onSuccess(order.id);
         }, 500);
       } else {
-        console.log('⚠️ Payment status:', paymentIntent?.status);
-        toast.warning('Payment is being processed...');
+        console.log("⚠️ Payment status:", paymentIntent?.status);
+        toast.warning("Payment is being processed...");
         setLoading(false);
       }
     } catch (error: any) {
-      console.error('Payment error:', error);
-      toast.error(error.message || 'Payment failed');
+      console.error("Payment error:", error);
+      toast.error(error.message || "Payment failed");
       setLoading(false);
     }
   };
@@ -162,14 +196,23 @@ function CheckoutForm({
           <Lock className="h-5 w-5 text-green-600" />
           Secure Payment
         </h2>
-        <PaymentElement />
+        <div className="mt-4">
+          <PaymentElement
+            options={{
+              layout: {
+                type: "tabs",
+                defaultCollapsed: false,
+              },
+            }}
+          />
+        </div>
       </Card>
 
       <Button
         type="submit"
         size="lg"
         className="w-full bg-[#C5A572] hover:bg-[#B89968] cursor-pointer"
-        disabled={!stripe || loading}
+        disabled={!stripe || !elements || loading}
       >
         {loading ? (
           <>
@@ -196,58 +239,113 @@ export default function CheckoutPage() {
   const { items, totalItems, clearCart } = useCart();
   const { formatPrice, currency } = useCurrency();
   const { user } = useAuth();
-  const [clientSecret, setClientSecret] = useState<string>('');
-  const [paymentIntentId, setPaymentIntentId] = useState<string>('');
-  const [stripePromise, setStripePromise] = useState<any>(null);
+  const [clientSecret, setClientSecret] = useState<string>("");
+  const [paymentIntentId, setPaymentIntentId] = useState<string>("");
+  const [stripePromise, setStripePromise] = useState<Promise<any> | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
+
+  // Use ref to track if payment intent is already being created
+  const paymentIntentCreated = useRef(false);
 
   const [formData, setFormData] = useState({
-    userId: user?.id || '',
-    email: user?.email || '',
-    firstName: '',
-    lastName: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: 'India',
-    phone: '',
+    userId: user?.id || "",
+    email: user?.email || "",
+    firstName: "",
+    lastName: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "India",
+    phone: "",
   });
 
-  const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  // Auto-fill from profile
+  useEffect(() => {
+    async function loadProfileData() {
+      if (!user) return;
+
+      const supabase = createClient();
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("full_name, phone, email")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Error loading profile:", error);
+        return;
+      }
+
+      if (profile) {
+        const nameParts = profile.full_name?.split(" ") || [];
+        setFormData((prev) => ({
+          ...prev,
+          firstName: nameParts[0] || "",
+          lastName: nameParts.slice(1).join(" ") || "",
+          phone: profile.phone || prev.phone,
+          email: profile.email || prev.email,
+        }));
+      }
+    }
+
+    loadProfileData();
+  }, [user]);
+
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
   const shipping = subtotal > 2000 ? 0 : 200;
   const tax = subtotal * 0.18;
   const total = subtotal + shipping + tax;
 
-  // Initialize Stripe
+  // Initialize Stripe (only once)
   useEffect(() => {
     setStripePromise(getStripe());
   }, []);
 
-  // Create payment intent when user is ready
-  useEffect(() => {
-    if (user && totalItems > 0 && !clientSecret) {
-      initializePayment();
-    }
-  }, [user, totalItems]);
-
-  const initializePayment = async () => {
-    try {
-      const stripeAmount = toStripeAmount(total, currency);
-      const { clientSecret: secret, paymentIntentId: id } = await createPaymentIntent(
-        stripeAmount,
-        currency,
-        {
-          userId: user?.id || 'guest',
-          items: totalItems,
-        }
+  // Create payment intent - with proper duplicate prevention
+  const initializePayment = useCallback(async () => {
+    // Prevent duplicate creation
+    if (paymentIntentCreated.current || isInitializing || clientSecret) {
+      console.log(
+        "⚠️ Payment intent already created or in progress, skipping..."
       );
+      return;
+    }
+
+    setIsInitializing(true);
+    paymentIntentCreated.current = true;
+
+    try {
+      console.log("💰 Creating payment intent for amount:", total, currency);
+      const stripeAmount = toStripeAmount(total, currency);
+      const { clientSecret: secret, paymentIntentId: id } =
+        await createPaymentIntent(stripeAmount, currency, {
+          userId: user?.id || "guest",
+          items: totalItems,
+        });
+
+      console.log("✅ Payment intent created:", id);
       setClientSecret(secret);
       setPaymentIntentId(id);
     } catch (error) {
-      console.error('Failed to initialize payment:', error);
-      toast.error('Failed to initialize payment. Please try again.');
+      console.error("❌ Failed to initialize payment:", error);
+      toast.error("Failed to initialize payment. Please try again.");
+      // Reset on error so user can retry
+      paymentIntentCreated.current = false;
+    } finally {
+      setIsInitializing(false);
     }
-  };
+  }, [total, currency, user?.id, totalItems, clientSecret, isInitializing]);
+
+  // Trigger payment intent creation only once when ready
+  useEffect(() => {
+    if (totalItems > 0 && !clientSecret && !isInitializing) {
+      initializePayment();
+    }
+  }, [totalItems, clientSecret, isInitializing, initializePayment]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -257,29 +355,21 @@ export default function CheckoutPage() {
   };
 
   const handlePaymentSuccess = (orderId: string) => {
-    console.log('🎉 handlePaymentSuccess called with orderId:', orderId);
+    console.log("🎉 handlePaymentSuccess called with orderId:", orderId);
     try {
       clearCart();
-      console.log('✅ Cart cleared');
-      
+      console.log("✅ Cart cleared");
+
       const successUrl = `/checkout/success?order_id=${orderId}`;
-      console.log('🔄 Redirecting to:', successUrl);
-      
+      console.log("🔄 Redirecting to:", successUrl);
+
       router.push(successUrl);
-      toast.success('Order placed successfully!');
+      toast.success("Order placed successfully!");
     } catch (error) {
-      console.error('❌ Error in handlePaymentSuccess:', error);
-      toast.error('Redirect failed. Order ID: ' + orderId);
+      console.error("❌ Error in handlePaymentSuccess:", error);
+      toast.error("Redirect failed. Order ID: " + orderId);
     }
   };
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!user) {
-      toast.error('Please login to continue');
-      router.push('/login');
-    }
-  }, [user, router]);
 
   // Empty cart check
   if (totalItems === 0) {
@@ -295,7 +385,7 @@ export default function CheckoutPage() {
             <Button
               size="lg"
               className="bg-[#C5A572] hover:bg-[#B89968] cursor-pointer"
-              onClick={() => router.push('/products')}
+              onClick={() => router.push("/products")}
             >
               Continue Shopping
             </Button>
@@ -450,24 +540,24 @@ export default function CheckoutPage() {
                 options={{
                   clientSecret,
                   appearance: {
-                    theme: 'stripe',
+                    theme: "stripe",
                     variables: {
-                      colorPrimary: '#C5A572',
-                      colorBackground: '#ffffff',
-                      colorText: '#1a1a1a',
-                      colorDanger: '#df1b41',
-                      fontFamily: 'Montserrat, sans-serif',
-                      spacingUnit: '4px',
-                      borderRadius: '8px',
+                      colorPrimary: "#C5A572",
+                      colorBackground: "#ffffff",
+                      colorText: "#1a1a1a",
+                      colorDanger: "#df1b41",
+                      fontFamily: "Montserrat, sans-serif",
+                      spacingUnit: "4px",
+                      borderRadius: "8px",
                     },
                   },
                 }}
               >
-                <CheckoutForm 
-                  formData={formData} 
-                  total={total} 
+                <CheckoutForm
+                  formData={formData}
+                  total={total}
                   currency={currency}
-                  onSuccess={handlePaymentSuccess} 
+                  onSuccess={handlePaymentSuccess}
                 />
               </Elements>
             )}
@@ -476,7 +566,9 @@ export default function CheckoutPage() {
               <Card className="p-6">
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-[#C5A572]" />
-                  <span className="ml-3 text-gray-600">Initializing secure payment...</span>
+                  <span className="ml-3 text-gray-600">
+                    Initializing secure payment...
+                  </span>
                 </div>
               </Card>
             )}
@@ -486,22 +578,29 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-24">
               <h2 className="text-xl font-bold mb-6">Order Summary</h2>
-              
+
               {/* Order Items */}
               <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
                 {items.map((item) => (
                   <div key={item.product.id} className="flex gap-3">
                     <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-gray-100">
                       <Image
-                        src={item.product.image_url || '/assets/images/product-placeholder.jpg'}
+                        src={
+                          item.product.image_url ||
+                          "/assets/images/product-placeholder.jpg"
+                        }
                         alt={item.product.name}
                         fill
                         className="object-cover"
                       />
                     </div>
                     <div className="flex-grow min-w-0">
-                      <p className="text-sm font-medium truncate">{item.product.name}</p>
-                      <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                      <p className="text-sm font-medium truncate">
+                        {item.product.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Qty: {item.quantity}
+                      </p>
                       <p className="text-sm font-semibold text-[#C5A572]">
                         {formatPrice(item.product.price * item.quantity)}
                       </p>
@@ -532,12 +631,14 @@ export default function CheckoutPage() {
                   <span className="text-gray-600">Tax (18% GST)</span>
                   <span className="font-medium">{formatPrice(tax)}</span>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="flex justify-between text-lg">
                   <span className="font-bold">Total</span>
-                  <span className="font-bold text-[#C5A572]">{formatPrice(total)}</span>
+                  <span className="font-bold text-[#C5A572]">
+                    {formatPrice(total)}
+                  </span>
                 </div>
               </div>
 

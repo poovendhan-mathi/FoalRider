@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,27 +14,30 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
-  const router = useRouter();
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const { resetPassword } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess(false);
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    const { error } = await resetPassword(email);
 
     if (error) {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/profile");
+      setSuccess(true);
+      setLoading(false);
+      setEmail("");
     }
   };
 
@@ -43,16 +45,33 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            Reset your password
+          </CardTitle>
           <CardDescription>
-            Enter your credentials to sign in to your account
+            Enter your email address and we&apos;ll send you a link to reset
+            your password
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
-                {error}
+              <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <p>{error}</p>
+              </div>
+            )}
+            {success && (
+              <div className="bg-green-50 text-green-800 text-sm p-3 rounded-md flex items-start gap-2 border border-green-200">
+                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">Check your email</p>
+                  <p className="mt-1">
+                    We&apos;ve sent a password reset link to{" "}
+                    <strong>{email}</strong>. Click the link in the email to
+                    reset your password.
+                  </p>
+                </div>
               </div>
             )}
             <div className="space-y-2">
@@ -64,40 +83,23 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-primary hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
+                disabled={loading || success}
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
-            </Button>
+            {!success && (
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Sending reset link..." : "Send reset link"}
+              </Button>
+            )}
             <p className="text-sm text-muted-foreground text-center">
-              Don't have an account?{" "}
+              Remember your password?{" "}
               <Link
-                href="/signup"
+                href="/login"
                 className="text-primary hover:underline font-medium"
               >
-                Sign up
+                Sign in
               </Link>
             </p>
           </CardFooter>

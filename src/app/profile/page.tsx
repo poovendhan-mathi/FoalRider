@@ -1,29 +1,35 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/auth/AuthContext';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { 
-  User, 
-  Package, 
-  MapPin, 
-  Settings, 
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import {
+  User,
+  Package,
+  MapPin,
+  Settings,
   Camera,
   Mail,
   Calendar,
   ShieldCheck,
-  LogOut
-} from 'lucide-react';
-import { toast } from 'sonner';
+  LogOut,
+} from "lucide-react";
+import { toast } from "sonner";
 
 interface Profile {
   full_name?: string;
@@ -60,20 +66,20 @@ export default function ProfilePage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     if (!user) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     loadProfileData();
-    
+
     // Check for hash navigation
-    const hash = window.location.hash.replace('#', '');
-    if (hash === 'settings') {
-      setActiveTab('settings');
+    const hash = window.location.hash.replace("#", "");
+    if (hash === "settings") {
+      setActiveTab("settings");
     }
   }, [user]);
 
@@ -87,49 +93,132 @@ export default function ProfilePage() {
     try {
       const supabase = createClient();
 
+      console.log("🔍 Loading profile for user:", user.id);
+
       // Load profile with timeout
       const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
         .single();
 
+      console.log("📊 Profile query result:", { profileData, profileError });
+
       if (profileError) {
-        console.error('Profile load error:', profileError);
+        console.error("❌ Profile load error:", profileError);
+        toast.error("Failed to load profile: " + profileError.message);
       } else if (profileData) {
+        console.log("✅ Profile loaded:", profileData);
         setProfile(profileData);
+      } else {
+        console.warn("⚠️ No profile data returned");
       }
 
       // Load orders
-      const { data: ordersData } = await supabase
-        .from('orders')
-        .select('id, created_at, status, total_amount, currency')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+      const { data: ordersData, error: ordersError } = await supabase
+        .from("orders")
+        .select("id, created_at, status, total_amount, currency")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
         .limit(5);
-      
-      if (ordersData) {
-        setOrders(ordersData.map(order => ({
-          id: order.id,
-          created_at: order.created_at,
-          status: order.status,
-          total: order.total_amount,
-          currency: order.currency,
-          items_count: 0 // Can be updated later with proper query
-        })));
+
+      if (ordersError) {
+        console.error("❌ Orders load error:", ordersError);
+      } else if (ordersData) {
+        console.log("✅ Orders loaded:", ordersData.length);
+        setOrders(
+          ordersData.map((order) => ({
+            id: order.id,
+            created_at: order.created_at,
+            status: order.status,
+            total: order.total_amount,
+            currency: order.currency,
+            items_count: 0, // Can be updated later with proper query
+          }))
+        );
       }
     } catch (error) {
-      console.error('Error loading profile data:', error);
+      console.error("❌ Error loading profile data:", error);
+      toast.error("Failed to load profile data");
     } finally {
+      console.log("✅ Profile loading complete");
       setLoading(false);
     }
   };
 
   const handleSignOut = async () => {
     const supabase = createClient();
+
+    // Clear all storage
+    if (typeof window !== "undefined") {
+      localStorage.clear();
+      sessionStorage.clear();
+    }
+
     await supabase.auth.signOut();
-    router.push('/login');
-    router.refresh();
+
+    // Redirect to home
+    router.push("/");
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 100);
+  };
+
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File size must be less than 2MB");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      toast.loading("Uploading avatar...");
+
+      // Upload to Supabase Storage
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, {
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+      // Update profile
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile((prev) => (prev ? { ...prev, avatar_url: publicUrl } : null));
+      toast.dismiss();
+      toast.success("Avatar updated successfully!");
+    } catch (error: any) {
+      toast.dismiss();
+      console.error("Avatar upload error:", error);
+      toast.error("Failed to upload avatar: " + error.message);
+    }
   };
 
   const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -141,23 +230,23 @@ export default function ProfilePage() {
 
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({
-          full_name: formData.get('full_name') as string,
-          phone: formData.get('phone') as string,
+          full_name: formData.get("full_name") as string,
+          phone: formData.get("phone") as string,
         })
-        .eq('id', user.id);
+        .eq("id", user.id);
 
       if (error) {
-        console.error('Profile update error:', error);
-        toast.error('Failed to update profile: ' + error.message);
+        console.error("Profile update error:", error);
+        toast.error("Failed to update profile: " + error.message);
       } else {
-        toast.success('Profile updated successfully');
+        toast.success("Profile updated successfully");
         await loadProfileData();
       }
     } catch (error: any) {
-      console.error('Profile update exception:', error);
-      toast.error('Failed to update profile');
+      console.error("Profile update exception:", error);
+      toast.error("Failed to update profile");
     }
   };
 
@@ -171,14 +260,18 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
-  const initials = profile?.full_name
-    ?.split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase() || user.email?.[0].toUpperCase() || 'U';
+  const initials =
+    profile?.full_name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase() ||
+    user.email?.[0].toUpperCase() ||
+    "U";
 
-  const displayName = profile?.full_name || user.email?.split('@')[0] || 'User';
-  const isAdmin = user?.user_metadata?.role === 'admin';
+  const displayName = profile?.full_name || user.email?.split("@")[0] || "User";
+  // Check role from profiles table - single source of truth
+  const isAdmin = profile?.role === "admin";
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
@@ -193,20 +286,34 @@ export default function ProfilePage() {
                   {initials}
                 </AvatarFallback>
               </Avatar>
+              <input
+                type="file"
+                id="avatar-upload"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
               <Button
                 size="icon"
                 variant="secondary"
-                className="absolute bottom-0 right-0 rounded-full h-8 w-8"
+                className="absolute bottom-0 right-0 rounded-full h-8 w-8 cursor-pointer"
+                onClick={() =>
+                  document.getElementById("avatar-upload")?.click()
+                }
+                type="button"
               >
                 <Camera className="h-4 w-4" />
               </Button>
             </div>
-            
+
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-3xl font-bold">{displayName}</h1>
                 {isAdmin && (
-                  <Badge variant="secondary" className="bg-[#C5A572] text-white">
+                  <Badge
+                    variant="secondary"
+                    className="bg-[#C5A572] text-white"
+                  >
                     <ShieldCheck className="h-3 w-3 mr-1" />
                     Admin
                   </Badge>
@@ -220,16 +327,17 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
                   <span>
-                    Member since {new Date(user.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
+                    Member since{" "}
+                    {new Date(user.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
                     })}
                   </span>
                 </div>
               </div>
             </div>
-            
+
             <Button
               variant="outline"
               onClick={handleSignOut}
@@ -242,7 +350,11 @@ export default function ProfilePage() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
             <TabsTrigger value="overview">
               <User className="h-4 w-4 mr-2" />
@@ -267,7 +379,9 @@ export default function ProfilePage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">Total Orders</CardTitle>
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    Total Orders
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{orders.length}</div>
@@ -277,21 +391,29 @@ export default function ProfilePage() {
 
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">Total Spent</CardTitle>
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    Total Spent
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">$0.00</div>
-                  <p className="text-xs text-gray-500 mt-1">Across all orders</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Across all orders
+                  </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">Saved Addresses</CardTitle>
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    Saved Addresses
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{addresses.length}</div>
-                  <p className="text-xs text-gray-500 mt-1">Shipping addresses</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Shipping addresses
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -324,13 +446,17 @@ export default function ProfilePage() {
             <Card>
               <CardHeader>
                 <CardTitle>Order History</CardTitle>
-                <CardDescription>View and track all your orders</CardDescription>
+                <CardDescription>
+                  View and track all your orders
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {orders.length === 0 ? (
                   <div className="text-center py-12">
                     <Package className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">No orders yet</h3>
+                    <h3 className="text-xl font-semibold mb-2">
+                      No orders yet
+                    </h3>
                     <p className="text-gray-600 mb-6">
                       Start shopping to see your orders here
                     </p>
@@ -354,7 +480,9 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Shipping Addresses</CardTitle>
-                    <CardDescription>Manage your delivery addresses</CardDescription>
+                    <CardDescription>
+                      Manage your delivery addresses
+                    </CardDescription>
                   </div>
                   <Button>
                     <MapPin className="h-4 w-4 mr-2" />
@@ -366,7 +494,9 @@ export default function ProfilePage() {
                 {addresses.length === 0 ? (
                   <div className="text-center py-12">
                     <MapPin className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">No saved addresses</h3>
+                    <h3 className="text-xl font-semibold mb-2">
+                      No saved addresses
+                    </h3>
                     <p className="text-gray-600 mb-6">
                       Add a shipping address for faster checkout
                     </p>
@@ -395,7 +525,7 @@ export default function ProfilePage() {
                     <Input
                       id="full_name"
                       name="full_name"
-                      defaultValue={profile?.full_name || ''}
+                      defaultValue={profile?.full_name || ""}
                       placeholder="Enter your full name"
                     />
                   </div>
@@ -405,7 +535,7 @@ export default function ProfilePage() {
                     <Input
                       id="email"
                       type="email"
-                      value={user.email || ''}
+                      value={user.email || ""}
                       disabled
                       className="bg-gray-50"
                     />
@@ -420,14 +550,17 @@ export default function ProfilePage() {
                       id="phone"
                       name="phone"
                       type="tel"
-                      defaultValue={profile?.phone || ''}
+                      defaultValue={profile?.phone || ""}
                       placeholder="Enter your phone number"
                     />
                   </div>
 
                   <Separator />
 
-                  <Button type="submit" className="bg-[#C5A572] hover:bg-[#B89968]">
+                  <Button
+                    type="submit"
+                    className="bg-[#C5A572] hover:bg-[#B89968]"
+                  >
                     Save Changes
                   </Button>
                 </form>
@@ -450,7 +583,10 @@ export default function ProfilePage() {
                 <CardDescription>Irreversible account actions</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="text-red-600 hover:bg-red-50">
+                <Button
+                  variant="outline"
+                  className="text-red-600 hover:bg-red-50"
+                >
                   Delete Account
                 </Button>
               </CardContent>

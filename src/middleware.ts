@@ -1,5 +1,5 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({
@@ -33,22 +33,37 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes
-  const protectedPaths = ['/profile', '/orders', '/cart', '/checkout'];
-  const isProtectedPath = protectedPaths.some(path => 
-    request.nextUrl.pathname.startsWith(path)
+  const pathname = request.nextUrl.pathname;
+
+  // Skip middleware for Next.js internals and static files
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.includes(".")
+  ) {
+    return supabaseResponse;
+  }
+
+  // Protected routes (require login)
+  const protectedPaths = ["/profile", "/orders", "/admin"];
+  const isProtectedPath = protectedPaths.some((path) =>
+    pathname.startsWith(path)
   );
+
+  // Auth pages
+  const authPages = ["/login", "/signup"];
+  const isAuthPage = authPages.includes(pathname);
 
   if (isProtectedPath && !user) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/login';
-    redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+    redirectUrl.pathname = "/login";
+    redirectUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
   // Redirect logged-in users away from auth pages
-  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/profile', request.url));
+  if (user && isAuthPage) {
+    return NextResponse.redirect(new URL("/profile", request.url));
   }
 
   return supabaseResponse;
@@ -56,6 +71,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

@@ -1,6 +1,7 @@
 # 🏇 FoalRider - Complete Project Documentation
 
 ## 📋 Table of Contents
+
 1. [Project Overview](#project-overview)
 2. [Architecture](#architecture)
 3. [Tech Stack](#tech-stack)
@@ -19,6 +20,7 @@
 **FoalRider** is a modern e-commerce platform built with Next.js 15, specializing in premium products with multi-currency support. The platform features a complete shopping experience with authentication, cart management, checkout with Stripe, and order tracking.
 
 ### Key Highlights
+
 - 🛍️ Full-featured e-commerce platform
 - 💳 Stripe payment integration
 - 🔐 Secure authentication with Supabase
@@ -32,6 +34,7 @@
 ## 🏗️ Architecture
 
 ### Frontend Architecture
+
 ```
 Next.js 15 (App Router)
 ├── React 19 (Server & Client Components)
@@ -41,6 +44,7 @@ Next.js 15 (App Router)
 ```
 
 ### Backend Architecture
+
 ```
 Supabase (BaaS)
 ├── PostgreSQL (Database)
@@ -50,6 +54,7 @@ Supabase (BaaS)
 ```
 
 ### Payment Processing
+
 ```
 Stripe
 ├── Payment Intents API
@@ -62,6 +67,7 @@ Stripe
 ## 🛠️ Tech Stack
 
 ### Core Technologies
+
 - **Framework:** Next.js 15.0.3 with Turbopack
 - **Language:** TypeScript 5.x
 - **React:** Version 19
@@ -76,6 +82,7 @@ Stripe
 - **Date Handling:** date-fns
 
 ### Development Tools
+
 - **Testing:** Jest + React Testing Library
 - **Linting:** ESLint
 - **Type Checking:** TypeScript
@@ -168,18 +175,21 @@ FoalRider/
 ### 1. **Authentication System**
 
 #### User Registration
+
 - Email/password signup
 - Automatic profile creation
 - Email verification
 - Secure password hashing
 
 #### User Login
+
 - Email/password authentication
 - Session management
 - Automatic token refresh
 - Remember me functionality
 
 #### Protected Routes
+
 - Middleware-based protection
 - Automatic redirects
 - Role-based access (admin/customer)
@@ -187,25 +197,238 @@ FoalRider/
 **Code Location:** `src/lib/auth/AuthContext.tsx`
 
 **Key Functions:**
+
 ```typescript
 // Sign up new user
-const signUp = async (email, password, metadata)
+const signUp = async(email, password, metadata);
 
 // Sign in existing user
-const signIn = async (email, password)
+const signIn = async(email, password);
 
 // Sign out
-const signOut = async ()
+const signOut = async();
 
 // Get current user
-const { user } = useAuth()
+const { user } = useAuth();
 ```
+
+---
+
+### **User Management & Role System**
+
+#### ✅ SIMPLIFIED APPROACH - Best Practice
+
+**Single Source of Truth: `profiles.role`**
+
+FoalRider uses a **simple, clean approach** for user roles:
+
+1. **`auth.users`** - Supabase's authentication table
+
+   - Stores login credentials (email, password hash)
+   - `role` column is ALWAYS `'authenticated'` (PostgreSQL role for RLS)
+   - `raw_user_meta_data` only stores display info (name, phone) temporarily
+   - **NOT used for permission checks**
+
+2. **`public.profiles`** - Your application's user table ✅ **SOURCE OF TRUTH**
+   - Stores user information: `id`, `email`, `full_name`, `phone`, `avatar_url`
+   - **`role`** column contains `'customer'` or `'admin'` ← **USE THIS!**
+   - Automatically created via database trigger
+   - Easy to query, update, and check permissions
+
+#### Database Triggers (Automatic Sync)
+
+Two triggers keep `auth.users` and `profiles` in sync:
+
+**1. On User Signup (INSERT):**
+
+```sql
+CREATE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, phone, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'phone',
+    'customer'  -- Default role
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+**2. On User Update:**
+
+```sql
+CREATE FUNCTION public.sync_user_to_profile()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE public.profiles
+  SET
+    email = NEW.email,
+    full_name = COALESCE(NEW.raw_user_meta_data->>'full_name', full_name),
+    phone = COALESCE(NEW.raw_user_meta_data->>'phone', phone),
+    updated_at = NOW()
+  WHERE id = NEW.id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+#### User Creation Methods
+
+##### TypeScript (Recommended)
+
+```typescript
+// Using Supabase Admin API (server-side only)
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+// Create customer user
+const { data } = await supabaseAdmin.auth.admin.createUser({
+  email: "customer@example.com",
+  password: "SecurePassword123!",
+  email_confirm: true, // Skip email verification
+  user_metadata: {
+    full_name: "John Doe",
+    phone: "+1234567890",
+  },
+});
+// Trigger automatically creates profile with role='customer'
+
+// Make user admin
+if (data.user) {
+  await supabaseAdmin
+    .from("profiles")
+    .update({ role: "admin" })
+    .eq("id", data.user.id);
+}
+```
+
+##### SQL (Direct Database)
+
+```sql
+-- Create regular customer
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  email_confirmed_at, raw_user_meta_data, created_at, updated_at
+)
+VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  gen_random_uuid(),
+  'authenticated',
+  'authenticated',  -- PostgreSQL role (always 'authenticated')
+  'customer@example.com',
+  crypt('SecurePassword123!', gen_salt('bf')),
+  NOW(),
+  '{"full_name":"John Doe","phone":"+1234567890"}',
+  NOW(),
+  NOW()
+);
+-- Trigger creates profile with role='customer'
+```
+
+##### Convert Customer to Admin
+
+```sql
+-- Simple! Just update profiles table
+UPDATE public.profiles
+SET role = 'admin', updated_at = NOW()
+WHERE email = 'user@example.com';
+```
+
+##### Convert Admin to Customer
+
+```sql
+UPDATE public.profiles
+SET role = 'customer', updated_at = NOW()
+WHERE email = 'admin@foalrider.com';
+```
+
+#### Role Checking in Code
+
+```typescript
+// ✅ CORRECT - Check profiles.role
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("role")
+  .eq("id", user.id)
+  .single();
+
+const isAdmin = profile?.role === "admin";
+
+// ❌ WRONG - Don't use auth.users.role
+const isAdmin = user?.role === "admin"; // Always false! This is PostgreSQL role
+```
+
+#### Verification Queries
+
+```sql
+-- Check all users and their roles
+SELECT
+  u.email,
+  u.role as postgres_role,      -- Always 'authenticated'
+  p.full_name,
+  p.role as app_role,            -- 'customer' or 'admin' ✅
+  p.created_at
+FROM auth.users u
+LEFT JOIN public.profiles p ON u.id = p.id
+ORDER BY u.created_at DESC;
+
+-- Count users by role
+SELECT role, COUNT(*) as count
+FROM public.profiles
+GROUP BY role;
+
+-- Find all admins
+SELECT email, full_name, created_at
+FROM public.profiles
+WHERE role = 'admin'
+ORDER BY created_at;
+```
+
+#### Best Practices
+
+1. **✅ Always use `profiles.role` for permission checks**
+
+   - Don't use `auth.users.role` (it's always 'authenticated')
+   - Don't use `user_metadata.role` (hard to query and maintain)
+
+2. **✅ Triggers handle syncing automatically**
+
+   - When user signs up → profile created with role='customer'
+   - When user email/metadata changes → profile updated
+   - No manual syncing needed!
+
+3. **✅ To change permissions, update profiles table**
+
+   ```sql
+   UPDATE profiles SET role = 'admin' WHERE email = 'user@example.com';
+   ```
+
+4. **✅ Default role is always 'customer'**
+   - All new signups get role='customer'
+   - Manually promote to admin as needed
+
+#### Files Updated for This System
+
+- `src/lib/auth/admin.ts` - Checks `profiles.role`
+- `src/components/layout/UserDropdown.tsx` - Uses `profile?.role`
+- `src/app/profile/page.tsx` - Checks `profile?.role`
+- `src/lib/auth/AuthContext.tsx` - Creates profiles with role='customer'
+- `database-triggers-fix.sql` - Trigger setup script
 
 ---
 
 ### 2. **Product Catalog**
 
 #### Product Listing
+
 - Grid/list view toggle
 - Filtering by category, price, color, size
 - Sorting options
@@ -215,6 +438,7 @@ const { user } = useAuth()
 **Code Location:** `src/app/products/page.tsx`
 
 **Key Functions:**
+
 ```typescript
 // Fetch all products
 fetchProducts(): Promise<Product[]>
@@ -229,6 +453,7 @@ sortBy('price-asc' | 'price-desc' | 'newest')
 ```
 
 #### Product Detail Page
+
 - Image gallery with zoom
 - Size & color selection
 - Stock availability
@@ -243,6 +468,7 @@ sortBy('price-asc' | 'price-desc' | 'newest')
 ### 3. **Shopping Cart**
 
 #### Cart Management
+
 - Add/remove items
 - Update quantities
 - Persistent storage (localStorage)
@@ -252,6 +478,7 @@ sortBy('price-asc' | 'price-desc' | 'newest')
 **Code Location:** `src/contexts/CartContext.tsx`
 
 **Key Functions:**
+
 ```typescript
 // Add item to cart
 addItem(product: Product, quantity: number, selectedSize?: string)
@@ -270,6 +497,7 @@ const { subtotal, tax, shipping, total } = useCart()
 ```
 
 **State Structure:**
+
 ```typescript
 interface CartItem {
   id: string;
@@ -285,6 +513,7 @@ interface CartItem {
 ### 4. **Checkout Process**
 
 #### Payment Flow
+
 1. **Cart Review** - Show items, calculate totals
 2. **Shipping Info** - Collect delivery address
 3. **Payment** - Stripe payment form
@@ -294,6 +523,7 @@ interface CartItem {
 **Code Location:** `src/app/checkout/page.tsx`
 
 **Key Functions:**
+
 ```typescript
 // Create payment intent
 createPaymentIntent(amount, currency): Promise<PaymentIntent>
@@ -306,6 +536,7 @@ createOrder(orderData): Promise<Order>
 ```
 
 **Stripe Integration:**
+
 - Uses Payment Intents API
 - Supports 3D Secure (SCA)
 - Test card: 4242 4242 4242 4242
@@ -316,6 +547,7 @@ createOrder(orderData): Promise<Order>
 ### 5. **Currency System**
 
 #### Multi-Currency Support
+
 - 5 currencies: INR, USD, EUR, GBP, AUD
 - Real-time conversion
 - Persistent selection
@@ -324,6 +556,7 @@ createOrder(orderData): Promise<Order>
 **Code Location:** `src/contexts/CurrencyContext.tsx`
 
 **Conversion Rates (Base: INR):**
+
 ```typescript
 INR: 1.0     (₹)
 USD: 83.0    ($)
@@ -333,18 +566,19 @@ AUD: 54.5    (A$)
 ```
 
 **Key Functions:**
+
 ```typescript
 // Get currency
-const { currency, symbol } = useCurrency()
+const { currency, symbol } = useCurrency();
 
 // Change currency
-setCurrency('USD')
+setCurrency("USD");
 
 // Format price
-formatPrice(1000) // "₹1,000.00"
+formatPrice(1000); // "₹1,000.00"
 
 // Convert price
-convertPrice(1000, 'USD') // "$12.05"
+convertPrice(1000, "USD"); // "$12.05"
 ```
 
 ---
@@ -352,6 +586,7 @@ convertPrice(1000, 'USD') // "$12.05"
 ### 6. **Order Management**
 
 #### Order History
+
 - View all orders
 - Order status tracking
 - Payment status
@@ -361,6 +596,7 @@ convertPrice(1000, 'USD') // "$12.05"
 **Code Location:** `src/app/profile/orders/page.tsx`
 
 **Order States:**
+
 - `pending` - Order placed
 - `processing` - Payment confirmed
 - `shipped` - Out for delivery
@@ -368,6 +604,7 @@ convertPrice(1000, 'USD') // "$12.05"
 - `cancelled` - Cancelled by user/admin
 
 **Key Functions:**
+
 ```typescript
 // Fetch user orders
 fetchOrders(): Promise<Order[]>
@@ -384,6 +621,7 @@ updateOrderStatus(orderId, status): Promise<Order>
 ### 7. **User Profile**
 
 #### Profile Management
+
 - Update personal info
 - Change password
 - Upload avatar
@@ -393,12 +631,14 @@ updateOrderStatus(orderId, status): Promise<Order>
 **Code Location:** `src/app/profile/page.tsx`
 
 **Tabs:**
+
 1. **Overview** - Stats and quick access
 2. **Orders** - Order history
 3. **Addresses** - Shipping addresses
 4. **Settings** - Account settings
 
 **Key Functions:**
+
 ```typescript
 // Update profile
 updateProfile(data): Promise<Profile>
@@ -414,22 +654,50 @@ addAddress(address): Promise<Address>
 
 ### 8. **Admin Features**
 
-#### Admin Identification
-- Role stored in `auth.users.raw_user_meta_data`
-- Accessed via JWT custom claims
-- RLS policies for data access
+#### Admin Identification ✅ SIMPLIFIED
+
+**Source of Truth: `profiles.role`**
+
+- Custom user role stored ONLY in `profiles.role` table
+- Values: `'customer'` or `'admin'`
+- Easy to query and update via SQL
+- No JWT parsing or metadata complexity
 
 **Admin Capabilities:**
+
 - View all orders
 - View all users
 - Manage products (future)
 - View analytics (future)
 
-**Code Location:** `src/components/layout/UserDropdown.tsx`
+**Code Location:** `src/lib/auth/admin.ts`, `src/components/layout/UserDropdown.tsx`
 
-**Check if admin:**
+**✅ Check if admin (CORRECT way):**
+
 ```typescript
-const isAdmin = user?.user_metadata?.role === 'admin'
+// Fetch from profiles table
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("role")
+  .eq("id", user.id)
+  .single();
+
+const isAdmin = profile?.role === "admin";
+```
+
+**❌ Wrong ways (DON'T DO THIS):**
+
+```typescript
+const isAdmin = user?.role === "admin"; // ❌ This is always 'authenticated'
+const isAdmin = user?.user_metadata?.role === "admin"; // ❌ Hard to maintain
+```
+
+**Make user admin:**
+
+```sql
+UPDATE profiles
+SET role = 'admin'
+WHERE email = 'user@example.com';
 ```
 
 ---
@@ -437,6 +705,7 @@ const isAdmin = user?.user_metadata?.role === 'admin'
 ## 🔐 Authentication Flow
 
 ### 1. Signup Flow
+
 ```
 User enters email/password
     ↓
@@ -452,6 +721,7 @@ User redirected to homepage
 ```
 
 ### 2. Login Flow
+
 ```
 User enters credentials
     ↓
@@ -466,7 +736,43 @@ Profile fetched from database
 User redirected to dashboard
 ```
 
-### 3. Session Management
+### 3. Password Reset Flow ✅ NEW
+
+```
+User clicks "Forgot password?" on login page
+    ↓
+Enters email address
+    ↓
+Supabase sends reset email with secure token
+    ↓
+User clicks link in email
+    ↓
+Lands on /reset-password page (authenticated)
+    ↓
+Enters new password twice
+    ↓
+Password updated in Supabase
+    ↓
+Auto-redirects to profile page
+```
+
+**Features:**
+
+- Secure token-based reset (1 hour expiry)
+- Email validation
+- Password confirmation required
+- Min 6 character password
+- Success/error messaging
+- Auto-redirect after success
+
+**Pages:**
+
+- `/login` - Contains "Forgot password?" link
+- `/forgot-password` - Request reset link
+- `/reset-password` - Set new password
+
+### 4. Session Management
+
 ```
 Middleware checks auth cookie
     ↓
@@ -484,6 +790,7 @@ Auto-refresh before expiry
 See [DATABASE_DOCUMENTATION.md](./DATABASE_DOCUMENTATION.md) for complete database details.
 
 ### Core Tables:
+
 - `auth.users` - Supabase managed auth
 - `profiles` - User profiles
 - `products` - Product catalog
@@ -501,9 +808,11 @@ See [DATABASE_DOCUMENTATION.md](./DATABASE_DOCUMENTATION.md) for complete databa
 ### Layout Components
 
 #### Header Component
+
 **Location:** `src/components/layout/Header.tsx`
 
 **Features:**
+
 - Sticky navigation
 - Search bar
 - Cart icon with count
@@ -514,14 +823,17 @@ See [DATABASE_DOCUMENTATION.md](./DATABASE_DOCUMENTATION.md) for complete databa
 **Props:** None (uses global state)
 
 #### Logo Component
+
 **Location:** `src/components/layout/Logo.tsx`
 
 **Features:**
+
 - Animated gradient text
 - Link to homepage
 - Consistent branding
 
 **Props:**
+
 ```typescript
 interface LogoProps {
   className?: string;
@@ -532,9 +844,11 @@ interface LogoProps {
 ### Product Components
 
 #### ProductCard
+
 **Location:** `src/components/products/ProductCard.tsx`
 
 **Features:**
+
 - Product image
 - Title and price
 - Quick add to cart
@@ -542,17 +856,20 @@ interface LogoProps {
 - Hover effects
 
 **Props:**
+
 ```typescript
 interface ProductCardProps {
   product: Product;
-  layout?: 'grid' | 'list';
+  layout?: "grid" | "list";
 }
 ```
 
 #### ProductFilters
+
 **Location:** `src/components/products/ProductFilters.tsx`
 
 **Features:**
+
 - Category filter
 - Price range slider
 - Color swatches
@@ -560,6 +877,7 @@ interface ProductCardProps {
 - Reset filters
 
 **Props:**
+
 ```typescript
 interface ProductFiltersProps {
   filters: FilterState;
@@ -574,9 +892,11 @@ interface ProductFiltersProps {
 ### Global State (Contexts)
 
 #### CartContext
+
 **Purpose:** Manage shopping cart state
 
 **Provides:**
+
 ```typescript
 {
   items: CartItem[];
@@ -590,9 +910,11 @@ interface ProductFiltersProps {
 ```
 
 #### CurrencyContext
+
 **Purpose:** Manage currency selection
 
 **Provides:**
+
 ```typescript
 {
   currency: CurrencyCode;
@@ -605,9 +927,11 @@ interface ProductFiltersProps {
 ```
 
 #### AuthContext
+
 **Purpose:** Manage authentication state
 
 **Provides:**
+
 ```typescript
 {
   user: User | null;
@@ -624,6 +948,7 @@ interface ProductFiltersProps {
 ## 📦 Deployment
 
 ### Environment Variables
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
@@ -634,6 +959,7 @@ NEXT_PUBLIC_SITE_URL=your_site_url
 ```
 
 ### Build Commands
+
 ```bash
 # Development
 npm run dev
@@ -653,12 +979,14 @@ npm test
 ## 🧪 Testing
 
 ### Test Coverage
+
 - Unit tests for utilities
 - Component tests
 - Integration tests for checkout
 - E2E tests (future)
 
 ### Running Tests
+
 ```bash
 # Run all tests
 npm test

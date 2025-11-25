@@ -39,11 +39,13 @@
 ### 🎯 Major Achievement: Simplified Role Architecture
 
 **Problem Identified:**
+
 - Confusion between Supabase's `auth.users.role` (always 'authenticated') and custom app roles
 - Complex user_metadata parsing across codebase
 - No clear single source of truth for user roles
 
 **Solution Implemented:**
+
 - ✅ **Adopted `profiles.role` as SINGLE SOURCE OF TRUTH**
 - ✅ **Eliminated complex user_metadata.role parsing**
 - ✅ **Simple, queryable, maintainable approach**
@@ -51,38 +53,42 @@
 ### Code Changes Made:
 
 #### 1. **src/lib/auth/admin.ts**
+
 ```typescript
 // BEFORE: Complex metadata parsing
-const isAdmin = user?.user_metadata?.role === 'admin'
+const isAdmin = user?.user_metadata?.role === "admin";
 
 // AFTER: Simple profiles.role check
 const { data: profile } = await supabase
-  .from('profiles')
-  .select('role')
-  .eq('id', user.id)
+  .from("profiles")
+  .select("role")
+  .eq("id", user.id)
   .single();
-if (profile?.role !== 'admin') redirect('/');
+if (profile?.role !== "admin") redirect("/");
 ```
 
 #### 2. **src/lib/auth/AuthContext.tsx**
+
 ```typescript
 // Added explicit role='customer' on signup
-await supabase.from('profiles').insert({
+await supabase.from("profiles").insert({
   id: data.user.id,
   email: data.user.email,
   full_name: fullName,
   phone: phone,
-  role: 'customer', // ← Explicit default role
+  role: "customer", // ← Explicit default role
 });
 ```
 
 #### 3. **src/app/profile/page.tsx**
+
 ```typescript
 // BEFORE: user?.user_metadata?.role === 'admin'
 // AFTER: profile?.role === 'admin'
 ```
 
 #### 4. **database-triggers-fix.sql** (Created)
+
 - Automatic profile creation on signup
 - Syncs auth.users changes to profiles
 - Adds missing columns (email, role, updated_at)
@@ -110,13 +116,14 @@ await supabase.from('profiles').insert({
   - Run `database-triggers-fix.sql` in Supabase SQL Editor
   - Adds missing columns: email, role, updated_at
   - Creates automatic triggers
-  
 - [ ] **Set admin user**
+
   ```sql
   UPDATE profiles SET role = 'admin' WHERE email = 'pooven0708@gmail.com';
   ```
 
 - [ ] **Test role system**
+
   - Login and verify full name displays
   - Verify admin badge shows
   - Test new user signup with auto-profile creation
@@ -225,18 +232,21 @@ await supabase.from('profiles').insert({
 ### Current Architecture:
 
 **Authentication & Roles:**
+
 - `auth.users.role` - Always 'authenticated' (Supabase internal)
 - `profiles.role` - 'customer' or 'admin' (SOURCE OF TRUTH) ✅
 - Automatic profile creation via triggers
 - Automatic sync from auth.users to profiles
 
 **Payment Flow:**
+
 - Stripe test mode active
 - Webhook listening locally
 - Idempotency keys prevent duplicates
 - Orders created on payment success
 
 **Database Structure:**
+
 ```sql
 profiles table:
 ├── id (uuid, PK, references auth.users)

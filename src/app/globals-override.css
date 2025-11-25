@@ -1,0 +1,33 @@
+/* Remove focus outline from dropdown triggers */
+[data-slot="dropdown-menu-trigger"]:focus-visible,
+[data-slot="dropdown-menu-trigger"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove focus outline from buttons with user avatar */
+button[aria-label="User menu"]:focus-visible,
+button[aria-label="User menu"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Cursor pointer for all clickable elements */
+button,
+a,
+[role="button"],
+[type="button"],
+[type="submit"],
+[role="link"],
+select,
+input[type="checkbox"],
+input[type="radio"],
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+/* Cursor pointer for dropdown menu items */
+[data-slot="dropdown-menu-item"],
+[role="menuitem"] {
+  cursor: pointer !important;
+}
