@@ -57,10 +57,17 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (error: any) {
-    console.error("Webhook error:", error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Webhook error:", error.message);
+      return NextResponse.json(
+        { error: error.message || "Webhook handler failed" },
+        { status: 400 }
+      );
+    }
+    console.error("Webhook error: Unknown error occurred");
     return NextResponse.json(
-      { error: error.message || "Webhook handler failed" },
+      { error: "Webhook handler failed" },
       { status: 400 }
     );
   }

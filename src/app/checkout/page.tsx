@@ -30,13 +30,23 @@ import { createClient } from "@/lib/supabase/client";
 function CheckoutForm({
   formData,
   total,
+  subtotal,
+  shipping,
+  tax,
   currency,
+  items,
   onSuccess,
+  validateForm,
 }: {
   formData: any;
   total: number;
+  subtotal: number;
+  shipping: number;
+  tax: number;
   currency: string;
+  items: any[];
   onSuccess: (orderId: string) => void;
+  validateForm: () => boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -50,12 +60,20 @@ function CheckoutForm({
       return;
     }
 
+    // Validate form data before payment
+    if (!validateForm()) {
+      toast.error("Please fix the errors in the form");
+      return;
+    }
+
     setLoading(true);
 
     try {
       // Submit form to validate
       const { error: submitError } = await elements.submit();
       if (submitError) {
+        setLoading(false);
+        toast.error(submitError.message);
         throw new Error(submitError.message);
       }
 
@@ -84,6 +102,7 @@ function CheckoutForm({
 
       if (error) {
         setLoading(false);
+        toast.error(error.message || "Payment failed");
         throw new Error(error.message);
       }
 
@@ -93,97 +112,167 @@ function CheckoutForm({
           paymentIntent.id
         );
 
-        // Payment successful - create order in database
-        const supabase = createClient();
+        try {
+          // Payment successful - create order in database
+          const supabase = createClient();
 
-        // Get current user (may be null for guests)
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
+          // Get current user (may be null for guests)
+          const {
+            data: { user: currentUser },
+          } = await supabase.auth.getUser();
 
-        const userId = currentUser?.id || null;
-        const isGuest = !userId;
+          const userId = currentUser?.id || null;
+          const isGuest = !userId;
 
-        // Generate guest ID for tracking
-        const guestId = isGuest
-          ? `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-          : null;
+          // Generate guest ID for tracking
+          const guestId = isGuest
+            ? `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+            : null;
 
-        console.log("🔍 Debug - Is Guest:", isGuest);
-        console.log("🔍 Debug - User ID:", userId);
-        console.log("🔍 Debug - Guest ID:", guestId);
-        console.log("🔍 Debug - Form Data:", formData);
+          console.log("🔍 Debug - Is Guest:", isGuest);
+          console.log("🔍 Debug - User ID:", userId);
+          console.log("🔍 Debug - Guest ID:", guestId);
+          console.log("🔍 Debug - Form Data:", formData);
 
-        const orderData = {
-          user_id: userId,
-          guest_id: guestId,
-          guest_email: isGuest ? formData.email : null,
-          total_amount: total,
-          currency: currency,
-          payment_status: "pending", // Will be updated to 'paid' by webhook
-          payment_intent_id: paymentIntent.id,
-          status: "pending", // Will be updated to 'processing' by webhook
-          shipping_address: {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            address: formData.address,
-            city: formData.city,
-            state: formData.state,
-            zipCode: formData.zipCode,
-            country: formData.country,
-            phone: formData.phone,
-          },
-          email: formData.email,
-        };
+          // Generate unique order number
+          const orderNumber = `ORD-${Date.now()}-${Math.random()
+            .toString(36)
+            .substr(2, 9)
+            .toUpperCase()}`;
 
-        console.log("📦 Inserting order:", JSON.stringify(orderData, null, 2));
+          const orderData = {
+            user_id: userId,
+            guest_id: guestId,
+            guest_email: isGuest ? formData.email : null,
+            email: formData.email, // Database has 'email' field
+            order_number: orderNumber, // REQUIRED field
+            subtotal: subtotal, // REQUIRED field
+            shipping_cost: shipping, // Match schema
+            tax: tax, // Match schema
+            total_amount: total, // Database uses total_amount NOT total!
+            currency: currency,
+            payment_status: "paid", // Set to paid immediately
+            payment_intent_id: paymentIntent.id, // Database uses payment_intent_id NOT stripe_payment_intent_id!
+            status: "processing", // Set to processing immediately
+            customer_name: `${formData.firstName} ${formData.lastName}`,
+            customer_email: formData.email,
+            customer_phone: formData.phone,
+            shipping_name: `${formData.firstName} ${formData.lastName}`,
+            shipping_phone: formData.phone,
+            shipping_address: JSON.stringify({
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              address: formData.address,
+              city: formData.city,
+              state: formData.state,
+              zipCode: formData.zipCode,
+              country: formData.country,
+              phone: formData.phone,
+            }),
+          };
 
-        const { data: order, error: orderError } = await supabase
-          .from("orders")
-          .insert(orderData)
-          .select()
-          .single();
+          console.log(
+            "📦 Inserting order:",
+            JSON.stringify(orderData, null, 2)
+          );
 
-        if (orderError) {
-          console.error("❌ Order creation error:", orderError);
-          console.error("❌ Error code:", orderError.code);
-          console.error("❌ Error message:", orderError.message);
-          console.error("❌ Error details:", orderError.details);
-          console.error("❌ Error hint:", orderError.hint);
+          const { data: order, error: orderError } = await supabase
+            .from("orders")
+            .insert(orderData)
+            .select()
+            .single();
 
-          // Check if it's a missing column error
-          if (
-            orderError.message?.includes("guest_email") ||
-            orderError.message?.includes("guest_id")
-          ) {
-            toast.error(
-              "Database not configured for guest orders. Please run setup-guest-orders.sql in Supabase."
-            );
-          } else {
-            toast.error(
-              "Payment succeeded but failed to create order. Please contact support with reference: " +
-                paymentIntent.id
-            );
+          if (orderError) {
+            console.error("❌ Order creation error:", orderError);
+            console.error("❌ Error code:", orderError.code);
+            console.error("❌ Error message:", orderError.message);
+            console.error("❌ Error details:", orderError.details);
+            console.error("❌ Error hint:", orderError.hint);
+
+            // Don't keep loading spinner forever
+            setLoading(false);
+
+            // Check if it's a missing column error
+            if (
+              orderError.message?.includes("guest_email") ||
+              orderError.message?.includes("guest_id") ||
+              orderError.message?.includes("customer_name") ||
+              orderError.message?.includes("customer_email")
+            ) {
+              toast.error(
+                "Database not configured properly. Please contact support.",
+                { duration: 5000 }
+              );
+            } else {
+              toast.error(
+                "Payment succeeded but failed to create order. Please contact support with reference: " +
+                  paymentIntent.id,
+                { duration: 5000 }
+              );
+            }
+            return;
           }
-          setLoading(false);
-          return;
-        }
 
-        console.log("✅ Order created successfully:", order.id);
-        toast.success("Payment successful! Redirecting...");
+          console.log("✅ Order created successfully:", order.id);
 
-        // Small delay to ensure state updates
-        setTimeout(() => {
+          // Create order items
+          console.log("📦 Creating order items for", items.length, "products");
+          const orderItems = items.map((item) => ({
+            order_id: order.id,
+            product_id: item.product.id,
+            quantity: item.quantity,
+            price: item.product.price, // Database uses 'price' NOT 'unit_price'!
+            subtotal: item.product.price * item.quantity, // Database uses 'subtotal' NOT 'total_price'!
+          }));
+
+          const { error: orderItemsError } = await supabase
+            .from("order_items")
+            .insert(orderItems);
+
+          if (orderItemsError) {
+            console.error("⚠️ Order items creation error:", orderItemsError);
+            console.error(
+              "⚠️ Full error object:",
+              JSON.stringify(orderItemsError, null, 2)
+            );
+            console.error("⚠️ Error message:", orderItemsError.message);
+            console.error("⚠️ Error code:", orderItemsError.code);
+            console.error("⚠️ Error details:", orderItemsError.details);
+            console.error("⚠️ Error hint:", orderItemsError.hint);
+            console.error(
+              "⚠️ Attempted to insert:",
+              JSON.stringify(orderItems, null, 2)
+            );
+            // Don't fail the whole order if items fail - order is already created
+            toast.warning("Order created but some details may be missing");
+          } else {
+            console.log("✅ Order items created successfully");
+          }
+
+          // Immediately redirect - don't wait
           onSuccess(order.id);
-        }, 500);
+        } catch (orderCreationError) {
+          console.error(
+            "❌ Exception during order creation:",
+            orderCreationError
+          );
+          setLoading(false);
+          toast.error(
+            "Payment succeeded but order creation failed. Reference: " +
+              paymentIntent.id,
+            { duration: 5000 }
+          );
+        }
       } else {
         console.log("⚠️ Payment status:", paymentIntent?.status);
         toast.warning("Payment is being processed...");
         setLoading(false);
       }
-    } catch (error: any) {
-      console.error("Payment error:", error);
-      toast.error(error.message || "Payment failed");
+    } catch (error) {
+      console.error("❌ Payment error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Payment failed";
+      toast.error(errorMessage);
       setLoading(false);
     }
   };
@@ -259,6 +348,9 @@ export default function CheckoutPage() {
     country: "India",
     phone: "",
   });
+
+  // Form validation errors state
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Auto-fill from profile
   useEffect(() => {
@@ -348,28 +440,100 @@ export default function CheckoutPage() {
   }, [totalItems, clientSecret, isInitializing, initializePayment]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
-  };
 
-  const handlePaymentSuccess = (orderId: string) => {
-    console.log("🎉 handlePaymentSuccess called with orderId:", orderId);
-    try {
-      clearCart();
-      console.log("✅ Cart cleared");
-
-      const successUrl = `/checkout/success?order_id=${orderId}`;
-      console.log("🔄 Redirecting to:", successUrl);
-
-      router.push(successUrl);
-      toast.success("Order placed successfully!");
-    } catch (error) {
-      console.error("❌ Error in handlePaymentSuccess:", error);
-      toast.error("Redirect failed. Order ID: " + orderId);
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
     }
   };
+
+  // Validate form fields
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Email validation
+    if (!formData.email || !formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!formData.email.includes("@") || !formData.email.includes(".")) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    // Name validation
+    if (!formData.firstName || !formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+    if (!formData.lastName || !formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    }
+
+    // Phone validation
+    if (!formData.phone || !formData.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    } else if (formData.phone.replace(/\D/g, "").length < 10) {
+      newErrors.phone = "Please enter a valid phone number";
+    }
+
+    // Address validation
+    if (!formData.address || !formData.address.trim()) {
+      newErrors.address = "Street address is required";
+    }
+    if (!formData.city || !formData.city.trim()) {
+      newErrors.city = "City is required";
+    }
+    if (!formData.state || !formData.state.trim()) {
+      newErrors.state = "State is required";
+    }
+    if (!formData.zipCode || !formData.zipCode.trim()) {
+      newErrors.zipCode = "ZIP code is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePaymentSuccess = useCallback(
+    (orderId: string) => {
+      console.log("🎉 handlePaymentSuccess called with orderId:", orderId);
+
+      if (!orderId) {
+        console.error("❌ No orderId provided to handlePaymentSuccess");
+        toast.error("Order ID missing. Please contact support.");
+        return;
+      }
+
+      try {
+        // Clear cart first
+        clearCart();
+        console.log("✅ Cart cleared");
+
+        // Show success message
+        toast.success("Order placed successfully!");
+
+        // Redirect immediately
+        const successUrl = `/checkout/success?order_id=${orderId}`;
+        console.log("🔄 Redirecting to:", successUrl);
+
+        router.push(successUrl);
+      } catch (error) {
+        console.error("❌ Error in handlePaymentSuccess:", error);
+        toast.error("Redirect failed. Your order ID: " + orderId);
+
+        // Try alternative navigation
+        window.location.href = `/checkout/success?order_id=${orderId}`;
+      }
+    },
+    [clearCart, router]
+  );
 
   // Empty cart check
   if (totalItems === 0) {
@@ -417,8 +581,15 @@ export default function CheckoutPage() {
                     onChange={handleInputChange}
                     required
                     placeholder="your@email.com"
-                    className="mt-1"
+                    className={`mt-1 ${
+                      errors.email
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }`}
                   />
+                  {errors.email && (
+                    <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -430,8 +601,17 @@ export default function CheckoutPage() {
                       onChange={handleInputChange}
                       required
                       placeholder="John"
-                      className="mt-1"
+                      className={`mt-1 ${
+                        errors.firstName
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : ""
+                      }`}
                     />
+                    {errors.firstName && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.firstName}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="lastName">Last Name *</Label>
@@ -442,8 +622,17 @@ export default function CheckoutPage() {
                       onChange={handleInputChange}
                       required
                       placeholder="Doe"
-                      className="mt-1"
+                      className={`mt-1 ${
+                        errors.lastName
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : ""
+                      }`}
                     />
+                    {errors.lastName && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.lastName}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -456,8 +645,15 @@ export default function CheckoutPage() {
                     onChange={handleInputChange}
                     required
                     placeholder="+91 98765 43210"
-                    className="mt-1"
+                    className={`mt-1 ${
+                      errors.phone
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }`}
                   />
+                  {errors.phone && (
+                    <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
+                  )}
                 </div>
               </div>
             </Card>
@@ -475,8 +671,17 @@ export default function CheckoutPage() {
                     onChange={handleInputChange}
                     required
                     placeholder="123 Main Street"
-                    className="mt-1"
+                    className={`mt-1 ${
+                      errors.address
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }`}
                   />
+                  {errors.address && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.address}
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -488,8 +693,15 @@ export default function CheckoutPage() {
                       onChange={handleInputChange}
                       required
                       placeholder="Mumbai"
-                      className="mt-1"
+                      className={`mt-1 ${
+                        errors.city
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : ""
+                      }`}
                     />
+                    {errors.city && (
+                      <p className="text-sm text-red-500 mt-1">{errors.city}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="state">State *</Label>
@@ -500,8 +712,17 @@ export default function CheckoutPage() {
                       onChange={handleInputChange}
                       required
                       placeholder="Maharashtra"
-                      className="mt-1"
+                      className={`mt-1 ${
+                        errors.state
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : ""
+                      }`}
                     />
+                    {errors.state && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.state}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -514,8 +735,17 @@ export default function CheckoutPage() {
                       onChange={handleInputChange}
                       required
                       placeholder="400001"
-                      className="mt-1"
+                      className={`mt-1 ${
+                        errors.zipCode
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : ""
+                      }`}
                     />
+                    {errors.zipCode && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.zipCode}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="country">Country *</Label>
@@ -556,8 +786,13 @@ export default function CheckoutPage() {
                 <CheckoutForm
                   formData={formData}
                   total={total}
+                  subtotal={subtotal}
+                  shipping={shipping}
+                  tax={tax}
                   currency={currency}
+                  items={items}
                   onSuccess={handlePaymentSuccess}
+                  validateForm={validateForm}
                 />
               </Elements>
             )}

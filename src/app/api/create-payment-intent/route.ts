@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
+import { createPaymentIntentSchema } from "@/lib/validations/api-schemas";
+import { ZodError } from "zod";
 
 // Mark this route as dynamic to prevent static generation during build
 export const dynamic = "force-dynamic";
@@ -16,21 +18,20 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const { amount, currency = "inr", metadata } = await request.json();
+    const body = await request.json();
 
-    // Validate amount
-    if (!amount || amount < 50) {
-      // Minimum 50 cents/paise
-      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
-    }
+    // Validate input with Zod
+    const validated = createPaymentIntentSchema.parse(body);
 
     // Generate idempotency key to prevent duplicate charges
     // This ensures that if the same request is made twice, only one payment intent is created
-    const idempotencyKey = `${user?.id || "guest"}_${amount}_${Date.now()}`;
+    const idempotencyKey = `${user?.id || "guest"}_${
+      validated.amount
+    }_${Date.now()}`;
 
     console.log("💳 Creating payment intent:", {
-      amount,
-      currency,
+      amount: validated.amount,
+      currency: validated.currency,
       userId: user?.id || "guest",
       idempotencyKey,
     });
@@ -38,14 +39,14 @@ export async function POST(request: NextRequest) {
     // Create payment intent with idempotency key
     const paymentIntent = await stripe.paymentIntents.create(
       {
-        amount: Math.round(amount), // Stripe expects amount in smallest currency unit (cents/paise)
-        currency: currency.toLowerCase(),
+        amount: Math.round(validated.amount), // Stripe expects amount in smallest currency unit (cents/paise)
+        currency: validated.currency.toLowerCase(),
         automatic_payment_methods: {
           enabled: true,
         },
         metadata: {
           userId: user?.id || "guest",
-          ...metadata,
+          ...validated.metadata,
         },
       },
       {
@@ -59,10 +60,25 @@ export async function POST(request: NextRequest) {
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
     });
-  } catch (error: any) {
-    console.error("❌ Create payment intent error:", error);
+  } catch (error: unknown) {
+    // Handle Zod validation errors
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: "Invalid payload", details: error.issues },
+        { status: 400 }
+      );
+    }
+
+    if (error instanceof Error) {
+      console.error("❌ Create payment intent error:", error.message);
+      return NextResponse.json(
+        { error: error.message || "Failed to create payment intent" },
+        { status: 500 }
+      );
+    }
+    console.error("❌ Create payment intent error: Unknown error");
     return NextResponse.json(
-      { error: error.message || "Failed to create payment intent" },
+      { error: "Failed to create payment intent" },
       { status: 500 }
     );
   }

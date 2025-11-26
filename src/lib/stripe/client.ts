@@ -1,4 +1,4 @@
-import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe } from "@stripe/stripe-js";
 
 let stripePromise: Promise<Stripe | null>;
 
@@ -15,13 +15,20 @@ export function getStripe(): Promise<Stripe | null> {
 
 /**
  * Create payment intent and get client secret
+ * @param amount - Amount in smallest currency unit (cents/paise)
+ * @param currency - Currency code (default: 'inr')
+ * @param metadata - Optional metadata to attach to payment intent
  */
-export async function createPaymentIntent(amount: number, currency: string = 'inr', metadata?: any) {
+export async function createPaymentIntent(
+  amount: number,
+  currency: string = "inr",
+  metadata?: Record<string, string | number>
+) {
   try {
-    const response = await fetch('/api/create-payment-intent', {
-      method: 'POST',
+    const response = await fetch("/api/create-payment-intent", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         amount,
@@ -32,7 +39,7 @@ export async function createPaymentIntent(amount: number, currency: string = 'in
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to create payment intent');
+      throw new Error(error.error || "Failed to create payment intent");
     }
 
     const data = await response.json();
@@ -40,9 +47,12 @@ export async function createPaymentIntent(amount: number, currency: string = 'in
       clientSecret: data.clientSecret,
       paymentIntentId: data.paymentIntentId,
     };
-  } catch (error: any) {
-    console.error('Create payment intent error:', error);
-    throw error;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Create payment intent error:", error.message);
+      throw error;
+    }
+    throw new Error("An unknown error occurred while creating payment intent");
   }
 }
 
@@ -52,9 +62,9 @@ export async function createPaymentIntent(amount: number, currency: string = 'in
 export function formatStripeAmount(amount: number, currency: string): string {
   const divisor = getAmountDivisor(currency);
   const value = amount / divisor;
-  
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
     currency: currency.toUpperCase(),
   }).format(value);
 }
@@ -71,6 +81,6 @@ export function toStripeAmount(amount: number, currency: string): number {
  * Get divisor for currency (100 for USD/EUR/INR, 1 for JPY)
  */
 function getAmountDivisor(currency: string): number {
-  const zeroCurrencies = ['jpy', 'krw'];
+  const zeroCurrencies = ["jpy", "krw"];
   return zeroCurrencies.includes(currency.toLowerCase()) ? 1 : 100;
 }

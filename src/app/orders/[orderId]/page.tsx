@@ -4,15 +4,17 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, Loader2, ArrowLeft } from "lucide-react";
+import { Package, Loader2, ArrowLeft, Download, Share2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { format } from "date-fns";
 import Image from "next/image";
+import { toast } from "sonner";
 
 interface OrderItem {
   id: string;
   quantity: number;
-  price_at_time: number;
+  price: number; // Database uses 'price' not 'price_at_time'
+  subtotal: number; // Database uses 'subtotal'
   products: {
     id: string;
     name: string;
@@ -62,7 +64,8 @@ export default function OrderDetailPage() {
           order_items (
             id,
             quantity,
-            price_at_time,
+            price,
+            subtotal,
             products (
               id,
               name,
@@ -93,6 +96,207 @@ export default function OrderDetailPage() {
       fetchOrder();
     }
   }, [orderId, fetchOrder]);
+
+  const downloadReceipt = () => {
+    if (!order) return;
+
+    // Create receipt HTML content
+    const receiptHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Order Receipt - ${order.order_number}</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; border-bottom: 2px solid #C5A572; padding-bottom: 20px; margin-bottom: 20px; }
+    .header h1 { color: #C5A572; margin: 0; }
+    .section { margin-bottom: 30px; }
+    .section-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #333; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .info-item { padding: 8px; background: #f9f9f9; border-radius: 4px; }
+    .info-label { font-weight: bold; color: #666; font-size: 12px; }
+    .info-value { color: #333; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { background: #C5A572; color: white; padding: 12px; text-align: left; }
+    td { padding: 12px; border-bottom: 1px solid #ddd; }
+    .total-row { font-weight: bold; font-size: 18px; background: #f9f9f9; }
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+    .status-processing { background: #E3F2FD; color: #1976D2; }
+    .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🐴 FoalRider</h1>
+    <p>Premium Equestrian Apparel</p>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">Order Receipt</div>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Order Number</div>
+        <div class="info-value">${order.order_number}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Order Date</div>
+        <div class="info-value">${format(
+          new Date(order.created_at),
+          "MMMM dd, yyyy"
+        )}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Status</div>
+        <div class="info-value">
+          <span class="status-badge status-processing">${order.status.toUpperCase()}</span>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Payment Status</div>
+        <div class="info-value">${order.payment_status.toUpperCase()}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Customer Information</div>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Email</div>
+        <div class="info-value">${order.email}</div>
+      </div>
+      ${
+        order.shipping_address
+          ? `
+      <div class="info-item">
+        <div class="info-label">Shipping Address</div>
+        <div class="info-value">
+          ${
+            typeof order.shipping_address === "string"
+              ? JSON.parse(order.shipping_address).address
+              : order.shipping_address.line1
+          }<br>
+          ${
+            typeof order.shipping_address === "string"
+              ? JSON.parse(order.shipping_address).city
+              : order.shipping_address.city
+          }, 
+          ${
+            typeof order.shipping_address === "string"
+              ? JSON.parse(order.shipping_address).state
+              : order.shipping_address.state
+          } 
+          ${
+            typeof order.shipping_address === "string"
+              ? JSON.parse(order.shipping_address).zipCode
+              : order.shipping_address.postal_code
+          }
+        </div>
+      </div>
+      `
+          : ""
+      }
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Order Items</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th style="text-align: center;">Quantity</th>
+          <th style="text-align: right;">Unit Price</th>
+          <th style="text-align: right;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${order.order_items
+          .map(
+            (item) => `
+          <tr>
+            <td>${item.products.name}</td>
+            <td style="text-align: center;">${item.quantity}</td>
+            <td style="text-align: right;">${new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: order.currency || "INR",
+            }).format(item.price)}</td>
+            <td style="text-align: right;">${new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: order.currency || "INR",
+            }).format(item.subtotal)}</td>
+          </tr>
+        `
+          )
+          .join("")}
+        <tr class="total-row">
+          <td colspan="3" style="text-align: right;">Total Amount:</td>
+          <td style="text-align: right;">${new Intl.NumberFormat("en-IN", {
+            style: "currency",
+            currency: order.currency || "INR",
+          }).format(order.total_amount)}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <p>Thank you for shopping with FoalRider!</p>
+    <p>For any questions, please contact us at support@foalrider.com</p>
+  </div>
+</body>
+</html>
+    `;
+
+    // Create blob and download
+    const blob = new Blob([receiptHTML], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `FoalRider-Receipt-${order.order_number}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success("Receipt downloaded successfully!");
+  };
+
+  const shareReceipt = async () => {
+    if (!order) return;
+
+    const shareData = {
+      title: `Order Receipt - ${order.order_number}`,
+      text: `My order from FoalRider\nOrder Number: ${
+        order.order_number
+      }\nTotal: ${new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: order.currency || "INR",
+      }).format(order.total_amount)}`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast.success("Shared successfully!");
+      } else {
+        // Fallback: Copy link to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Order link copied to clipboard!");
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      // Fallback: Copy to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Order link copied to clipboard!");
+      } catch (clipboardError) {
+        toast.error("Failed to share order");
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -157,7 +361,7 @@ export default function OrderDetailPage() {
 
           {/* Order Header */}
           <Card className="p-6 mb-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
               <div>
                 <h1 className="text-2xl font-bold mb-2">Order Details</h1>
                 <p className="text-gray-600">Order #{order.order_number}</p>
@@ -184,6 +388,26 @@ export default function OrderDetailPage() {
                   {order.payment_status === "paid" ? "Paid" : "Pending Payment"}
                 </span>
               </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 pt-4 border-t">
+              <Button
+                onClick={downloadReceipt}
+                variant="outline"
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download Receipt
+              </Button>
+              <Button
+                onClick={shareReceipt}
+                variant="outline"
+                className="gap-2"
+              >
+                <Share2 className="h-4 w-4" />
+                Share Order
+              </Button>
             </div>
           </Card>
 
@@ -220,7 +444,7 @@ export default function OrderDetailPage() {
                       {new Intl.NumberFormat("en-IN", {
                         style: "currency",
                         currency: order.currency || "INR",
-                      }).format(item.price_at_time)}
+                      }).format(item.price)}
                     </p>
                   </div>
                   <div className="text-right">
@@ -228,7 +452,7 @@ export default function OrderDetailPage() {
                       {new Intl.NumberFormat("en-IN", {
                         style: "currency",
                         currency: order.currency || "INR",
-                      }).format(item.price_at_time * item.quantity)}
+                      }).format(item.subtotal)}
                     </p>
                   </div>
                 </div>

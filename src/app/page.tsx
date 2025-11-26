@@ -61,41 +61,17 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen pt-16">
-      {/* Hero Section */}
-      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#2E2E2E]/20 via-background to-[#C5A572]/10" />
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl mx-auto text-center space-y-8">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-              Premium Quality
-              <span className="block bg-gradient-to-r from-[#000000] to-[#C5A572] bg-clip-text text-transparent">
-                Textile Products
-              </span>
+      {/* Featured Products Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center space-y-4 mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+              Discover Our Collection
             </h1>
-
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Experience the finest quality pants and shirts, meticulously
-              crafted from premium fabrics. Where timeless style meets
-              exceptional comfort.
+            <p className="text-lg text-muted-foreground">
+              Premium quality textile products crafted with care
             </p>
-
-            <div className="flex gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90"
-                asChild
-              >
-                <Link href="/products?category=mens-wear">
-                  Explore Collection <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/products">Shop All Products</Link>
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-4">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
                   <Star
@@ -108,9 +84,6 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
-
-        {/* Decorative Elements */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
       </section>
 
       {/* Men's Premium Denim Jeans Section */}
