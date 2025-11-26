@@ -94,11 +94,12 @@ function getStatusColor(status: string): string {
 export default async function CustomerDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   await requireAdmin();
 
-  const customerData = await getCustomerDetails(params.id);
+  const { id } = await params;
+  const customerData = await getCustomerDetails(id);
 
   if (!customerData) {
     notFound();

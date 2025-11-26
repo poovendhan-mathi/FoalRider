@@ -24,6 +24,37 @@ export async function GET() {
       );
     }
 
+    // Fetch categories and merge
+    if (products && products.length > 0) {
+      const categoryIds = products
+        .filter((p) => p.category_id)
+        .map((p) => p.category_id);
+
+      if (categoryIds.length > 0) {
+        const { data: categories } = await supabase
+          .from("categories")
+          .select("id, name")
+          .in("id", categoryIds);
+
+        const categoryMap = new Map(
+          categories?.map((c) => [c.id, c.name]) || []
+        );
+
+        products.forEach((product) => {
+          if (product.category_id) {
+            (product as any).category_name =
+              categoryMap.get(product.category_id) || "Uncategorized";
+          } else {
+            (product as any).category_name = "Uncategorized";
+          }
+        });
+      } else {
+        products.forEach((product) => {
+          (product as any).category_name = "Uncategorized";
+        });
+      }
+    }
+
     return NextResponse.json({ products });
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -44,7 +75,7 @@ export async function POST(request: NextRequest) {
     await requireAdmin();
 
     const body = await request.json();
-    
+
     // Validate input with Zod
     const validated = createProductSchema.parse(body);
 

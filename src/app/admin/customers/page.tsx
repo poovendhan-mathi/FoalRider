@@ -91,26 +91,34 @@ function formatDate(dateString: string): string {
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
   await requireAdmin();
 
-  const page = Number(searchParams.page) || 1;
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
   const { customers, totalCount, totalPages, currentPage } = await getCustomers(
     page
   );
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Customers</h1>
-          <p className="text-gray-600">Manage your customer accounts</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Customers</h1>
+          <p className="text-sm sm:text-base text-gray-600">
+            Manage your customer accounts
+          </p>
         </div>
         <Link href="/admin">
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            size="sm"
+            className="sm:size-default w-full sm:w-auto"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </Button>
         </Link>
       </div>
@@ -135,10 +143,18 @@ export default async function CustomersPage({
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Orders</TableHead>
-                      <TableHead>Joined</TableHead>
+                      <TableHead className="hidden sm:table-cell">
+                        Email
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Phone
+                      </TableHead>
+                      <TableHead className="hidden lg:table-cell">
+                        Orders
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Joined
+                      </TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -158,23 +174,32 @@ export default async function CustomersPage({
                                 <User className="h-4 w-4 text-gray-500" />
                               </div>
                             )}
-                            <span className="font-medium">
+                            <span className="font-medium text-sm sm:text-base">
                               {customer.full_name || "N/A"}
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell>{customer.email}</TableCell>
-                        <TableCell>{customer.phone || "-"}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
+                        <TableCell className="hidden sm:table-cell text-sm">
+                          {customer.email}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-sm">
+                          {customer.phone || "-"}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <Badge variant="outline" className="text-xs">
                             {customer.order_count || 0}
                           </Badge>
                         </TableCell>
-                        <TableCell>{formatDate(customer.created_at)}</TableCell>
+                        <TableCell className="hidden md:table-cell text-sm">
+                          {formatDate(customer.created_at)}
+                        </TableCell>
                         <TableCell className="text-right">
                           <Link href={`/admin/customers/${customer.id}`}>
                             <Button variant="ghost" size="sm">
-                              View Details
+                              <span className="hidden sm:inline">
+                                View Details
+                              </span>
+                              <span className="sm:hidden">View</span>
                             </Button>
                           </Link>
                         </TableCell>
@@ -186,8 +211,8 @@ export default async function CustomersPage({
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-gray-600">
+                <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-4">
+                  <p className="text-xs sm:text-sm text-gray-600">
                     Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
                     {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of{" "}
                     {totalCount} customers

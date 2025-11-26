@@ -19,16 +19,16 @@ export const createPaymentIntentSchema = z.object({
  */
 export const createProductSchema = z.object({
   name: z.string().min(1, "Product name is required").max(200),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   sku: z.string().min(1, "SKU is required").max(100),
   category_id: z.string().uuid("Invalid category ID"),
   price: z.number().min(0, "Price must be positive"),
   stock_quantity: z.number().int().min(0).default(0),
   is_active: z.boolean().default(true),
   is_featured: z.boolean().default(false),
-  main_image: z.string().url().optional(),
-  images: z.array(z.string().url()).optional(),
-  variants: z.any().optional(), // Could be more specific based on your schema
+  main_image: z.string().url().optional().nullable(),
+  images: z.array(z.string().url()).optional().nullable(),
+  variants: z.any().optional().nullable(), // Could be more specific based on your schema
 });
 
 /**
@@ -36,16 +36,16 @@ export const createProductSchema = z.object({
  */
 export const updateProductSchema = z.object({
   name: z.string().min(1).max(200).optional(),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   sku: z.string().min(1).max(100).optional(),
   category_id: z.string().uuid().optional(),
   price: z.number().min(0).optional(),
   stock_quantity: z.number().int().min(0).optional(),
   is_active: z.boolean().optional(),
   is_featured: z.boolean().optional(),
-  main_image: z.string().url().optional(),
-  images: z.array(z.string().url()).optional(),
-  variants: z.any().optional(),
+  main_image: z.string().url().optional().nullable(),
+  images: z.array(z.string().url()).optional().nullable(),
+  variants: z.any().optional().nullable(),
 });
 
 /**

@@ -130,28 +130,36 @@ function getPaymentStatusColor(status: string): string {
 export default async function OrdersPage({
   searchParams,
 }: {
-  searchParams: { status?: string; page?: string };
+  searchParams: Promise<{ status?: string; page?: string }>;
 }) {
   await requireAdmin();
 
-  const status = searchParams.status || "all";
-  const page = Number(searchParams.page) || 1;
+  const params = await searchParams;
+  const status = params.status || "all";
+  const page = Number(params.page) || 1;
   const { orders, totalCount, totalPages, currentPage } = await getOrders(
     status,
     page
   );
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Orders</h1>
-          <p className="text-gray-600">Manage and track all customer orders</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Orders</h1>
+          <p className="text-sm sm:text-base text-gray-600">
+            Manage and track all customer orders
+          </p>
         </div>
         <Link href="/admin">
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            size="sm"
+            className="sm:size-default w-full sm:w-auto"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </Button>
         </Link>
       </div>
@@ -165,7 +173,7 @@ export default async function OrdersPage({
                 {totalCount} order{totalCount !== 1 ? "s" : ""} found
               </CardDescription>
             </div>
-            <div className="flex gap-3">
+            <div className="w-full sm:w-auto">
               <OrderStatusFilter currentStatus={status} />
             </div>
           </div>
@@ -182,10 +190,16 @@ export default async function OrdersPage({
                   <TableHeader>
                     <TableRow>
                       <TableHead>Order ID</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Date</TableHead>
+                      <TableHead className="hidden sm:table-cell">
+                        Customer
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Date
+                      </TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Payment</TableHead>
+                      <TableHead className="hidden lg:table-cell">
+                        Payment
+                      </TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -193,17 +207,17 @@ export default async function OrdersPage({
                   <TableBody>
                     {orders.map((order: any) => (
                       <TableRow key={order.id}>
-                        <TableCell className="font-mono text-sm">
+                        <TableCell className="font-mono text-xs sm:text-sm">
                           {order.id.slice(0, 8)}...
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium text-sm">
                               {order.profile?.full_name ||
                                 order.customer_name ||
                                 "Guest"}
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-xs text-gray-500">
                               {order.profile?.email ||
                                 order.customer_email ||
                                 order.guest_email ||
@@ -211,28 +225,37 @@ export default async function OrdersPage({
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell>{formatDate(order.created_at)}</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(order.status)}>
-                            {order.status}
-                          </Badge>
+                        <TableCell className="hidden md:table-cell text-sm">
+                          {formatDate(order.created_at)}
                         </TableCell>
                         <TableCell>
                           <Badge
-                            className={getPaymentStatusColor(
+                            className={`${getStatusColor(
+                              order.status
+                            )} text-xs`}
+                          >
+                            {order.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <Badge
+                            className={`${getPaymentStatusColor(
                               order.payment_status
-                            )}
+                            )} text-xs`}
                           >
                             {order.payment_status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="font-semibold">
+                        <TableCell className="font-semibold text-sm sm:text-base">
                           {formatCurrency(order.total_amount)}
                         </TableCell>
                         <TableCell className="text-right">
                           <Link href={`/admin/orders/${order.id}`}>
                             <Button variant="ghost" size="sm">
-                              View Details
+                              <span className="hidden sm:inline">
+                                View Details
+                              </span>
+                              <span className="sm:hidden">View</span>
                             </Button>
                           </Link>
                         </TableCell>

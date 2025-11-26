@@ -62,11 +62,12 @@ function getStatusColor(status: string): string {
 export default async function OrderDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   await requireAdmin();
 
-  const order = await getOrderDetails(params.id);
+  const { id } = await params;
+  const order = await getOrderDetails(id);
 
   if (!order) {
     notFound();
@@ -87,7 +88,7 @@ export default async function OrderDetailPage({
             Order ID: {order.id}
           </p>
         </div>
-        <UpdateOrderStatus orderId={order.id} currentStatus={order.status} />
+        <UpdateOrderStatus orderId={id} currentStatus={order.status} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

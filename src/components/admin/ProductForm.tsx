@@ -189,11 +189,12 @@ export default function ProductForm({
         body: JSON.stringify(productData),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to save product");
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Product save error:", data);
+        throw new Error(data.error || "Failed to save product");
+      }
 
       toast({
         title: "Success",
@@ -205,11 +206,13 @@ export default function ProductForm({
       router.push("/admin/products");
       router.refresh();
     } catch (error) {
+      console.error("Product save error:", error);
       toast({
         title: "Error",
-        description: `Failed to ${
-          mode === "create" ? "create" : "update"
-        } product`,
+        description:
+          error instanceof Error
+            ? error.message
+            : `Failed to ${mode === "create" ? "create" : "update"} product`,
         variant: "destructive",
       });
     } finally {
