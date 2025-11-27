@@ -326,7 +326,7 @@ function CheckoutForm({
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalItems, clearCart } = useCart();
-  const { formatPrice, currency } = useCurrency();
+  const { formatPrice, currency, convertPrice } = useCurrency();
   const { user } = useAuth();
   const [clientSecret, setClientSecret] = useState<string>("");
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
@@ -384,13 +384,25 @@ export default function CheckoutPage() {
     loadProfileData();
   }, [user]);
 
+  // Calculate totals - prices are stored in INR in database
+  // formatPrice() will convert to selected currency automatically
   const subtotal = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
-  const shipping = subtotal > 2000 ? 0 : 200;
-  const tax = subtotal * 0.18;
+  const shipping = subtotal > 2000 ? 0 : 200; // Free shipping over ₹2000
+  const tax = subtotal * 0.18; // 18% GST
   const total = subtotal + shipping + tax;
+  
+  // For Stripe: Convert from INR to selected currency
+  const totalInSelectedCurrency = convertPrice(total);
+
+  console.log('💰 Checkout calculations:', {
+    currency,
+    totalINR: total,
+    totalConverted: totalInSelectedCurrency,
+    note: 'Display uses formatPrice (auto-converts), Stripe uses converted amount',
+  });
 
   // Initialize Stripe (only once)
   useEffect(() => {
@@ -411,8 +423,8 @@ export default function CheckoutPage() {
     paymentIntentCreated.current = true;
 
     try {
-      console.log("💰 Creating payment intent for amount:", total, currency);
-      const stripeAmount = toStripeAmount(total, currency);
+      console.log("💰 Creating payment intent for amount:", totalInSelectedCurrency, currency);
+      const stripeAmount = toStripeAmount(totalInSelectedCurrency, currency);
       const { clientSecret: secret, paymentIntentId: id } =
         await createPaymentIntent(stripeAmount, currency, {
           userId: user?.id || "guest",
@@ -430,7 +442,7 @@ export default function CheckoutPage() {
     } finally {
       setIsInitializing(false);
     }
-  }, [total, currency, user?.id, totalItems, clientSecret, isInitializing]);
+  }, [totalInSelectedCurrency, currency, user?.id, totalItems, clientSecret, isInitializing]);
 
   // Trigger payment intent creation only once when ready
   useEffect(() => {

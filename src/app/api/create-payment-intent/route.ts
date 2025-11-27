@@ -36,14 +36,27 @@ export async function POST(request: NextRequest) {
       idempotencyKey,
     });
 
-    // Create payment intent with idempotency key
+    // Determine payment method configuration based on currency
+    const isINR = validated.currency.toLowerCase() === 'inr';
+    
+    // Create payment intent with proper configuration
     const paymentIntent = await stripe.paymentIntents.create(
       {
         amount: Math.round(validated.amount), // Stripe expects amount in smallest currency unit (cents/paise)
         currency: validated.currency.toLowerCase(),
-        automatic_payment_methods: {
-          enabled: true,
-        },
+        // CRITICAL FIX: Cannot use both automatic_payment_methods and payment_method_types
+        // Use automatic_payment_methods for non-INR, specific types for INR (to enable UPI)
+        ...(isINR
+          ? {
+              // For INR: Specify payment methods to enable UPI
+              payment_method_types: ['card', 'upi'],
+            }
+          : {
+              // For other currencies: Use automatic payment methods
+              automatic_payment_methods: {
+                enabled: true,
+              },
+            }),
         metadata: {
           userId: user?.id || "guest",
           ...validated.metadata,

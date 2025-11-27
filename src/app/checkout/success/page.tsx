@@ -5,11 +5,38 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, Package, Mail } from "lucide-react";
+import { CheckCircle2, Package, Mail, Download, Share2 } from "lucide-react";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
+
+  const handleDownloadInvoice = () => {
+    if (orderId) {
+      // Open invoice download in new tab
+      window.open(`/api/orders/${orderId}/invoice`, '_blank');
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'FoalRider Order Confirmation',
+      text: `Order #${orderId} placed successfully!`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log('Error sharing:', err);
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(window.location.href);
+      alert('Link copied to clipboard!');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
@@ -59,10 +86,10 @@ function SuccessContent() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
             <Button
               size="lg"
-              className="bg-[#C5A572] hover:bg-[#B89968] cursor-pointer"
+              className="bg-[#C5A572] hover:bg-[#B89968] tap-feedback"
               asChild
             >
               <Link href="/products">Continue Shopping</Link>
@@ -71,13 +98,36 @@ function SuccessContent() {
               <Button
                 variant="outline"
                 size="lg"
-                className="cursor-pointer"
+                className="tap-feedback"
                 asChild
               >
                 <Link href={`/orders/${orderId}`}>View Order Details</Link>
               </Button>
             )}
           </div>
+
+          {orderId && (
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4 border-t">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="tap-feedback"
+                onClick={handleDownloadInvoice}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download Invoice
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="tap-feedback"
+                onClick={handleShare}
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Share Order
+              </Button>
+            </div>
+          )}
         </Card>
       </div>
     </div>

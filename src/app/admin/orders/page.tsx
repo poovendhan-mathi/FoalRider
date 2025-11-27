@@ -91,10 +91,10 @@ async function getOrders(status?: string, page: number = 1) {
   };
 }
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number, currency: string = 'INR'): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "INR",
+    currency: currency,
   }).format(amount / 100);
 }
 
@@ -247,7 +247,7 @@ export default async function OrdersPage({
                           </Badge>
                         </TableCell>
                         <TableCell className="font-semibold text-sm sm:text-base">
-                          {formatCurrency(order.total_amount)}
+                          {formatCurrency(order.total_amount, order.currency || 'INR')}
                         </TableCell>
                         <TableCell className="text-right">
                           <Link href={`/admin/orders/${order.id}`}>

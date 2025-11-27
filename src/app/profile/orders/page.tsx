@@ -34,11 +34,17 @@ export default function OrdersPage() {
   }, [user]);
 
   const fetchOrders = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       const supabase = createClient();
       const { data, error } = await supabase
         .from('orders')
         .select('*')
+        .eq('user_id', user.id) // Filter orders by current user
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -151,8 +157,8 @@ export default function OrdersPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="mt-2"
-                      onClick={() => router.push(`/profile/orders/${order.id}`)}
+                      className="mt-2 tap-feedback"
+                      onClick={() => router.push(`/orders/${order.id}`)}
                     >
                       View Details
                     </Button>
