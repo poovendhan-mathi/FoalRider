@@ -564,9 +564,86 @@ export default function CheckoutPage() {
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Checkout Form */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8">
+          {/* Order Summary - First on Mobile, Right on Desktop */}
+          <div className="order-1 lg:order-2 lg:col-span-1">
+            <Card className="p-6 lg:sticky lg:top-24">
+              <h2 className="text-xl font-bold mb-6">Order Summary</h2>
+
+              {/* Order Items */}
+              <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
+                {items.map((item) => (
+                  <div key={item.product.id} className="flex gap-3">
+                    <div className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden bg-gray-100">
+                      <Image
+                        src={
+                          item.product.image_url ||
+                          "/assets/images/product-placeholder.jpg"
+                        }
+                        alt={item.product.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="grow min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {item.product.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Qty: {item.quantity}
+                      </p>
+                      <p className="text-sm font-semibold text-[#C5A572]">
+                        {formatPrice(item.product.price * item.quantity)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Separator className="my-6" />
+
+              {/* Price Breakdown */}
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-medium">{formatPrice(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Shipping</span>
+                  <span className="font-medium">
+                    {shipping === 0 ? (
+                      <span className="text-green-600">Free</span>
+                    ) : (
+                      formatPrice(shipping)
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Tax (18% GST)</span>
+                  <span className="font-medium">{formatPrice(tax)}</span>
+                </div>
+
+                <Separator />
+
+                <div className="flex justify-between text-lg">
+                  <span className="font-bold">Total</span>
+                  <span className="font-bold text-[#C5A572]">
+                    {formatPrice(total)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-xs text-green-700 flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Secured by Stripe Payment Processing
+                </p>
+              </div>
+            </Card>
+          </div>
+
+          {/* Left Column: Contact & Shipping - Second on Mobile, Left on Desktop */}
+          <div className="order-2 lg:order-1 lg:col-span-2 space-y-6">
             {/* Contact Information */}
             <Card className="p-6">
               <h2 className="text-xl font-bold mb-6">Contact Information</h2>
@@ -807,83 +884,6 @@ export default function CheckoutPage() {
                 </div>
               </Card>
             )}
-          </div>
-
-          {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-24">
-              <h2 className="text-xl font-bold mb-6">Order Summary</h2>
-
-              {/* Order Items */}
-              <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
-                {items.map((item) => (
-                  <div key={item.product.id} className="flex gap-3">
-                    <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-gray-100">
-                      <Image
-                        src={
-                          item.product.image_url ||
-                          "/assets/images/product-placeholder.jpg"
-                        }
-                        alt={item.product.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex-grow min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {item.product.name}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Qty: {item.quantity}
-                      </p>
-                      <p className="text-sm font-semibold text-[#C5A572]">
-                        {formatPrice(item.product.price * item.quantity)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Separator className="my-6" />
-
-              {/* Price Breakdown */}
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">{formatPrice(subtotal)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium">
-                    {shipping === 0 ? (
-                      <span className="text-green-600">Free</span>
-                    ) : (
-                      formatPrice(shipping)
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tax (18% GST)</span>
-                  <span className="font-medium">{formatPrice(tax)}</span>
-                </div>
-
-                <Separator />
-
-                <div className="flex justify-between text-lg">
-                  <span className="font-bold">Total</span>
-                  <span className="font-bold text-[#C5A572]">
-                    {formatPrice(total)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-xs text-green-700 flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  Secured by Stripe Payment Processing
-                </p>
-              </div>
-            </Card>
           </div>
         </div>
       </div>

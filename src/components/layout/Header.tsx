@@ -61,35 +61,35 @@ export function Header() {
         <nav className="hidden md:flex items-center gap-6">
           <Link
             href="/"
-            className="text-base font-medium text-white/90 hover:text-[#C5A572] transition-colors"
+            className="text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
             style={{ fontFamily: "Montserrat, sans-serif" }}
           >
             Home
           </Link>
           <Link
             href="/products"
-            className="text-base font-medium text-white/90 hover:text-[#C5A572] transition-colors"
+            className="text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
             style={{ fontFamily: "Montserrat, sans-serif" }}
           >
             Collections
           </Link>
           <Link
             href="/about"
-            className="text-base font-medium text-white/90 hover:text-[#C5A572] transition-colors"
+            className="text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
             style={{ fontFamily: "Montserrat, sans-serif" }}
           >
             About Us
           </Link>
           <Link
             href="/journal"
-            className="text-base font-medium text-white/90 hover:text-[#C5A572] transition-colors"
+            className="text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
             style={{ fontFamily: "Montserrat, sans-serif" }}
           >
             Journal
           </Link>
           <Link
             href="/contact"
-            className="text-base font-medium text-white/90 hover:text-[#C5A572] transition-colors"
+            className="text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
             style={{ fontFamily: "Montserrat, sans-serif" }}
           >
             Contact
@@ -106,7 +106,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-white/90 hover:text-[#C5A572] hover:bg-white/10"
+            className="text-white/90 hover:text-[#C5A572] hover:bg-white/10 tap-feedback"
             asChild
           >
             <Link href="/search">
@@ -130,7 +130,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-white/90 hover:text-[#C5A572] hover:bg-white/10 relative"
+            className="text-white/90 hover:text-[#C5A572] hover:bg-white/10 relative tap-feedback"
             asChild
           >
             <Link href="/wishlist">
@@ -146,7 +146,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-white/90 hover:text-[#C5A572] hover:bg-white/10 relative"
+            className="text-white/90 hover:text-[#C5A572] hover:bg-white/10 relative tap-feedback"
             asChild
           >
             <Link href="/cart">
@@ -164,7 +164,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-white/90 hover:text-[#C5A572] hover:bg-white/10"
+            className="md:hidden text-white/90 hover:text-[#C5A572] hover:bg-white/10 tap-feedback"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <Menu className="h-5 w-5" />
@@ -174,48 +174,62 @@ export function Header() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/10 bg-black/80 backdrop-blur-md p-6 space-y-4">
-          {/* Currency Selector for Mobile */}
-          <div className="pb-4 border-b border-white/10">
-            <CurrencySelectorCompact />
-          </div>
+        <>
+          {/* Overlay */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          
+          {/* Menu Content */}
+          <div className="relative z-50 md:hidden border-t border-white/10 bg-black/80 backdrop-blur-md p-6 space-y-4">
+            {/* Currency Selector for Mobile */}
+            <div className="pb-4 border-b border-white/10">
+              <CurrencySelectorCompact />
+            </div>
 
-          <Link
-            href="/"
-            className="block text-base font-medium text-white/90 hover:text-[#C5A572] transition-colors"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
-          >
-            Home
-          </Link>
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
+              style={{ fontFamily: "Montserrat, sans-serif" }}
+            >
+              Home
+            </Link>
           <Link
             href="/products"
-            className="block text-base font-medium text-white/90 hover:text-[#C5A572] transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
             style={{ fontFamily: "Montserrat, sans-serif" }}
           >
             Collections
           </Link>
           <Link
             href="/about"
-            className="block text-base font-medium text-white/90 hover:text-[#C5A572] transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
             style={{ fontFamily: "Montserrat, sans-serif" }}
           >
             About Us
           </Link>
           <Link
             href="/journal"
-            className="block text-base font-medium text-white/90 hover:text-[#C5A572] transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
             style={{ fontFamily: "Montserrat, sans-serif" }}
           >
             Journal
           </Link>
           <Link
             href="/contact"
-            className="block text-base font-medium text-white/90 hover:text-[#C5A572] transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
             style={{ fontFamily: "Montserrat, sans-serif" }}
           >
             Contact
           </Link>
-        </div>
+          </div>
+        </>
       )}
     </header>
   );

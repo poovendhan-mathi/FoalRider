@@ -126,50 +126,87 @@ export async function addToUserCart(
 ): Promise<boolean> {
   const supabase = createClient();
 
-  // Check if item already exists
-  let query = supabase
-    .from("cart_items")
-    .select("id, quantity")
-    .eq("user_id", userId)
-    .eq("product_id", productId);
-
-  // Handle variant_id correctly - check if it's null or has a value
-  if (variantId) {
-    query = query.eq("variant_id", variantId);
-  } else {
-    query = query.is("variant_id", null);
-  }
-
-  const { data: existing } = await query.maybeSingle();
-
-  if (existing) {
-    // Update quantity
-    const { error } = await supabase
+  try {
+    // Check if item already exists
+    let query = supabase
       .from("cart_items")
-      .update({ quantity: existing.quantity + quantity })
-      .eq("id", existing.id);
+      .select("id, quantity")
+      .eq("user_id", userId)
+      .eq("product_id", productId);
 
-    if (error) {
-      console.error("Error updating cart:", error);
+    // Handle variant_id correctly - check if it's null or has a value
+    if (variantId) {
+      query = query.eq("variant_id", variantId);
+    } else {
+      query = query.is("variant_id", null);
+    }
+
+    const { data: existing, error: fetchError } = await query.maybeSingle();
+
+    if (fetchError) {
+      console.error("Error fetching existing cart item:", fetchError);
       return false;
     }
-  } else {
-    // Insert new item
-    const { error } = await supabase.from("cart_items").insert({
-      user_id: userId,
-      product_id: productId,
-      quantity,
-      variant_id: variantId,
-      session_id: null,
-    });
 
-    if (error) {
-      console.error("Error adding to cart:", error);
-      return false;
+    if (existing) {
+      // Update quantity
+      const { error } = await supabase
+        .from("cart_items")
+        .update({ quantity: existing.quantity + quantity })
+        .eq("id", existing.id);
+
+      if (error) {
+        console.error("Error updating cart:", error);
+        return false;
+      }
+    } else {
+      // Insert new item with upsert to handle race conditions
+      const { error } = await supabase.from("cart_items").upsert(
+        {
+          user_id: userId,
+          product_id: productId,
+          quantity,
+          variant_id: variantId || null,
+          session_id: null,
+        },
+        {
+          onConflict: "user_id,product_id,variant_id",
+          ignoreDuplicates: false,
+        }
+      );
+
+      if (error) {
+        // If duplicate, try to update instead
+        if (error.code === "23505") {
+          console.log("Duplicate detected, updating quantity instead");
+          const { data: existingItem } = await query.maybeSingle();
+          if (existingItem) {
+            const { error: updateError } = await supabase
+              .from("cart_items")
+              .update({ quantity: existingItem.quantity + quantity })
+              .eq("id", existingItem.id);
+
+            if (updateError) {
+              console.error(
+                "Error updating cart after duplicate:",
+                updateError
+              );
+              return false;
+            }
+            return true;
+          }
+        }
+
+        console.error("Error adding to cart:", error);
+        return false;
+      }
     }
+
+    return true;
+  } catch (error) {
+    console.error("Unexpected error in addToUserCart:", error);
+    return false;
   }
-
-  return true;
 }
 
 /**
@@ -183,55 +220,88 @@ export async function addToGuestCart(
 ): Promise<boolean> {
   const supabase = createClient();
 
-  // Check if item already exists
-  let query = supabase
-    .from("cart_items")
-    .select("id, quantity")
-    .is("user_id", null)
-    .eq("session_id", sessionId)
-    .eq("product_id", productId);
-
-  // Handle variant_id correctly - check if it's null or has a value
-  if (variantId) {
-    query = query.eq("variant_id", variantId);
-  } else {
-    query = query.is("variant_id", null);
-  }
-
-  const { data: existing } = await query.maybeSingle();
-
-  if (existing) {
-    // Update quantity
-    const { error } = await supabase
+  try {
+    // Check if item already exists
+    let query = supabase
       .from("cart_items")
-      .update({ quantity: existing.quantity + quantity })
-      .eq("id", existing.id);
+      .select("id, quantity")
+      .is("user_id", null)
+      .eq("session_id", sessionId)
+      .eq("product_id", productId);
 
-    if (error) {
-      console.error("Error updating guest cart:", error);
+    // Handle variant_id correctly - check if it's null or has a value
+    if (variantId) {
+      query = query.eq("variant_id", variantId);
+    } else {
+      query = query.is("variant_id", null);
+    }
+
+    const { data: existing, error: fetchError } = await query.maybeSingle();
+
+    if (fetchError) {
+      console.error("Error fetching existing cart item:", fetchError);
       return false;
     }
-  } else {
-    // Insert new item
-    const { error } = await supabase.from("cart_items").insert({
-      user_id: null,
-      session_id: sessionId,
-      product_id: productId,
-      quantity,
-      variant_id: variantId || null,
-    });
 
-    if (error) {
-      console.error("Error adding to guest cart:", error);
-      console.error("Error code:", error.code);
-      console.error("Error message:", error.message);
-      console.error("Error details:", error.details);
-      console.error("Error hint:", error.hint);
-      return false;
+    if (existing) {
+      // Update quantity
+      const { error } = await supabase
+        .from("cart_items")
+        .update({ quantity: existing.quantity + quantity })
+        .eq("id", existing.id);
+
+      if (error) {
+        console.error("Error updating guest cart:", error);
+        return false;
+      }
+    } else {
+      // Insert new item with upsert to handle race conditions
+      const { error } = await supabase.from("cart_items").upsert(
+        {
+          user_id: null,
+          session_id: sessionId,
+          product_id: productId,
+          quantity,
+          variant_id: variantId || null,
+        },
+        {
+          onConflict: "user_id,product_id,variant_id",
+          ignoreDuplicates: false,
+        }
+      );
+
+      if (error) {
+        // If still duplicate, try to update instead
+        if (error.code === "23505") {
+          console.log("Duplicate detected, updating quantity instead");
+          const { data: existingItem } = await query.maybeSingle();
+          if (existingItem) {
+            const { error: updateError } = await supabase
+              .from("cart_items")
+              .update({ quantity: existingItem.quantity + quantity })
+              .eq("id", existingItem.id);
+
+            if (updateError) {
+              console.error(
+                "Error updating cart after duplicate:",
+                updateError
+              );
+              return false;
+            }
+            return true;
+          }
+        }
+
+        console.error("Error adding to guest cart:", error);
+        return false;
+      }
     }
+
+    return true;
+  } catch (error) {
+    console.error("Unexpected error in addToGuestCart:", error);
+    return false;
   }
-
-  return true;
 }
 
 /**

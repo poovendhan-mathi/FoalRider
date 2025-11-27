@@ -139,6 +139,49 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Optimize touch response across the app */
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Ensure minimum touch targets for accessibility */
+  button:not(.no-min-size),
+  a:not(.no-min-size),
+  [role="button"]:not(.no-min-size) {
+    min-height: 44px;
+  }
+}
+
+/* Custom Touch Feedback Utilities */
+@layer utilities {
+  /* Tap feedback with scale and opacity */
+  .tap-feedback {
+    @apply transition-all duration-150 active:scale-95 active:opacity-80;
+  }
+  
+  /* Scale-only tap feedback for cards */
+  .tap-scale {
+    @apply transition-transform duration-150 active:scale-98;
+  }
+  
+  /* Highlight tap feedback for list items */
+  .tap-highlight {
+    @apply transition-colors duration-150 active:bg-gray-100 dark:active:bg-gray-800;
+  }
+  
+  /* Opacity-only feedback for links */
+  .tap-opacity {
+    @apply transition-opacity duration-150 active:opacity-70;
+  }
+  
+  /* Ring pulse feedback for important actions */
+  .tap-ring {
+    @apply transition-all duration-150 active:ring-2 active:ring-[#C5A572]/30;
+  }
 }
 
 /* Custom Animations */

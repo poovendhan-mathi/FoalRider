@@ -35,7 +35,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const isOutOfStock = product.inventory <= 0;
 
   return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 tap-scale">
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden bg-muted">
           <Image
@@ -70,7 +70,7 @@ export function ProductCard({ product }: ProductCardProps) {
           className="font-semibold text-lg mb-2 line-clamp-2"
           style={{ fontFamily: 'Playfair Display, serif' }}
         >
-          <Link href={`/products/${product.slug}`} className="hover:text-[#C5A572] transition-colors">
+          <Link href={`/products/${product.slug}`} className="hover:text-[#C5A572] tap-opacity transition-all">
             {product.name}
           </Link>
         </h3>
