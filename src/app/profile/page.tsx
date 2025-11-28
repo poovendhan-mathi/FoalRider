@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
   Card,
@@ -68,7 +69,6 @@ function ProfileContent() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
-  const [dataLoaded, setDataLoaded] = useState(false);
 
   // Show verification success message
   useEffect(() => {
@@ -86,14 +86,12 @@ function ProfileContent() {
     }
   }, [authLoading, user, router]);
 
-  // Load profile data only once when user is available
+  // Load profile data when user is available
   useEffect(() => {
-    if (user && !dataLoaded) {
-      const loadData = async () => {
-        await loadProfileData();
-        setDataLoaded(true);
-      };
-      loadData();
+    if (!authLoading && user) {
+      loadProfileData();
+    } else if (!authLoading && !user) {
+      setLoading(false);
     }
 
     // Check for hash navigation
@@ -101,7 +99,8 @@ function ProfileContent() {
     if (hash === "settings") {
       setActiveTab("settings");
     }
-  }, [user, dataLoaded]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user]);
 
   const loadProfileData = async () => {
     if (!user) {
@@ -293,6 +292,27 @@ function ProfileContent() {
   // Check role from profiles table - single source of truth
   const isAdmin = profile?.role === "admin";
 
+  // Show loading state
+  if (loading || authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C5A572] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no user (while redirecting)
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Redirecting to login...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -449,7 +469,7 @@ function ProfileContent() {
                     <Package className="h-12 w-12 mx-auto text-gray-300 mb-4" />
                     <p className="text-gray-600 mb-4">No orders yet</p>
                     <Button asChild>
-                      <a href="/products">Start Shopping</a>
+                      <Link href="/products">Start Shopping</Link>
                     </Button>
                   </div>
                 ) : (
@@ -481,7 +501,7 @@ function ProfileContent() {
                       Start shopping to see your orders here
                     </p>
                     <Button size="lg" asChild>
-                      <a href="/products">Browse Products</a>
+                      <Link href="/products">Browse Products</Link>
                     </Button>
                   </div>
                 ) : (
