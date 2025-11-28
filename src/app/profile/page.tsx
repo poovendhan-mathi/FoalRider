@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   Card,
@@ -59,29 +59,49 @@ interface Address {
   is_default: boolean;
 }
 
-export default function ProfilePage() {
-  const { user } = useAuth();
+function ProfileContent() {
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [dataLoaded, setDataLoaded] = useState(false);
 
+  // Show verification success message
   useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
+    if (searchParams.get('verified') === 'true') {
+      toast.success('Email verified successfully! Welcome to Foal Rider.');
+      // Clean up URL
+      window.history.replaceState({}, '', '/profile');
     }
+  }, [searchParams]);
 
-    loadProfileData();
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [authLoading, user, router]);
+
+  // Load profile data only once when user is available
+  useEffect(() => {
+    if (user && !dataLoaded) {
+      const loadData = async () => {
+        await loadProfileData();
+        setDataLoaded(true);
+      };
+      loadData();
+    }
 
     // Check for hash navigation
     const hash = window.location.hash.replace("#", "");
     if (hash === "settings") {
       setActiveTab("settings");
     }
-  }, [user]);
+  }, [user, dataLoaded]);
 
   const loadProfileData = async () => {
     if (!user) {
@@ -595,5 +615,17 @@ export default function ProfilePage() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   );
 }
