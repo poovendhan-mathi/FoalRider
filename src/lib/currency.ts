@@ -223,30 +223,64 @@ export function setPreferredCurrency(currency: SupportedCurrency): void {
 }
 
 /**
- * Detect user's currency based on location (optional enhancement)
+ * Detect user's currency based on location
+ * Automatically selects currency based on user's country
+ * Defaults to SGD for countries without supported currency
  */
 export async function detectUserCurrency(): Promise<SupportedCurrency> {
   try {
     const response = await fetch("https://ipapi.co/json/");
     const data = await response.json();
 
+    console.log(
+      "📍 User location detected:",
+      data.country_name,
+      `(${data.country_code})`
+    );
+
     const currencyMap: Record<string, SupportedCurrency> = {
+      // India
       IN: "INR",
+
+      // Singapore
       SG: "SGD",
+
+      // United States
       US: "USD",
+
+      // United Kingdom
       GB: "GBP",
+
+      // Australia
       AU: "AUD",
-      // Add EU countries
-      DE: "EUR",
-      FR: "EUR",
-      IT: "EUR",
-      ES: "EUR",
+
+      // European Union countries
+      DE: "EUR", // Germany
+      FR: "EUR", // France
+      IT: "EUR", // Italy
+      ES: "EUR", // Spain
+      NL: "EUR", // Netherlands
+      BE: "EUR", // Belgium
+      AT: "EUR", // Austria
+      PT: "EUR", // Portugal
+      IE: "EUR", // Ireland
+      GR: "EUR", // Greece
+      FI: "EUR", // Finland
     };
 
-    return currencyMap[data.country_code] || "INR";
+    const detectedCurrency = currencyMap[data.country_code] || "SGD";
+
+    console.log(
+      `💰 Currency set to: ${detectedCurrency} ${
+        detectedCurrency === "SGD" ? "(default)" : ""
+      }`
+    );
+
+    return detectedCurrency;
   } catch (error) {
     console.error("Error detecting currency:", error);
-    return "INR";
+    console.log("💰 Using default currency: SGD");
+    return "SGD"; // Default to SGD instead of INR
   }
 }
 
