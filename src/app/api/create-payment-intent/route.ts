@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerActionClient } from "@/lib/supabase/server";
 import { createPaymentIntentSchema } from "@/lib/validations/api-schemas";
 import { ZodError } from "zod";
 
@@ -13,7 +13,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerActionClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin";
 
 // Security: Allowed MIME types
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
     // Security: Generate unique, unpredictable filename
     const timestamp = Date.now();
@@ -134,7 +134,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
     const { error } = await supabase.storage
       .from("product-images")

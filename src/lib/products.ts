@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface Product {
   id: string;
@@ -26,7 +26,7 @@ export interface Product {
 export async function getFeaturedProducts(
   limit: number = 6
 ): Promise<Product[]> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   const { data: products, error } = await supabase
     .from("products")
@@ -91,7 +91,7 @@ export async function getFilteredProducts(filters: {
 }): Promise<Product[]> {
   console.log("🔍 Fetching products with filters:", filters);
 
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   let query = supabase
     .from("products")
@@ -216,7 +216,7 @@ export async function getFilteredProducts(filters: {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   const { data: product, error } = await supabase
     .from("products")
@@ -253,7 +253,7 @@ export async function getRelatedProducts(
   categoryId: string | null,
   limit: number = 4
 ): Promise<Product[]> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   let query = supabase
     .from("products")

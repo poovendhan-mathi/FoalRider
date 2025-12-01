@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerActionClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { createProductSchema } from "@/lib/validations/api-schemas";
 import { ZodError } from "zod";
@@ -9,7 +9,7 @@ export async function GET() {
   try {
     await requireAdmin();
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
     const { data: products, error } = await supabase
       .from("products")
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Validate input with Zod
     const validated = createProductSchema.parse(body);
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
     // Check if SKU already exists
     const { data: existingProduct } = await supabase

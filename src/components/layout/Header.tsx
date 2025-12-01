@@ -2,7 +2,7 @@
 
 import { Logo } from "./Logo";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { CurrencySelectorCompact } from "@/components/CurrencySelector";
@@ -10,10 +10,10 @@ import { UserDropdown } from "./UserDropdown";
 import Link from "next/link";
 import { ShoppingCart, Menu, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function Header() {
-  const { user } = useAuth();
+  const { state } = useAuth(); const user = state.user;
   const { totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -25,7 +25,7 @@ export function Header() {
         return;
       }
 
-      const supabase = createClient();
+      const supabase = getSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("profiles")
         .select("full_name, avatar_url, role")
@@ -176,11 +176,11 @@ export function Header() {
       {mobileMenuOpen && (
         <>
           {/* Overlay */}
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-40 md:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
-          
+
           {/* Menu Content */}
           <div className="relative z-50 md:hidden border-t border-white/10 bg-black/80 backdrop-blur-md p-6 space-y-4">
             {/* Currency Selector for Mobile */}
@@ -196,38 +196,38 @@ export function Header() {
             >
               Home
             </Link>
-          <Link
-            href="/products"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
-          >
-            Collections
-          </Link>
-          <Link
-            href="/about"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
-          >
-            About Us
-          </Link>
-          <Link
-            href="/journal"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
-          >
-            Journal
-          </Link>
-          <Link
-            href="/contact"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
-          >
-            Contact
-          </Link>
+            <Link
+              href="/products"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
+              style={{ fontFamily: "Montserrat, sans-serif" }}
+            >
+              Collections
+            </Link>
+            <Link
+              href="/about"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
+              style={{ fontFamily: "Montserrat, sans-serif" }}
+            >
+              About Us
+            </Link>
+            <Link
+              href="/journal"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
+              style={{ fontFamily: "Montserrat, sans-serif" }}
+            >
+              Journal
+            </Link>
+            <Link
+              href="/contact"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
+              style={{ fontFamily: "Montserrat, sans-serif" }}
+            >
+              Contact
+            </Link>
           </div>
         </>
       )}

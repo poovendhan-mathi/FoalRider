@@ -1,0 +1,1007 @@
+TypeScript
+
+// Continuing PaymentForm.tsx
+
+function generateIdempotencyKey(userId: string, productId: string, action: string): string {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 10);
+  return `${userId}_${productId}_${action}_${timestamp}_${random}`;
+}
+
+function PaymentFormSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="h-12 bg-gray-200 rounded"></div>
+      <div className="h-12 bg-gray-200 rounded"></div>
+      <div className="h-12 bg-gray-200 rounded"></div>
+      <div className="h-12 bg-blue-200 rounded"></div>
+    </div>
+  );
+}
+14. Pricing Card Component (components/payment/PricingCard.tsx)
+TypeScript
+
+/**
+ * Pricing Card Component
+ * 
+ * Displays product pricing in user's currency.
+ * Handles currency conversion display.
+ */
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useCurrency } from '@/providers/CurrencyProvider';
+import { useLocale } from '@/providers/LocaleProvider';
+
+interface PricingCardProps {
+  product: {
+    id: string;
+    name: string;
+    description: string;
+    features: string[];
+  };
+  interval?: 'month' | 'year';
+  onSelect: (productId: string, priceId: string) => void;
+  highlighted?: boolean;
+}
+
+interface PriceData {
+  priceId: string;
+  amount: number;
+  displayAmount: string;
+  currency: string;
+  originalCurrency?: string;
+  originalAmount?: string;
+  isConverted: boolean;
+}
+
+export function PricingCard({
+  product,
+  interval = 'month',
+  onSelect,
+  highlighted = false,
+}: PricingCardProps) {
+  const { currency, formatAmount } = useCurrency();
+  const { locale } = useLocale();
+  
+  const [priceData, setPriceData] = useState<PriceData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch price when currency changes
+  useEffect(() => {
+    async function fetchPrice() {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(
+          `/api/pricing/get-price?` + new URLSearchParams({
+            productId: product.id,
+            currency: currency,
+            interval: interval,
+          })
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch price');
+        }
+
+        const data = await response.json();
+        setPriceData(data);
+      } catch (err) {
+        setError('Unable to load price');
+        console.error('Price fetch error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchPrice();
+  }, [product.id, currency, interval]);
+
+  const handleSelect = () => {
+    if (priceData) {
+      onSelect(product.id, priceData.priceId);
+    }
+  };
+
+  return (
+    <div
+      className={`
+        rounded-2xl p-8 
+        ${highlighted 
+          ? 'bg-blue-600 text-white ring-4 ring-blue-600 ring-offset-2' 
+          : 'bg-white border border-gray-200'
+        }
+      `}
+    >
+      {/* Product name */}
+      <h3 className={`text-2xl font-bold ${highlighted ? 'text-white' : 'text-gray-900'}`}>
+        {product.name}
+      </h3>
+      
+      {/* Price display */}
+      <div className="mt-4">
+        {isLoading ? (
+          <div className="h-12 bg-gray-200 rounded animate-pulse w-32"></div>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : priceData ? (
+          <>
+            <div className="flex items-baseline">
+              <span className={`text-4xl font-bold ${highlighted ? 'text-white' : 'text-gray-900'}`}>
+                {priceData.displayAmount}
+              </span>
+              <span className={`ml-2 ${highlighted ? 'text-blue-100' : 'text-gray-500'}`}>
+                /{interval}
+              </span>
+            </div>
+            
+            {/* Show original price if converted */}
+            {priceData.isConverted && priceData.originalAmount && (
+              <p className={`text-sm mt-1 ${highlighted ? 'text-blue-100' : 'text-gray-400'}`}>
+                ≈ {priceData.originalAmount} {priceData.originalCurrency}
+              </p>
+            )}
+          </>
+        ) : null}
+      </div>
+
+      {/* Description */}
+      <p className={`mt-4 ${highlighted ? 'text-blue-100' : 'text-gray-600'}`}>
+        {product.description}
+      </p>
+
+      {/* Features */}
+      <ul className="mt-6 space-y-3">
+        {product.features.map((feature, index) => (
+          <li key={index} className="flex items-start">
+            <CheckIcon className={`h-5 w-5 mr-3 flex-shrink-0 ${
+              highlighted ? 'text-blue-200' : 'text-blue-600'
+            }`} />
+            <span className={highlighted ? 'text-blue-50' : 'text-gray-600'}>
+              {feature}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {/* CTA Button */}
+      <button
+        onClick={handleSelect}
+        disabled={isLoading || !!error}
+        className={`
+          mt-8 w-full py-3 px-6 rounded-lg font-medium
+          transition-colors disabled:opacity-50
+          ${highlighted
+            ? 'bg-white text-blue-600 hover:bg-blue-50'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
+          }
+        `}
+      >
+        {isLoading ? 'Loading...' : 'Get Started'}
+      </button>
+    </div>
+  );
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+15. Currency Selector Component (components/payment/CurrencySelector.tsx)
+TypeScript
+
+/**
+ * Currency Selector Component
+ * 
+ * Allows users to change their display currency.
+ * Updates all prices across the app.
+ */
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useCurrency } from '@/providers/CurrencyProvider';
+
+interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+}
+
+export function CurrencySelector() {
+  const { currency, setCurrency, isLoading } = useCurrency();
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Fetch supported currencies
+  useEffect(() => {
+    async function fetchCurrencies() {
+      try {
+        const response = await fetch('/api/pricing/supported-currencies');
+        const data = await response.json();
+        setCurrencies(data);
+      } catch (error) {
+        console.error('Failed to fetch currencies:', error);
+      }
+    }
+    
+    fetchCurrencies();
+  }, []);
+
+  const selectedCurrency = currencies.find(c => c.code === currency);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        disabled={isLoading}
+        className="flex items-center gap-2 px-3 py-2 border rounded-lg hover:bg-gray-50"
+      >
+        <span className="font-medium">{selectedCurrency?.symbol || '$'}</span>
+        <span>{currency}</span>
+        <ChevronDownIcon className="h-4 w-4" />
+      </button>
+
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-10" 
+            onClick={() => setIsOpen(false)} 
+          />
+          
+          {/* Dropdown */}
+          <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-20 max-h-64 overflow-y-auto">
+            {currencies.map((curr) => (
+              <button
+                key={curr.code}
+                onClick={() => {
+                  setCurrency(curr.code);
+                  setIsOpen(false);
+                }}
+                className={`
+                  w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3
+                  ${curr.code === currency ? 'bg-blue-50 text-blue-600' : ''}
+                `}
+              >
+                <span className="w-6 text-center font-medium">{curr.symbol}</span>
+                <span>{curr.code}</span>
+                <span className="text-gray-500 text-sm">{curr.name}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ChevronDownIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  );
+}
+16. Checkout Page (app/(main)/checkout/page.tsx)
+TypeScript
+
+/**
+ * Checkout Page
+ * 
+ * Brings together all payment components.
+ * Protected route - requires authentication.
+ */
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { AuthGuard } from '@/components/auth/AuthGuard';
+import { PaymentForm } from '@/components/payment/PaymentForm';
+import { OrderSummary } from '@/components/payment/OrderSummary';
+import { useCurrency } from '@/providers/CurrencyProvider';
+import { useSession } from '@/hooks/useSession';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
+export default function CheckoutPage() {
+  return (
+    <AuthGuard>
+      <CheckoutContent />
+    </AuthGuard>
+  );
+}
+
+function CheckoutContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useSession();
+  const { currency } = useCurrency();
+  
+  const productId = searchParams.get('product');
+  const priceId = searchParams.get('price');
+  
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Validate required params
+  useEffect(() => {
+    if (!productId || !priceId) {
+      router.push('/pricing');
+    }
+  }, [productId, priceId, router]);
+
+  // Fetch order details
+  useEffect(() => {
+    async function fetchOrderDetails() {
+      if (!productId || !priceId) return;
+      
+      try {
+        const response = await fetch(`/api/pricing/order-summary?` + new URLSearchParams({
+          productId,
+          priceId,
+          currency,
+        }));
+        
+        if (!response.ok) throw new Error('Failed to load order details');
+        
+        const data = await response.json();
+        setOrderDetails(data);
+      } catch (err) {
+        setError('Failed to load order details');
+      }
+    }
+    
+    fetchOrderDetails();
+  }, [productId, priceId, currency]);
+
+  const handlePaymentSuccess = (paymentId: string) => {
+    router.push(`/checkout/success?payment_id=${paymentId}`);
+  };
+
+  const handlePaymentError = (error: string) => {
+    setError(error);
+  };
+
+  if (error) {
+    return (
+      <div className="max-w-2xl mx-auto p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h2 className="text-red-800 font-semibold">Something went wrong</h2>
+          <p className="text-red-600 mt-2">{error}</p>
+          <button
+            onClick={() => router.push('/pricing')}
+            className="mt-4 px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200"
+          >
+            Back to Pricing
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto p-8">
+      <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* Order Summary */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+          {orderDetails ? (
+            <OrderSummary details={orderDetails} />
+          ) : (
+            <OrderSummarySkeleton />
+          )}
+        </div>
+
+        {/* Payment Form */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Payment Details</h2>
+          
+          <Elements
+            stripe={stripePromise}
+            options={{
+              appearance: {
+                theme: 'stripe',
+                variables: {
+                  colorPrimary: '#0066cc',
+                },
+              },
+            }}
+          >
+            {productId && priceId && (
+              <PaymentForm
+                productId={productId}
+                priceId={priceId}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+              />
+            )}
+          </Elements>
+          
+          {/* Trust badges */}
+          <div className="mt-8 pt-6 border-t">
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              <LockIcon className="h-5 w-5" />
+              <span>Your payment information is encrypted and secure</span>
+            </div>
+            <div className="flex items-center gap-4 mt-2">
+              <img src="/stripe-badge.svg" alt="Powered by Stripe" className="h-8" />
+              <img src="/ssl-badge.svg" alt="SSL Secured" className="h-8" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface OrderDetails {
+  product: {
+    name: string;
+    description: string;
+  };
+  price: {
+    amount: number;
+    displayAmount: string;
+    currency: string;
+  };
+  tax: {
+    amount: number;
+    displayAmount: string;
+    rate: number;
+  };
+  total: {
+    amount: number;
+    displayAmount: string;
+  };
+}
+
+function OrderSummary({ details }: { details: OrderDetails }) {
+  return (
+    <div className="bg-gray-50 rounded-lg p-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="font-medium">{details.product.name}</h3>
+          <p className="text-sm text-gray-500">{details.product.description}</p>
+        </div>
+        <span className="font-medium">{details.price.displayAmount}</span>
+      </div>
+      
+      <hr className="my-4" />
+      
+      <div className="space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-gray-500">Subtotal</span>
+          <span>{details.price.displayAmount}</span>
+        </div>
+        
+        {details.tax.amount > 0 && (
+          <div className="flex justify-between">
+            <span className="text-gray-500">Tax ({details.tax.rate}%)</span>
+            <span>{details.tax.displayAmount}</span>
+          </div>
+        )}
+      </div>
+      
+      <hr className="my-4" />
+      
+      <div className="flex justify-between font-semibold">
+        <span>Total</span>
+        <span className="text-lg">{details.total.displayAmount}</span>
+      </div>
+    </div>
+  );
+}
+
+function OrderSummarySkeleton() {
+  return (
+    <div className="bg-gray-50 rounded-lg p-6 animate-pulse">
+      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+      <div className="h-4 bg-gray-200 rounded w-1/2 mt-2"></div>
+      <hr className="my-4" />
+      <div className="h-4 bg-gray-200 rounded w-full mt-2"></div>
+      <div className="h-4 bg-gray-200 rounded w-full mt-2"></div>
+      <hr className="my-4" />
+      <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+    </div>
+  );
+}
+
+function LockIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+      />
+    </svg>
+  );
+}
+17. API Route: Get Price (app/api/pricing/get-price/route.ts)
+TypeScript
+
+/**
+ * Get Price API
+ * 
+ * Returns price for a product in specified currency.
+ * Handles conversion if exact price not available.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
+const querySchema = z.object({
+  productId: z.string().uuid(),
+  currency: z.string().length(3),
+  interval: z.enum(['month', 'year']).optional(),
+});
+
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = Object.fromEntries(request.nextUrl.searchParams);
+    const validation = querySchema.safeParse(searchParams);
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid parameters', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const { productId, currency, interval } = validation.data;
+    
+    const pricingService = getPricingService();
+    const price = await pricingService.getPriceForCurrency(
+      productId,
+      currency,
+      interval
+    );
+
+    if (!price) {
+      return NextResponse.json(
+        { error: 'Price not found' },
+        { status: 404 }
+      );
+    }
+
+    // Get the Stripe price ID for this currency
+    const stripePrice = await getStripePriceId(productId, currency, interval);
+
+    return NextResponse.json({
+      priceId: stripePrice?.id,
+      amount: price.amount,
+      displayAmount: price.displayAmount,
+      currency: price.currency,
+      currencySymbol: price.currencySymbol,
+      isConverted: price.isConverted || false,
+      originalCurrency: price.originalCurrency,
+      originalAmount: price.originalAmount,
+    });
+
+  } catch (error) {
+    console.error('Get price error:', error);
+    return NextResponse.json(
+      { error: 'Failed to get price' },
+      { status: 500 }
+    );
+  }
+}
+18. Audit Logger (lib/payments/audit-logger.ts)
+TypeScript
+
+/**
+ * Audit Logger
+ * 
+ * Immutable record of all payment-related events.
+ * Critical for:
+ * - Debugging issues
+ * - Compliance (PCI-DSS, SOX)
+ * - Dispute evidence
+ * - Fraud investigation
+ */
+
+export class AuditLogger {
+  private supabase: SupabaseClient;
+
+  constructor(supabase: SupabaseClient) {
+    this.supabase = supabase;
+  }
+
+  /**
+   * Log a payment event
+   */
+  async log(entry: {
+    paymentId?: string;
+    eventType: string;
+    actorType: 'user' | 'system' | 'stripe' | 'admin';
+    actorId: string;
+    previousState?: Record<string, any>;
+    newState?: Record<string, any>;
+    metadata?: Record<string, any>;
+    ipAddress?: string;
+    userAgent?: string;
+  }): Promise<void> {
+    try {
+      await this.supabase.from('payment_audit_log').insert({
+        payment_id: entry.paymentId,
+        event_type: entry.eventType,
+        actor_type: entry.actorType,
+        actor_id: entry.actorId,
+        previous_state: entry.previousState,
+        new_state: entry.newState,
+        metadata: entry.metadata || {},
+        ip_address: entry.ipAddress,
+        user_agent: entry.userAgent,
+        created_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      // Log to external service if database fails
+      console.error('Audit log failed:', error, entry);
+      
+      // Send to backup logging service (e.g., CloudWatch, Datadog)
+      await this.sendToBackupLogger(entry, error);
+    }
+  }
+
+  /**
+   * Get audit trail for a payment
+   */
+  async getAuditTrail(paymentId: string): Promise<AuditEntry[]> {
+    const { data, error } = await this.supabase
+      .from('payment_audit_log')
+      .select('*')
+      .eq('payment_id', paymentId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return data;
+  }
+
+  /**
+   * Get all events for a user (for support/compliance)
+   */
+  async getUserAuditTrail(
+    userId: string,
+    options?: {
+      startDate?: Date;
+      endDate?: Date;
+      eventTypes?: string[];
+    }
+  ): Promise<AuditEntry[]> {
+    let query = this.supabase
+      .from('payment_audit_log')
+      .select(`
+        *,
+        payment:payments(id, amount, currency, status)
+      `)
+      .eq('actor_id', userId)
+      .eq('actor_type', 'user')
+      .order('created_at', { ascending: false });
+
+    if (options?.startDate) {
+      query = query.gte('created_at', options.startDate.toISOString());
+    }
+    if (options?.endDate) {
+      query = query.lte('created_at', options.endDate.toISOString());
+    }
+    if (options?.eventTypes?.length) {
+      query = query.in('event_type', options.eventTypes);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  }
+
+  /**
+   * Backup logger for critical events
+   */
+  private async sendToBackupLogger(entry: any, originalError: any): Promise<void> {
+    // Implement backup logging to external service
+    // This ensures audit trail is never lost
+  }
+}
+
+interface AuditEntry {
+  id: string;
+  payment_id: string | null;
+  event_type: string;
+  actor_type: string;
+  actor_id: string;
+  previous_state: Record<string, any> | null;
+  new_state: Record<string, any> | null;
+  metadata: Record<string, any>;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+}
+19. Error Types (lib/payments/errors.ts)
+TypeScript
+
+/**
+ * Payment Error Types
+ * 
+ * Structured error handling for payment operations.
+ */
+
+export class PaymentError extends Error {
+  constructor(
+    public code: PaymentErrorCode,
+    message: string,
+    public details?: Record<string, any>
+  ) {
+    super(message);
+    this.name = 'PaymentError';
+  }
+
+  toJSON() {
+    return {
+      code: this.code,
+      message: this.message,
+      details: this.details,
+    };
+  }
+}
+
+export type PaymentErrorCode =
+  | 'INVALID_IDEMPOTENCY_KEY'
+  | 'DUPLICATE_PAYMENT'
+  | 'PRICE_NOT_FOUND'
+  | 'PRODUCT_NOT_FOUND'
+  | 'CURRENCY_NOT_SUPPORTED'
+  | 'FRAUD_DETECTED'
+  | 'RATE_LIMIT_EXCEEDED'
+  | 'INVALID_AMOUNT'
+  | 'STRIPE_ERROR'
+  | 'WEBHOOK_ERROR'
+  | 'REFUND_ERROR'
+  | 'CUSTOMER_ERROR'
+  | 'UNAUTHORIZED'
+  | 'INTERNAL_ERROR';
+
+export class WebhookError extends Error {
+  constructor(
+    public code: 'INVALID_SIGNATURE' | 'PROCESSING_ERROR' | 'UNKNOWN_EVENT',
+    message: string
+  ) {
+    super(message);
+    this.name = 'WebhookError';
+  }
+}
+
+// Error messages for user display (sanitized)
+export const USER_FRIENDLY_ERRORS: Record<PaymentErrorCode, string> = {
+  INVALID_IDEMPOTENCY_KEY: 'Please refresh and try again.',
+  DUPLICATE_PAYMENT: 'This payment has already been processed.',
+  PRICE_NOT_FOUND: 'This price is no longer available.',
+  PRODUCT_NOT_FOUND: 'This product is no longer available.',
+  CURRENCY_NOT_SUPPORTED: 'This currency is not supported.',
+  FRAUD_DETECTED: 'We were unable to process your payment. Please contact support.',
+  RATE_LIMIT_EXCEEDED: 'Too many attempts. Please wait a moment and try again.',
+  INVALID_AMOUNT: 'Invalid payment amount.',
+  STRIPE_ERROR: 'Payment processing error. Please try again.',
+  WEBHOOK_ERROR: 'Payment verification error. Please contact support if charged.',
+  REFUND_ERROR: 'Unable to process refund. Please contact support.',
+  CUSTOMER_ERROR: 'Account error. Please contact support.',
+  UNAUTHORIZED: 'Please log in to continue.',
+  INTERNAL_ERROR: 'An unexpected error occurred. Please try again.',
+};
+20. Rate Limiter (lib/payments/rate-limiter.ts)
+TypeScript
+
+/**
+ * Rate Limiter for Payment Operations
+ * 
+ * Prevents abuse and protects against card testing attacks.
+ */
+
+interface RateLimitConfig {
+  windowMs: number;      // Time window in milliseconds
+  maxRequests: number;   // Max requests per window
+}
+
+const RATE_LIMITS: Record<string, RateLimitConfig> = {
+  create_payment: { windowMs: 60 * 1000, maxRequests: 5 },      // 5 per minute
+  confirm_payment: { windowMs: 60 * 1000, maxRequests: 10 },    // 10 per minute
+  refund: { windowMs: 60 * 60 * 1000, maxRequests: 3 },         // 3 per hour
+  price_lookup: { windowMs: 60 * 1000, maxRequests: 30 },       // 30 per minute
+};
+
+export class RateLimiter {
+  private supabase: SupabaseClient;
+
+  constructor(supabase: SupabaseClient) {
+    this.supabase = supabase;
+  }
+
+  /**
+   * Check if action is allowed
+   */
+  async checkLimit(
+    identifier: string,  // userId or IP
+    action: keyof typeof RATE_LIMITS
+  ): Promise<{
+    allowed: boolean;
+    remaining: number;
+    resetAt: Date;
+    retryAfter: number;
+  }> {
+    const config = RATE_LIMITS[action];
+    if (!config) {
+      return { allowed: true, remaining: 999, resetAt: new Date(), retryAfter: 0 };
+    }
+
+    const windowStart = new Date(Date.now() - config.windowMs);
+    const key = `${identifier}:${action}`;
+
+    // Count requests in current window
+    const { count } = await this.supabase
+      .from('rate_limit_log')
+      .select('*', { count: 'exact', head: true })
+      .eq('key', key)
+      .gte('created_at', windowStart.toISOString());
+
+    const currentCount = count || 0;
+    const allowed = currentCount < config.maxRequests;
+    const remaining = Math.max(0, config.maxRequests - currentCount - 1);
+    const resetAt = new Date(Date.now() + config.windowMs);
+    const retryAfter = allowed ? 0 : Math.ceil(config.windowMs / 1000);
+
+    // Log this request if allowed
+    if (allowed) {
+      await this.supabase.from('rate_limit_log').insert({
+        key,
+        identifier,
+        action,
+        created_at: new Date().toISOString(),
+      });
+    }
+
+    return { allowed, remaining, resetAt, retryAfter };
+  }
+
+  /**
+   * Clean up old rate limit entries
+   */
+  async cleanup(): Promise<void> {
+    const maxAge = Math.max(...Object.values(RATE_LIMITS).map(c => c.windowMs));
+    const cutoff = new Date(Date.now() - maxAge);
+
+    await this.supabase
+      .from('rate_limit_log')
+      .delete()
+      .lt('created_at', cutoff.toISOString());
+  }
+}
+
+// Add this table to your database schema
+/*
+CREATE TABLE rate_limit_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key VARCHAR(255) NOT NULL,
+  identifier VARCHAR(255) NOT NULL,
+  action VARCHAR(100) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_rate_limit_key_created ON rate_limit_log(key, created_at);
+
+-- Auto-cleanup old entries
+CREATE OR REPLACE FUNCTION cleanup_rate_limits()
+RETURNS void AS $$
+BEGIN
+  DELETE FROM rate_limit_log WHERE created_at < NOW() - INTERVAL '1 hour';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Run cleanup every hour
+SELECT cron.schedule('cleanup-rate-limits', '0 * * * *', 'SELECT cleanup_rate_limits()');
+*/
+Security Checklist Summary
+Server-Side (CRITICAL)
+text
+
+✓ ALWAYS verify prices on server - never trust client amounts
+✓ ALWAYS verify webhook signatures before processing
+✓ ALWAYS use idempotency keys to prevent duplicate charges
+✓ ALWAYS store payment records BEFORE calling Stripe
+✓ NEVER expose secret keys to client
+✓ NEVER log full card numbers or CVV
+✓ ALWAYS use HTTPS
+✓ ALWAYS validate all input with Zod schemas
+✓ ALWAYS authenticate users before payment operations
+✓ ALWAYS rate limit payment endpoints
+Client-Side
+text
+
+✓ Use Stripe Elements (not raw card inputs)
+✓ Generate idempotency key before payment
+✓ Handle all error states gracefully
+✓ Show clear loading states
+✓ Display trust badges and security info
+Database
+text
+
+✓ RLS policies prevent direct modification
+✓ Audit log is immutable (no UPDATE/DELETE)
+✓ Sensitive data encrypted at rest
+✓ Payment records linked to Stripe IDs
+Compliance
+text
+
+✓ PCI-DSS: Using Stripe Elements (SAQ-A)
+✓ Audit trail for all payment events
+✓ Refund records maintained
+✓ Customer data properly secured
+Integration with Your Existing Project
+1. Connect to Your Locale Provider
+TypeScript
+
+// In your existing LocaleProvider, add currency detection
+export function LocaleProvider({ children }) {
+  // Your existing locale logic...
+  
+  // Add: Get default currency based on detected country
+  const defaultCurrency = useMemo(() => {
+    return COUNTRY_CURRENCY_MAP[country] || 'USD';
+  }, [country]);
+  
+  // Pass to CurrencyProvider
+  return (
+    <LocaleContext.Provider value={{ locale, country, language }}>
+      <CurrencyProvider defaultCurrency={defaultCurrency}>
+        {children}
+      </CurrencyProvider>
+    </LocaleContext.Provider>
+  );
+}
+2. Connect to Your Session Manager
+TypeScript
+
+// In PaymentService, use your existing session
+import { SessionManager } from '@/lib/auth/session-manager';
+
+async function getAuthenticatedUser(request: NextRequest) {
+  const sessionManager = SessionManager.getInstance();
+  const state = sessionManager.getState();
+  
+  if (state.status !== 'authenticated' || !state.user) {
+    throw new PaymentError('UNAUTHORIZED', 'Authentication required');
+  }
+  
+  return state.user;
+}
+3. Provider Hierarchy in Layout
+TypeScript
+
+// app/layout.tsx
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <AuthProvider>
+          <LocaleProvider>
+            <CurrencyProvider>
+              <StripeProvider>
+                {children}
+              </StripeProvider>
+            </CurrencyProvider>
+          </LocaleProvider>
+        </AuthProvider>
+      </body>
+    </html>
+  );
+}
+This architecture gives you enterprise-grade payment processing with proper security, multi-currency support, and full audit trails. Let Claude 4.5 help you implement each piece, starting with the database schema, then the services, then the API routes, and finally the UI components.

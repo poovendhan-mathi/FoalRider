@@ -4,14 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { ArrowRight, Star, ShoppingBag } from "lucide-react";
 import { getFeaturedProducts } from "@/lib/products";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import { PriceDisplay } from "@/components/PriceDisplay";
 import { getProductImageUrl } from "@/lib/product-helpers";
 
 // Get featured products for sections
 async function getSectionProducts() {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   // Get Men's Tapered Fit Dark Indigo Jeans
   const { data: mensJeansProduct } = await supabase

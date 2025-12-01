@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useAuth } from "@/lib/auth/AuthContext";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthProvider";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,18 +23,17 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Check for verification errors or messages
   useEffect(() => {
-    const error = searchParams.get('error');
-    const message = searchParams.get('message');
-    
-    if (error === 'verification_failed') {
-      toast.error(message || 'Email verification failed. Please try again.');
-    } else if (error === 'no_code') {
-      toast.error('Invalid verification link.');
+    const error = searchParams.get("error");
+    const message = searchParams.get("message");
+
+    if (error === "verification_failed") {
+      toast.error(message || "Email verification failed. Please try again.");
+    } else if (error === "no_code") {
+      toast.error("Invalid verification link.");
     }
   }, [searchParams]);
 
@@ -43,13 +42,21 @@ function LoginForm() {
     setError("");
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      console.log("[Login] Attempting to sign in with email:", email);
+      await signIn(email, password);
+      console.log("[Login] Sign in success, waiting for session sync...");
 
-    if (error) {
-      setError(error.message);
+      // Wait a bit for session to sync across tabs
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log("[Login] Redirecting to profile");
+
+      // Use window.location for a full page reload to ensure middleware runs
+      window.location.href = "/profile";
+    } catch (err: unknown) {
+      console.error("[Login] Sign in error:", err);
+      setError((err as Error)?.message || "Failed to sign in");
       setLoading(false);
-    } else {
-      router.push("/profile");
     }
   };
 
@@ -123,11 +130,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

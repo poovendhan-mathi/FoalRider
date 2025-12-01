@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth/admin";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import ProductForm from "@/components/admin/ProductForm";
 
 async function getProduct(productId: string) {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   const { data: product, error } = await supabase
     .from("products")
@@ -23,7 +23,7 @@ async function getProduct(productId: string) {
 }
 
 async function getCategories() {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   const { data: categories } = await supabase
     .from("categories")

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Package, ShoppingCart, Users, BarChart3 } from "lucide-react";
 import {
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 
 async function getDashboardStats() {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   const { count: productsCount } = await supabase
     .from("products")

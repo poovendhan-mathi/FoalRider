@@ -49,10 +49,13 @@ interface Category {
   name: string;
 }
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-IN", {
+function formatCurrency(amount: number, currency: string = "INR"): string {
+  // Default to INR, but support USD and others
+  let locale = "en-IN";
+  if (currency === "USD") locale = "en-US";
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "INR",
+    currency,
   }).format(amount / 100);
 }
 
@@ -65,12 +68,16 @@ export default function ProductsClientPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const pageSize = 20;
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/admin/products");
+      const response = await fetch(
+        `/api/admin/products?page=${currentPage}&limit=${pageSize}`
+      );
       const data = await response.json();
 
       if (!response.ok) {
@@ -78,6 +85,8 @@ export default function ProductsClientPage() {
       }
 
       setProducts(data.products || []);
+      setTotalPages(data.totalPages || 1);
+      setTotalCount(data.totalCount || 0);
     } catch (error) {
       toast({
         title: "Error",
@@ -120,9 +129,9 @@ export default function ProductsClientPage() {
     fetchProducts();
     fetchCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentPage]); // Refetch when page changes
 
-  // Filter and search products
+  // Filter and search products (client-side for now, can be moved to server later)
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
 
@@ -155,12 +164,19 @@ export default function ProductsClientPage() {
     return filtered;
   }, [products, searchQuery, categoryFilter, statusFilter]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredProducts.length / pageSize);
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  // Use server-side pagination data
+  const paginatedProducts =
+    searchQuery || categoryFilter !== "all" || statusFilter !== "all"
+      ? filteredProducts.slice(
+          (currentPage - 1) * pageSize,
+          currentPage * pageSize
+        )
+      : products; // Use server-paginated data when no filters applied
+
+  const displayTotalPages =
+    searchQuery || categoryFilter !== "all" || statusFilter !== "all"
+      ? Math.ceil(filteredProducts.length / pageSize)
+      : totalPages; // Use server total pages when no filters
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -326,7 +342,10 @@ export default function ProductsClientPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-semibold text-sm sm:text-base">
-                          {formatCurrency(product.price)}
+                          {formatCurrency(
+                            product.price,
+                            (product as any).currency || "INR"
+                          )}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <span
@@ -374,7 +393,7 @@ export default function ProductsClientPage() {
               </div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
+              {displayTotalPages > 1 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
                   <p className="text-sm text-gray-600">
                     Showing {(currentPage - 1) * pageSize + 1} to{" "}
@@ -392,15 +411,15 @@ export default function ProductsClientPage() {
                     </Button>
                     <div className="flex items-center gap-1">
                       {Array.from(
-                        { length: Math.min(5, totalPages) },
+                        { length: Math.min(5, displayTotalPages) },
                         (_, i) => {
                           let pageNum;
-                          if (totalPages <= 5) {
+                          if (displayTotalPages <= 5) {
                             pageNum = i + 1;
                           } else if (currentPage <= 3) {
                             pageNum = i + 1;
-                          } else if (currentPage >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
+                          } else if (currentPage >= displayTotalPages - 2) {
+                            pageNum = displayTotalPages - 4 + i;
                           } else {
                             pageNum = currentPage - 2 + i;
                           }
@@ -423,9 +442,11 @@ export default function ProductsClientPage() {
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                        setCurrentPage((p) =>
+                          Math.min(displayTotalPages, p + 1)
+                        )
                       }
-                      disabled={currentPage >= totalPages}
+                      disabled={currentPage >= displayTotalPages}
                     >
                       Next
                     </Button>

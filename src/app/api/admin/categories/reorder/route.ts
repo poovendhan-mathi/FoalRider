@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerActionClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
 /**
@@ -21,7 +21,7 @@ const reorderSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
     // Verify admin
     const {

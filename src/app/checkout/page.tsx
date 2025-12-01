@@ -11,7 +11,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { useCart } from "@/contexts/CartContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ import {
   createPaymentIntent,
   toStripeAmount,
 } from "@/lib/stripe/client";
-import { createClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 // Payment Form Component
 function CheckoutForm({
@@ -114,7 +114,7 @@ function CheckoutForm({
 
         try {
           // Payment successful - create order in database
-          const supabase = createClient();
+          const supabase = getSupabaseBrowserClient();
 
           // Get current user (may be null for guests)
           const {
@@ -327,7 +327,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalItems, clearCart } = useCart();
   const { formatPrice, currency, convertPrice } = useCurrency();
-  const { user } = useAuth();
+  const { state } = useAuth(); const user = state.user;
   const [clientSecret, setClientSecret] = useState<string>("");
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
   const [stripePromise, setStripePromise] = useState<Promise<any> | null>(null);
@@ -357,7 +357,7 @@ export default function CheckoutPage() {
     async function loadProfileData() {
       if (!user) return;
 
-      const supabase = createClient();
+      const supabase = getSupabaseBrowserClient();
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("full_name, phone, email")
@@ -393,15 +393,15 @@ export default function CheckoutPage() {
   const shipping = subtotal > 2000 ? 0 : 200; // Free shipping over ₹2000
   const tax = subtotal * 0.18; // 18% GST
   const total = subtotal + shipping + tax;
-  
+
   // For Stripe: Convert from INR to selected currency
   const totalInSelectedCurrency = convertPrice(total);
 
-  console.log('💰 Checkout calculations:', {
+  console.log("💰 Checkout calculations:", {
     currency,
     totalINR: total,
     totalConverted: totalInSelectedCurrency,
-    note: 'Display uses formatPrice (auto-converts), Stripe uses converted amount',
+    note: "Display uses formatPrice (auto-converts), Stripe uses converted amount",
   });
 
   // Initialize Stripe (only once)
@@ -423,7 +423,11 @@ export default function CheckoutPage() {
     paymentIntentCreated.current = true;
 
     try {
-      console.log("💰 Creating payment intent for amount:", totalInSelectedCurrency, currency);
+      console.log(
+        "💰 Creating payment intent for amount:",
+        totalInSelectedCurrency,
+        currency
+      );
       const stripeAmount = toStripeAmount(totalInSelectedCurrency, currency);
       const { clientSecret: secret, paymentIntentId: id } =
         await createPaymentIntent(stripeAmount, currency, {
@@ -442,7 +446,14 @@ export default function CheckoutPage() {
     } finally {
       setIsInitializing(false);
     }
-  }, [totalInSelectedCurrency, currency, user?.id, totalItems, clientSecret, isInitializing]);
+  }, [
+    totalInSelectedCurrency,
+    currency,
+    user?.id,
+    totalItems,
+    clientSecret,
+    isInitializing,
+  ]);
 
   // Trigger payment intent creation only once when ready
   useEffect(() => {

@@ -4,7 +4,7 @@
 // Handles multi-currency support with database-managed exchange rates
 // ✅ FIXED: Corrected exchange rate logic (27 Nov 2025)
 
-import { createClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type SupportedCurrency = "INR" | "SGD" | "USD" | "EUR" | "GBP" | "AUD";
 
@@ -73,7 +73,7 @@ export async function getExchangeRates(): Promise<ExchangeRates> {
     }
 
     // Fetch from database
-    const supabase = createClient();
+    const supabase = getSupabaseBrowserClient();
     const { data, error } = await supabase
       .from("currency_rates")
       .select("currency_code, rate_to_inr")

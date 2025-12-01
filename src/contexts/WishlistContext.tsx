@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth } from '@/lib/auth/AuthContext';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthProvider";
 import {
   getUserWishlist,
   getGuestWishlist,
@@ -13,8 +13,8 @@ import {
   clearWishlist as clearWishlistDB,
   clearGuestWishlist,
   WishlistItem,
-} from '@/lib/supabase/wishlist';
-import { toast } from 'sonner';
+} from "@/lib/supabase/wishlist";
+import { toast } from "sonner";
 
 interface WishlistContextType {
   items: WishlistItem[];
@@ -27,25 +27,30 @@ interface WishlistContextType {
   loading: boolean;
 }
 
-const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
+const WishlistContext = createContext<WishlistContextType | undefined>(
+  undefined
+);
 
 // Generate or retrieve session ID for guest users
 function getSessionId(): string {
-  if (typeof window === 'undefined') return '';
-  
-  let sessionId = localStorage.getItem('wishlist_session_id');
+  if (typeof window === "undefined") return "";
+
+  let sessionId = localStorage.getItem("wishlist_session_id");
   if (!sessionId) {
-    sessionId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('wishlist_session_id', sessionId);
+    sessionId = `guest_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+    localStorage.setItem("wishlist_session_id", sessionId);
   }
   return sessionId;
 }
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { state } = useAuth();
+  const user = state.user;
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sessionId, setSessionId] = useState<string>('');
+  const [sessionId, setSessionId] = useState<string>("");
 
   // Initialize sessionId on client side only
   useEffect(() => {
@@ -68,30 +73,30 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   async function loadWishlist() {
     // Skip loading during SSR
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       setLoading(false);
       return;
     }
-    
+
     setLoading(true);
     try {
       let wishlistItems: WishlistItem[] = [];
-      
+
       if (user) {
         wishlistItems = await getUserWishlist(user.id);
       } else if (sessionId) {
         wishlistItems = await getGuestWishlist(sessionId);
       }
-      
+
       // Ensure wishlistItems is always an array
       if (!Array.isArray(wishlistItems)) {
-        console.warn('Wishlist items not an array, setting empty array');
+        console.warn("Wishlist items not an array, setting empty array");
         wishlistItems = [];
       }
-      
+
       setItems(wishlistItems);
     } catch (error) {
-      console.error('Error loading wishlist:', error);
+      console.error("Error loading wishlist:", error);
       setItems([]); // Set empty wishlist on error
       // Don't show error toast on initial load
     } finally {
@@ -106,12 +111,12 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       // Reload wishlist
       await loadWishlist();
     } catch (error) {
-      console.error('Error syncing wishlist:', error);
+      console.error("Error syncing wishlist:", error);
     }
   }
 
   function isInWishlist(productId: string): boolean {
-    return items.some(item => item.product_id === productId);
+    return items.some((item) => item.product_id === productId);
   }
 
   async function addToWishlist(productId: string, productName?: string) {
@@ -123,7 +128,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       product_id: productId,
       created_at: new Date().toISOString(),
     };
-    setItems(prev => [tempItem, ...prev]);
+    setItems((prev) => [tempItem, ...prev]);
 
     try {
       const success = user
@@ -131,26 +136,28 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         : await addToGuestWishlist(sessionId, productId);
 
       if (success) {
-        toast.success(productName ? `${productName} added to wishlist` : 'Added to wishlist');
+        toast.success(
+          productName ? `${productName} added to wishlist` : "Added to wishlist"
+        );
         // Reload to get the actual item with product data
         await loadWishlist();
       } else {
         // Rollback optimistic update
-        setItems(prev => prev.filter(item => item.id !== tempItem.id));
-        toast.error('Failed to add to wishlist');
+        setItems((prev) => prev.filter((item) => item.id !== tempItem.id));
+        toast.error("Failed to add to wishlist");
       }
     } catch (error) {
-      console.error('Error adding to wishlist:', error);
+      console.error("Error adding to wishlist:", error);
       // Rollback optimistic update
-      setItems(prev => prev.filter(item => item.id !== tempItem.id));
-      toast.error('Failed to add to wishlist');
+      setItems((prev) => prev.filter((item) => item.id !== tempItem.id));
+      toast.error("Failed to add to wishlist");
     }
   }
 
   async function removeFromWishlist(productId: string) {
     // Optimistic update
     const previousItems = items;
-    setItems(prev => prev.filter(item => item.product_id !== productId));
+    setItems((prev) => prev.filter((item) => item.product_id !== productId));
 
     try {
       const success = user
@@ -158,17 +165,17 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         : await removeFromGuestWishlist(sessionId, productId);
 
       if (success) {
-        toast.success('Removed from wishlist');
+        toast.success("Removed from wishlist");
       } else {
         // Rollback optimistic update
         setItems(previousItems);
-        toast.error('Failed to remove from wishlist');
+        toast.error("Failed to remove from wishlist");
       }
     } catch (error) {
-      console.error('Error removing from wishlist:', error);
+      console.error("Error removing from wishlist:", error);
       // Rollback optimistic update
       setItems(previousItems);
-      toast.error('Failed to remove from wishlist');
+      toast.error("Failed to remove from wishlist");
     }
   }
 
@@ -191,17 +198,17 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         : await clearGuestWishlist(sessionId);
 
       if (success) {
-        toast.success('Wishlist cleared');
+        toast.success("Wishlist cleared");
       } else {
         // Rollback optimistic update
         setItems(previousItems);
-        toast.error('Failed to clear wishlist');
+        toast.error("Failed to clear wishlist");
       }
     } catch (error) {
-      console.error('Error clearing wishlist:', error);
+      console.error("Error clearing wishlist:", error);
       // Rollback optimistic update
       setItems(previousItems);
-      toast.error('Failed to clear wishlist');
+      toast.error("Failed to clear wishlist");
     }
   }
 
@@ -216,13 +223,17 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     loading,
   };
 
-  return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
+  return (
+    <WishlistContext.Provider value={value}>
+      {children}
+    </WishlistContext.Provider>
+  );
 }
 
 export function useWishlist() {
   const context = useContext(WishlistContext);
   if (context === undefined) {
-    throw new Error('useWishlist must be used within a WishlistProvider');
+    throw new Error("useWishlist must be used within a WishlistProvider");
   }
   return context;
 }

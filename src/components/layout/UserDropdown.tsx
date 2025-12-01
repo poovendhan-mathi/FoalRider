@@ -14,7 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { User, Settings, LogOut, ShieldCheck } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 interface UserDropdownProps {
   user: {
@@ -48,7 +48,7 @@ export function UserDropdown({
   }
 
   const handleSignOut = async () => {
-    const supabase = createClient();
+    const supabase = getSupabaseBrowserClient();
 
     // Clear all local storage and session storage
     if (typeof window !== "undefined") {

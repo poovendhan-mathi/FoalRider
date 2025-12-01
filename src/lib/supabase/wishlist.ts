@@ -1,4 +1,4 @@
-import { createClient } from './client';
+import { getSupabaseBrowserClient } from "./client";
 
 export interface WishlistItem {
   id: string;
@@ -20,11 +20,12 @@ export interface WishlistItem {
  * Get wishlist items for authenticated user
  */
 export async function getUserWishlist(userId: string): Promise<WishlistItem[]> {
-  const supabase = createClient();
-  
+  const supabase = getSupabaseBrowserClient();
+
   const { data, error } = await supabase
-    .from('wishlists')
-    .select(`
+    .from("wishlists")
+    .select(
+      `
       *,
       product:products(
         id,
@@ -34,12 +35,13 @@ export async function getUserWishlist(userId: string): Promise<WishlistItem[]> {
         image_url,
         category_id
       )
-    `)
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    `
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Error fetching user wishlist:', error);
+    console.error("Error fetching user wishlist:", error);
     return [];
   }
 
@@ -49,12 +51,15 @@ export async function getUserWishlist(userId: string): Promise<WishlistItem[]> {
 /**
  * Get wishlist items for guest user by session ID
  */
-export async function getGuestWishlist(sessionId: string): Promise<WishlistItem[]> {
-  const supabase = createClient();
-  
+export async function getGuestWishlist(
+  sessionId: string
+): Promise<WishlistItem[]> {
+  const supabase = getSupabaseBrowserClient();
+
   const { data, error } = await supabase
-    .from('wishlists')
-    .select(`
+    .from("wishlists")
+    .select(
+      `
       *,
       product:products(
         id,
@@ -64,12 +69,13 @@ export async function getGuestWishlist(sessionId: string): Promise<WishlistItem[
         image_url,
         category_id
       )
-    `)
-    .eq('session_id', sessionId)
-    .order('created_at', { ascending: false });
+    `
+    )
+    .eq("session_id", sessionId)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Error fetching guest wishlist:', error);
+    console.error("Error fetching guest wishlist:", error);
     return [];
   }
 
@@ -79,19 +85,20 @@ export async function getGuestWishlist(sessionId: string): Promise<WishlistItem[
 /**
  * Add product to wishlist for authenticated user
  */
-export async function addToWishlist(userId: string, productId: string): Promise<boolean> {
-  const supabase = createClient();
-  
-  const { error } = await supabase
-    .from('wishlists')
-    .insert({
-      user_id: userId,
-      product_id: productId,
-      session_id: null
-    });
+export async function addToWishlist(
+  userId: string,
+  productId: string
+): Promise<boolean> {
+  const supabase = getSupabaseBrowserClient();
+
+  const { error } = await supabase.from("wishlists").insert({
+    user_id: userId,
+    product_id: productId,
+    session_id: null,
+  });
 
   if (error) {
-    console.error('Error adding to wishlist:', error);
+    console.error("Error adding to wishlist:", error);
     return false;
   }
 
@@ -101,19 +108,20 @@ export async function addToWishlist(userId: string, productId: string): Promise<
 /**
  * Add product to wishlist for guest user
  */
-export async function addToGuestWishlist(sessionId: string, productId: string): Promise<boolean> {
-  const supabase = createClient();
-  
-  const { error } = await supabase
-    .from('wishlists')
-    .insert({
-      user_id: null,
-      session_id: sessionId,
-      product_id: productId
-    });
+export async function addToGuestWishlist(
+  sessionId: string,
+  productId: string
+): Promise<boolean> {
+  const supabase = getSupabaseBrowserClient();
+
+  const { error } = await supabase.from("wishlists").insert({
+    user_id: null,
+    session_id: sessionId,
+    product_id: productId,
+  });
 
   if (error) {
-    console.error('Error adding to guest wishlist:', error);
+    console.error("Error adding to guest wishlist:", error);
     return false;
   }
 
@@ -123,17 +131,20 @@ export async function addToGuestWishlist(sessionId: string, productId: string): 
 /**
  * Remove product from wishlist for authenticated user
  */
-export async function removeFromWishlist(userId: string, productId: string): Promise<boolean> {
-  const supabase = createClient();
-  
+export async function removeFromWishlist(
+  userId: string,
+  productId: string
+): Promise<boolean> {
+  const supabase = getSupabaseBrowserClient();
+
   const { error } = await supabase
-    .from('wishlists')
+    .from("wishlists")
     .delete()
-    .eq('user_id', userId)
-    .eq('product_id', productId);
+    .eq("user_id", userId)
+    .eq("product_id", productId);
 
   if (error) {
-    console.error('Error removing from wishlist:', error);
+    console.error("Error removing from wishlist:", error);
     return false;
   }
 
@@ -143,17 +154,20 @@ export async function removeFromWishlist(userId: string, productId: string): Pro
 /**
  * Remove product from wishlist for guest user
  */
-export async function removeFromGuestWishlist(sessionId: string, productId: string): Promise<boolean> {
-  const supabase = createClient();
-  
+export async function removeFromGuestWishlist(
+  sessionId: string,
+  productId: string
+): Promise<boolean> {
+  const supabase = getSupabaseBrowserClient();
+
   const { error } = await supabase
-    .from('wishlists')
+    .from("wishlists")
     .delete()
-    .eq('session_id', sessionId)
-    .eq('product_id', productId);
+    .eq("session_id", sessionId)
+    .eq("product_id", productId);
 
   if (error) {
-    console.error('Error removing from guest wishlist:', error);
+    console.error("Error removing from guest wishlist:", error);
     return false;
   }
 
@@ -163,18 +177,21 @@ export async function removeFromGuestWishlist(sessionId: string, productId: stri
 /**
  * Check if product is in user's wishlist
  */
-export async function isInWishlist(userId: string, productId: string): Promise<boolean> {
-  const supabase = createClient();
-  
+export async function isInWishlist(
+  userId: string,
+  productId: string
+): Promise<boolean> {
+  const supabase = getSupabaseBrowserClient();
+
   const { data, error } = await supabase
-    .from('wishlists')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('product_id', productId)
+    .from("wishlists")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("product_id", productId)
     .single();
 
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error checking wishlist:', error);
+  if (error && error.code !== "PGRST116") {
+    console.error("Error checking wishlist:", error);
     return false;
   }
 
@@ -184,18 +201,21 @@ export async function isInWishlist(userId: string, productId: string): Promise<b
 /**
  * Check if product is in guest's wishlist
  */
-export async function isInGuestWishlist(sessionId: string, productId: string): Promise<boolean> {
-  const supabase = createClient();
-  
+export async function isInGuestWishlist(
+  sessionId: string,
+  productId: string
+): Promise<boolean> {
+  const supabase = getSupabaseBrowserClient();
+
   const { data, error } = await supabase
-    .from('wishlists')
-    .select('id')
-    .eq('session_id', sessionId)
-    .eq('product_id', productId)
+    .from("wishlists")
+    .select("id")
+    .eq("session_id", sessionId)
+    .eq("product_id", productId)
     .single();
 
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error checking guest wishlist:', error);
+  if (error && error.code !== "PGRST116") {
+    console.error("Error checking guest wishlist:", error);
     return false;
   }
 
@@ -205,14 +225,17 @@ export async function isInGuestWishlist(sessionId: string, productId: string): P
 /**
  * Sync guest wishlist to user account after login
  */
-export async function syncGuestWishlist(sessionId: string, userId: string): Promise<boolean> {
-  const supabase = createClient();
+export async function syncGuestWishlist(
+  sessionId: string,
+  userId: string
+): Promise<boolean> {
+  const supabase = getSupabaseBrowserClient();
 
   // Get guest wishlist items
   const { data: guestItems, error: fetchError } = await supabase
-    .from('wishlists')
-    .select('product_id')
-    .eq('session_id', sessionId);
+    .from("wishlists")
+    .select("product_id")
+    .eq("session_id", sessionId);
 
   if (fetchError || !guestItems || guestItems.length === 0) {
     return true; // Nothing to sync
@@ -220,46 +243,50 @@ export async function syncGuestWishlist(sessionId: string, userId: string): Prom
 
   // Get existing user wishlist items
   const { data: userItems, error: userFetchError } = await supabase
-    .from('wishlists')
-    .select('product_id')
-    .eq('user_id', userId);
+    .from("wishlists")
+    .select("product_id")
+    .eq("user_id", userId);
 
   if (userFetchError) {
-    console.error('Error fetching user wishlist:', userFetchError);
+    console.error("Error fetching user wishlist:", userFetchError);
     return false;
   }
 
-  const existingProductIds = new Set(userItems?.map(item => item.product_id) || []);
+  const existingProductIds = new Set(
+    userItems?.map((item: { product_id: string }) => item.product_id) || []
+  );
 
   // Filter out items that already exist in user's wishlist
   const itemsToSync = guestItems
-    .filter(item => !existingProductIds.has(item.product_id))
-    .map(item => ({
+    .filter(
+      (item: { product_id: string }) => !existingProductIds.has(item.product_id)
+    )
+    .map((item: { product_id: string }) => ({
       user_id: userId,
       product_id: item.product_id,
-      session_id: null
+      session_id: null,
     }));
 
   if (itemsToSync.length > 0) {
     // Insert new items
     const { error: insertError } = await supabase
-      .from('wishlists')
+      .from("wishlists")
       .insert(itemsToSync);
 
     if (insertError) {
-      console.error('Error syncing wishlist:', insertError);
+      console.error("Error syncing wishlist:", insertError);
       return false;
     }
   }
 
   // Delete guest wishlist items
   const { error: deleteError } = await supabase
-    .from('wishlists')
+    .from("wishlists")
     .delete()
-    .eq('session_id', sessionId);
+    .eq("session_id", sessionId);
 
   if (deleteError) {
-    console.error('Error deleting guest wishlist:', deleteError);
+    console.error("Error deleting guest wishlist:", deleteError);
     return false;
   }
 
@@ -270,15 +297,15 @@ export async function syncGuestWishlist(sessionId: string, userId: string): Prom
  * Clear all wishlist items for user
  */
 export async function clearWishlist(userId: string): Promise<boolean> {
-  const supabase = createClient();
-  
+  const supabase = getSupabaseBrowserClient();
+
   const { error } = await supabase
-    .from('wishlists')
+    .from("wishlists")
     .delete()
-    .eq('user_id', userId);
+    .eq("user_id", userId);
 
   if (error) {
-    console.error('Error clearing wishlist:', error);
+    console.error("Error clearing wishlist:", error);
     return false;
   }
 
@@ -289,15 +316,15 @@ export async function clearWishlist(userId: string): Promise<boolean> {
  * Clear all wishlist items for guest
  */
 export async function clearGuestWishlist(sessionId: string): Promise<boolean> {
-  const supabase = createClient();
-  
+  const supabase = getSupabaseBrowserClient();
+
   const { error } = await supabase
-    .from('wishlists')
+    .from("wishlists")
     .delete()
-    .eq('session_id', sessionId);
+    .eq("session_id", sessionId);
 
   if (error) {
-    console.error('Error clearing guest wishlist:', error);
+    console.error("Error clearing guest wishlist:", error);
     return false;
   }
 

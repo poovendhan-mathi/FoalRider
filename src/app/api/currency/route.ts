@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerActionClient } from "@/lib/supabase/server";
 
 /**
  * GET - Fetch current exchange rates
@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
     const { data, error } = await supabase
       .from("currency_rates")

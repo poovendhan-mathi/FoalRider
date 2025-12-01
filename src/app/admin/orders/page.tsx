@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth/admin";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import OrderStatusFilter from "@/components/admin/OrderStatusFilter";
 const ITEMS_PER_PAGE = 10;
 
 async function getOrders(status?: string, page: number = 1) {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   // Calculate offset
   const from = (page - 1) * ITEMS_PER_PAGE;
@@ -91,7 +91,7 @@ async function getOrders(status?: string, page: number = 1) {
   };
 }
 
-function formatCurrency(amount: number, currency: string = 'INR'): string {
+function formatCurrency(amount: number, currency: string = "INR"): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: currency,
@@ -247,7 +247,10 @@ export default async function OrdersPage({
                           </Badge>
                         </TableCell>
                         <TableCell className="font-semibold text-sm sm:text-base">
-                          {formatCurrency(order.total_amount, order.currency || 'INR')}
+                          {formatCurrency(
+                            order.total_amount,
+                            order.currency || "INR"
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Link href={`/admin/orders/${order.id}`}>
@@ -299,14 +302,11 @@ export default async function OrdersPage({
                           );
                         })
                         .map((p, idx, arr) => (
-                          <>
+                          <div key={p}>
                             {idx > 0 && arr[idx - 1] !== p - 1 && (
-                              <span key={`ellipsis-${p}`} className="px-2">
-                                ...
-                              </span>
+                              <span className="px-2">...</span>
                             )}
                             <Link
-                              key={p}
                               href={`/admin/orders?status=${status}&page=${p}`}
                             >
                               <Button
@@ -318,7 +318,7 @@ export default async function OrdersPage({
                                 {p}
                               </Button>
                             </Link>
-                          </>
+                          </div>
                         ))}
                     </div>
                     <Link

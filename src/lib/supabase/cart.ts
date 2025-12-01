@@ -1,4 +1,4 @@
-import { createClient } from "./client";
+import { getSupabaseBrowserClient } from "./client";
 
 export interface CartItem {
   id: string;
@@ -23,7 +23,7 @@ export interface CartItem {
  * Get cart items for authenticated user
  */
 export async function getUserCart(userId: string): Promise<CartItem[]> {
-  const supabase = createClient();
+  const supabase = getSupabaseBrowserClient();
 
   const { data, error } = await supabase
     .from("cart_items")
@@ -58,7 +58,7 @@ export async function getUserCart(userId: string): Promise<CartItem[]> {
  */
 async function cleanupExpiredGuestCarts(): Promise<void> {
   try {
-    const supabase = createClient();
+    const supabase = getSupabaseBrowserClient();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -80,7 +80,7 @@ async function cleanupExpiredGuestCarts(): Promise<void> {
  * Automatically cleans up old carts
  */
 export async function getGuestCart(sessionId: string): Promise<CartItem[]> {
-  const supabase = createClient();
+  const supabase = getSupabaseBrowserClient();
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -124,7 +124,7 @@ export async function addToUserCart(
   quantity: number,
   variantId?: string | null
 ): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseBrowserClient();
 
   try {
     // Check if item already exists
@@ -160,23 +160,17 @@ export async function addToUserCart(
         return false;
       }
     } else {
-      // Insert new item with upsert to handle race conditions
-      const { error } = await supabase.from("cart_items").upsert(
-        {
-          user_id: userId,
-          product_id: productId,
-          quantity,
-          variant_id: variantId || null,
-          session_id: null,
-        },
-        {
-          onConflict: "user_id,product_id,variant_id",
-          ignoreDuplicates: false,
-        }
-      );
+      // Insert new item - use direct insert, not upsert
+      // If duplicate occurs, we'll catch it and update
+      const { error } = await supabase.from("cart_items").insert({
+        user_id: userId,
+        product_id: productId,
+        quantity,
+        variant_id: variantId || null,
+      });
 
       if (error) {
-        // If duplicate, try to update instead
+        // If duplicate error (23505), fetch existing and update
         if (error.code === "23505") {
           console.log("Duplicate detected, updating quantity instead");
           const { data: existingItem } = await query.maybeSingle();
@@ -197,7 +191,7 @@ export async function addToUserCart(
           }
         }
 
-        console.error("Error adding to cart:", error);
+        console.error("Error adding to cart:", error.message || error);
         return false;
       }
     }
@@ -218,7 +212,7 @@ export async function addToGuestCart(
   quantity: number,
   variantId?: string | null
 ): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseBrowserClient();
 
   try {
     // Check if item already exists
@@ -311,7 +305,7 @@ export async function updateCartQuantity(
   cartItemId: string,
   quantity: number
 ): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseBrowserClient();
 
   if (quantity <= 0) {
     const { error } = await supabase
@@ -342,7 +336,7 @@ export async function updateCartQuantity(
  * Remove item from cart
  */
 export async function removeFromCart(cartItemId: string): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseBrowserClient();
 
   const { error } = await supabase
     .from("cart_items")
@@ -361,7 +355,7 @@ export async function removeFromCart(cartItemId: string): Promise<boolean> {
  * Clear cart for user
  */
 export async function clearUserCart(userId: string): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseBrowserClient();
 
   const { error } = await supabase
     .from("cart_items")
@@ -380,7 +374,7 @@ export async function clearUserCart(userId: string): Promise<boolean> {
  * Clear cart for guest
  */
 export async function clearGuestCart(sessionId: string): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseBrowserClient();
 
   const { error } = await supabase
     .from("cart_items")
@@ -402,7 +396,7 @@ export async function syncGuestCart(
   sessionId: string,
   userId: string
 ): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseBrowserClient();
 
   // Get guest cart items
   const { data: guestItems, error: fetchError } = await supabase
@@ -428,7 +422,7 @@ export async function syncGuestCart(
   // Merge guest items with user cart
   for (const guestItem of guestItems) {
     const existingItem = userItems?.find(
-      (item) =>
+      (item: { product_id: string; variant_id: string | null }) =>
         item.product_id === guestItem.product_id &&
         ((item.variant_id === null && guestItem.variant_id === null) ||
           item.variant_id === guestItem.variant_id)

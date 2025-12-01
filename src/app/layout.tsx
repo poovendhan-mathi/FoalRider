@@ -2,14 +2,31 @@ import type { Metadata } from "next";
 import { Playfair_Display, Montserrat } from "next/font/google";
 import "./globals.css";
 import "./globals-override.css";
-import { AuthProvider } from "@/lib/auth/AuthContext";
+import { AuthProvider } from "@/contexts/AuthProvider";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
+import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { ClientLayout } from "@/components/layout/ClientLayout";
 import { PageLoader } from "@/components/layout/PageLoader";
 import { Suspense } from "react";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
+
+// Suppress Radix UI hydration warnings (known issue with dynamic IDs)
+if (typeof window !== "undefined") {
+  const originalError = console.error;
+  console.error = (...args) => {
+    if (
+      typeof args[0] === "string" &&
+      args[0].includes("Hydration") &&
+      args[0].includes("aria-controls")
+    ) {
+      return;
+    }
+    originalError.apply(console, args);
+  };
+}
 
 // Figma Design System Fonts
 const playfairDisplay = Playfair_Display({
@@ -39,29 +56,37 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Get initial session on server
+  const supabase = await getSupabaseServerClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   return (
     <html lang="en">
       <body
         className={`${playfairDisplay.variable} ${montserrat.variable} antialiased`}
         style={{ fontFamily: "var(--font-body)" }}
       >
-        <AuthProvider>
-          <CurrencyProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <Suspense fallback={null}>
-                  <PageLoader />
-                </Suspense>
-                <ClientLayout>{children}</ClientLayout>
-              </WishlistProvider>
-            </CartProvider>
-          </CurrencyProvider>
-        </AuthProvider>
+        <ReactQueryProvider>
+          <AuthProvider initialSession={session}>
+            <CurrencyProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <Suspense fallback={null}>
+                    <PageLoader />
+                  </Suspense>
+                  <ClientLayout>{children}</ClientLayout>
+                </WishlistProvider>
+              </CartProvider>
+            </CurrencyProvider>
+          </AuthProvider>
+        </ReactQueryProvider>
         <Toaster />
       </body>
     </html>

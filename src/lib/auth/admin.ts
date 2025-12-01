@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 /**
@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
  */
 export async function requireAdmin() {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerClient();
 
     const {
       data: { user },
@@ -50,7 +50,7 @@ export async function requireAdmin() {
  */
 export async function isAdmin(userId: string): Promise<boolean> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerClient();
 
     const { data: profile, error } = await supabase
       .from("profiles")

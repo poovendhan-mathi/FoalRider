@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useSession } from "@/contexts/AuthProvider";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   Card,
   CardContent,
@@ -61,78 +61,77 @@ interface Address {
 }
 
 function ProfileContent() {
-  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, loading } = useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [addresses] = useState<Address[]>([]); // TODO: Implement addresses feature
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Debug logging helper
+  const log = (...args: unknown[]) => {
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[ProfilePage]", ...args);
+    }
+  };
+
+  // Redirect to login if not loading and no user
+  useEffect(() => {
+    log("Session state:", { loading, user });
+    if (!loading && !user) {
+      log("No user found, redirecting to /login");
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
 
   // Show verification success message
   useEffect(() => {
-    if (searchParams.get('verified') === 'true') {
-      toast.success('Email verified successfully! Welcome to Foal Rider.');
-      // Clean up URL
-      window.history.replaceState({}, '', '/profile');
+    log("Search params:", searchParams.toString());
+    if (searchParams.get("verified") === "true") {
+      toast.success("Email verified successfully! Welcome to Foal Rider.");
+      window.history.replaceState({}, "", "/profile");
     }
   }, [searchParams]);
 
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/login");
-    }
-  }, [authLoading, user, router]);
-
   // Load profile data when user is available
   useEffect(() => {
-    if (!authLoading && user) {
+    log("User effect triggered", user);
+    if (user) {
+      log("User present, loading profile data");
       loadProfileData();
-    } else if (!authLoading && !user) {
-      setLoading(false);
     }
-
     // Check for hash navigation
     const hash = window.location.hash.replace("#", "");
     if (hash === "settings") {
       setActiveTab("settings");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user]);
+  }, [user]);
 
   const loadProfileData = async () => {
     if (!user) {
-      setLoading(false);
+      log("loadProfileData called with no user");
       return;
     }
-
-    setLoading(true);
     try {
-      const supabase = createClient();
-
-      console.log("🔍 Loading profile for user:", user.id);
-
+      const supabase = getSupabaseBrowserClient();
+      log("🔍 Loading profile for user:", user.id);
       // Load profile with timeout
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
-
-      console.log("📊 Profile query result:", { profileData, profileError });
-
+      log("📊 Profile query result:", { profileData, profileError });
       if (profileError) {
-        console.error("❌ Profile load error:", profileError);
+        log("❌ Profile load error:", profileError);
         toast.error("Failed to load profile: " + profileError.message);
       } else if (profileData) {
-        console.log("✅ Profile loaded:", profileData);
+        log("✅ Profile loaded:", profileData);
         setProfile(profileData);
       } else {
-        console.warn("⚠️ No profile data returned");
+        log("⚠️ No profile data returned");
       }
-
       // Load orders
       const { data: ordersData, error: ordersError } = await supabase
         .from("orders")
@@ -140,33 +139,39 @@ function ProfileContent() {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(5);
-
       if (ordersError) {
-        console.error("❌ Orders load error:", ordersError);
+        log("❌ Orders load error:", ordersError);
       } else if (ordersData) {
-        console.log("✅ Orders loaded:", ordersData.length);
+        log("✅ Orders loaded:", ordersData.length);
         setOrders(
-          ordersData.map((order) => ({
-            id: order.id,
-            created_at: order.created_at,
-            status: order.status,
-            total: order.total_amount,
-            currency: order.currency,
-            items_count: 0, // Can be updated later with proper query
-          }))
+          ordersData.map(
+            (order: {
+              id: string;
+              created_at: string;
+              status: string;
+              total_amount: number;
+              currency: string;
+            }) => ({
+              id: order.id,
+              created_at: order.created_at,
+              status: order.status,
+              total: order.total_amount,
+              currency: order.currency,
+              items_count: 0, // Can be updated later with proper query
+            })
+          )
         );
       }
     } catch (error) {
-      console.error("❌ Error loading profile data:", error);
+      log("❌ Error loading profile data:", error);
       toast.error("Failed to load profile data");
     } finally {
-      console.log("✅ Profile loading complete");
-      setLoading(false);
+      log("✅ Profile loading complete");
     }
   };
 
   const handleSignOut = async () => {
-    const supabase = createClient();
+    const supabase = getSupabaseBrowserClient();
 
     // Clear all storage
     if (typeof window !== "undefined") {
@@ -201,7 +206,7 @@ function ProfileContent() {
     }
 
     try {
-      const supabase = createClient();
+      const supabase = getSupabaseBrowserClient();
       toast.loading("Uploading avatar...");
 
       // Upload to Supabase Storage
@@ -233,10 +238,12 @@ function ProfileContent() {
       setProfile((prev) => (prev ? { ...prev, avatar_url: publicUrl } : null));
       toast.dismiss();
       toast.success("Avatar updated successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.dismiss();
       console.error("Avatar upload error:", error);
-      toast.error("Failed to upload avatar: " + error.message);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error("Failed to upload avatar: " + errorMessage);
     }
   };
 
@@ -245,7 +252,7 @@ function ProfileContent() {
     if (!user) return;
 
     const formData = new FormData(e.currentTarget);
-    const supabase = createClient();
+    const supabase = getSupabaseBrowserClient();
 
     try {
       const { error } = await supabase
@@ -263,9 +270,11 @@ function ProfileContent() {
         toast.success("Profile updated successfully");
         await loadProfileData();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Profile update exception:", error);
-      toast.error("Failed to update profile");
+      const errorMessage =
+        error instanceof Error ? error.message : "An unexpected error occurred";
+      toast.error("Failed to update profile: " + errorMessage);
     }
   };
 
@@ -277,7 +286,10 @@ function ProfileContent() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    // While redirecting, render nothing
+    return null;
+  }
 
   const initials =
     profile?.full_name
@@ -293,7 +305,7 @@ function ProfileContent() {
   const isAdmin = profile?.role === "admin";
 
   // Show loading state
-  if (loading || authLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -640,11 +652,13 @@ function ProfileContent() {
 
 export default function ProfilePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+      }
+    >
       <ProfileContent />
     </Suspense>
   );

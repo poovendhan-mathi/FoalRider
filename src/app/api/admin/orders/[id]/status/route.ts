@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerActionClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { updateOrderStatusSchema } from "@/lib/validations/api-schemas";
 import { ZodError } from "zod";
@@ -20,7 +20,7 @@ export async function PATCH(
     // Validate input with Zod
     const validated = updateOrderStatusSchema.parse(body);
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
     const { data, error } = await supabase
       .from("orders")

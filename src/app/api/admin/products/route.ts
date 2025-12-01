@@ -1,20 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerActionClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { createProductSchema } from "@/lib/validations/api-schemas";
 import { ZodError } from "zod";
 
-// GET - List all products
-export async function GET() {
+// GET - List all products with pagination
+export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
+    // Parse query parameters for pagination
+    const searchParams = request.nextUrl.searchParams;
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    // Get total count
+    const { count } = await supabase
+      .from("products")
+      .select("*", { count: "exact", head: true });
+
+    // Get paginated products
     const { data: products, error } = await supabase
       .from("products")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) {
       console.error("Error fetching products:", error);
@@ -55,7 +69,12 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ products });
+    return NextResponse.json({
+      products,
+      totalCount: count || 0,
+      totalPages: count ? Math.ceil(count / limit) : 0,
+      currentPage: page,
+    });
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error("Error in products GET:", error.message);
@@ -79,7 +98,7 @@ export async function POST(request: NextRequest) {
     // Validate input with Zod
     const validated = createProductSchema.parse(body);
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
     // Check if SKU already exists
     const { data: existingProduct } = await supabase

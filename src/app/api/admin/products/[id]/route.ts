@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerActionClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { updateProductSchema } from "@/lib/validations/api-schemas";
 import { ZodError } from "zod";
@@ -13,7 +13,7 @@ export async function GET(
     await requireAdmin();
     const { id } = await params;
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
     const { data: product, error } = await supabase
       .from("products")
@@ -53,7 +53,7 @@ export async function PUT(
     // Validate input with Zod
     const validated = updateProductSchema.parse(body);
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
     const { data: product, error } = await supabase
       .from("products")
@@ -104,7 +104,7 @@ export async function DELETE(
     await requireAdmin();
     const { id } = await params;
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServerActionClient();
 
     // Soft delete by setting is_active to false
     const { error } = await supabase

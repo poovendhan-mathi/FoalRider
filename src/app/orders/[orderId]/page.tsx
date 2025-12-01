@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, Loader2, ArrowLeft, Download, Share2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { format } from "date-fns";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -55,7 +55,7 @@ export default function OrderDetailPage() {
 
   const fetchOrder = useCallback(async () => {
     try {
-      const supabase = createClient();
+      const supabase = getSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("orders")
         .select(

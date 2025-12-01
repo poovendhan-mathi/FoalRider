@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth/admin";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
@@ -29,7 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 async function getCustomerDetails(customerId: string) {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   // Get customer profile
   const { data: profile, error: profileError } = await supabase

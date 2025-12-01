@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth/admin";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowLeft, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 const ITEMS_PER_PAGE = 10;
 
 async function getCustomers(page: number = 1) {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   // Calculate offset
   const from = (page - 1) * ITEMS_PER_PAGE;

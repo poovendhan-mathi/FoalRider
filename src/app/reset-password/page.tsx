@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const { updatePassword, user } = useAuth();
+  const { updatePassword, state } = useAuth(); const user = state.user;
   const router = useRouter();
 
   useEffect(() => {

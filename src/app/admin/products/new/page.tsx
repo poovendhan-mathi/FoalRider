@@ -1,12 +1,12 @@
 import { requireAdmin } from "@/lib/auth/admin";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductForm from "@/components/admin/ProductForm";
 
 async function getCategories() {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   const { data: categories } = await supabase
     .from("categories")

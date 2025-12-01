@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin";
 
 // Helper functions
@@ -49,7 +49,7 @@ const getStatusColor = (status: string): string => {
 };
 
 async function getDashboardStats() {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   // Get total products
   const { count: productsCount } = await supabase

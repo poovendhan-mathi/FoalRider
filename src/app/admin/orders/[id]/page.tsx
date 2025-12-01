@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth/admin";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Package, User, MapPin, CreditCard } from "lucide-react";
@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import UpdateOrderStatus from "@/components/admin/UpdateOrderStatus";
 
 async function getOrderDetails(orderId: string) {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServerClient();
 
   const { data: order, error } = await supabase
     .from("orders")
