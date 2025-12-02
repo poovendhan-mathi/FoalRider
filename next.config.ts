@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  serverExternalPackages: ["@supabase/ssr"],
+  // Ensure middleware is properly traced
+  outputFileTracingIncludes: {
+    "/": ["./middleware.ts"],
+  },
 };
 
 export default nextConfig;
