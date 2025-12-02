@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { ProductImages } from "@/components/products/ProductImages";
-import { ProductInfo } from "@/components/products/ProductInfo";
+import { ProductImagesLevis } from "@/components/products/ProductImagesLevis";
+import { ProductInfoLevis } from "@/components/products/ProductInfoLevis";
 import { ProductTabs } from "@/components/products/ProductTabs";
 import { RelatedProducts } from "@/components/products/RelatedProducts";
 import { ProductDetailSkeleton } from "@/components/products/ProductSkeleton";
@@ -22,12 +22,12 @@ async function ProductContent({ slug }: { slug: string }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Product Images */}
-        <ProductImages product={product} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        {/* Product Images - Levi's Style with vertical thumbnails */}
+        <ProductImagesLevis product={product} />
 
-        {/* Product Info */}
-        <ProductInfo product={product} />
+        {/* Product Info - Levi's Style with size selectors, offers */}
+        <ProductInfoLevis product={product} />
       </div>
 
       {/* Product Tabs - Description, Specs, Reviews */}
@@ -50,10 +50,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pt-16">
+    <div className="min-h-screen bg-white pt-16">
       {/* Product Details Section */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
+      <section className="py-8 lg:py-12">
+        <div className="container mx-auto px-4 lg:px-8">
           <Suspense fallback={<ProductDetailSkeleton />}>
             <ProductContent slug={slug} />
           </Suspense>

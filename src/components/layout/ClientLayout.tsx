@@ -1,14 +1,19 @@
 "use client";
 
 import { Header } from "./Header";
+import { Footer } from "./Footer";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { usePathname } from "next/navigation";
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Don't show main header on admin pages or checkout
+  // Don't show main header/footer on admin pages or checkout
   const hideHeader =
+    pathname?.startsWith("/admin") || pathname?.startsWith("/checkout");
+
+  // Don't show footer on admin or checkout pages
+  const hideFooter =
     pathname?.startsWith("/admin") || pathname?.startsWith("/checkout");
 
   // Don't show mobile nav on admin or checkout pages
@@ -19,7 +24,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     <>
       {!hideHeader && <Header />}
       {/* Main content with bottom padding for mobile nav */}
-      <div className={!hideMobileNav ? "pb-16 md:pb-0" : ""}>{children}</div>
+      <main className={!hideMobileNav ? "pb-16 md:pb-0" : ""}>{children}</main>
+      {!hideFooter && <Footer />}
       {!hideMobileNav && <MobileBottomNav />}
     </>
   );

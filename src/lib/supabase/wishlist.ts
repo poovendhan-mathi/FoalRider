@@ -6,6 +6,10 @@ export interface WishlistItem {
   session_id: string | null;
   product_id: string;
   created_at: string;
+  // Phase 5 enhancements
+  price_at_add?: number;
+  notify_on_sale?: boolean;
+  notify_on_restock?: boolean;
   product?: {
     id: string;
     name: string;

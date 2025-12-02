@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductForm from "@/components/admin/ProductForm";
+import ProductFeaturesForm from "@/components/admin/ProductFeaturesForm";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 async function getProduct(productId: string) {
   const supabase = await getSupabaseServerClient();
@@ -61,10 +63,27 @@ export default async function EditProductPage({
           </Button>
         </Link>
         <h1 className="text-3xl font-bold mb-2">Edit Product</h1>
-        <p className="text-gray-600">Update product details</p>
+        <p className="text-gray-600">Update product details and features</p>
       </div>
 
-      <ProductForm categories={categories} mode="edit" initialData={product} />
+      <Tabs defaultValue="basic" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="basic">Basic Info</TabsTrigger>
+          <TabsTrigger value="features">Product Features</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="basic">
+          <ProductForm
+            categories={categories}
+            mode="edit"
+            initialData={product}
+          />
+        </TabsContent>
+
+        <TabsContent value="features">
+          <ProductFeaturesForm productId={id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

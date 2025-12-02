@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useCart } from "@/contexts/CartContext";
 import { WishlistButtonWithLabel } from "@/components/wishlist/WishlistButton";
+import { MobileProductActions } from "./MobileProductActions";
 import type { Product } from "@/lib/products";
 import { ShoppingCart, Share2, Truck, Shield, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -223,6 +224,9 @@ export function ProductInfo({ product }: ProductInfoProps) {
           </div>
         </div>
       </div>
+
+      {/* Mobile Sticky Add to Cart */}
+      <MobileProductActions product={product} />
     </div>
   );
 }
