@@ -1,5 +1,5 @@
-import { getFilteredProducts } from '@/lib/products';
-import { ProductCard } from './ProductCard';
+import { getFilteredProducts } from "@/lib/products";
+import { ProductCard } from "./ProductCard";
 
 interface ProductGridProps {
   searchParams: {
@@ -11,16 +11,21 @@ interface ProductGridProps {
   };
 }
 
+/**
+ * Product Grid - Adidas-style layout
+ * - 2 columns on mobile (like Adidas app)
+ * - 3 columns on tablet
+ * - 4 columns on desktop
+ * - Tight gap for clean look
+ */
 export async function ProductGrid({ searchParams }: ProductGridProps) {
   const products = await getFilteredProducts(searchParams);
 
   if (products.length === 0) {
     return (
-      <div className="text-center py-12">
-        <h3 className="text-2xl font-semibold mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-          No products found
-        </h3>
-        <p className="text-muted-foreground" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+      <div className="text-center py-16">
+        <h3 className="fr-h2 mb-3">No products found</h3>
+        <p className="fr-body">
           Try adjusting your filters to see more results
         </p>
       </div>
@@ -29,13 +34,15 @@ export async function ProductGrid({ searchParams }: ProductGridProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-          Showing {products.length} {products.length === 1 ? 'product' : 'products'}
+      {/* Product Count */}
+      <div className="flex items-center justify-between mb-5">
+        <p className="fr-meta">
+          {products.length} {products.length === 1 ? "item" : "items"}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Grid - 2 cols mobile, 3 cols tablet, 4 cols desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

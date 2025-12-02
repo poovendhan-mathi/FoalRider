@@ -1,20 +1,23 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useCart } from '@/contexts/CartContext';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { ShoppingBag, Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useCart } from "@/contexts/CartContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 
 export default function CartPage() {
-  const { items, totalItems, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { items, totalItems, removeFromCart, updateQuantity, clearCart } =
+    useCart();
   const { formatPrice } = useCurrency();
 
-  const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
   const shipping = subtotal > 2000 ? 0 : 200; // Free shipping over $2000
   const tax = subtotal * 0.18; // 18% GST
   const total = subtotal + shipping + tax;
@@ -28,49 +31,60 @@ export default function CartPage() {
   };
 
   const handleClearCart = () => {
-    if (confirm('Are you sure you want to clear your cart?')) {
+    if (confirm("Are you sure you want to clear your cart?")) {
       clearCart();
     }
   };
 
   if (totalItems === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-24">
-        <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
-          
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <ShoppingBag className="h-24 w-24 mx-auto text-gray-300 mb-6" />
-            <h2 className="text-2xl font-semibold mb-4">Your cart is empty</h2>
-            <p className="text-gray-600 mb-8">
-              Add some amazing products to your cart and start shopping!
+      <div className="min-h-screen bg-[#FAFAFA] pt-24">
+        <div className="container mx-auto px-4 py-12">
+          <h1 className="font-['Playfair_Display'] text-4xl font-bold text-black mb-8">
+            Shopping Cart
+          </h1>
+
+          <Card variant="elevated" className="p-16 text-center rounded-2xl">
+            <div className="p-6 bg-[#C5A572]/10 rounded-full w-fit mx-auto mb-8">
+              <ShoppingBag className="h-16 w-16 text-[#C5A572]" />
+            </div>
+            <h2 className="font-['Playfair_Display'] text-2xl font-semibold text-black mb-4">
+              Your cart is empty
+            </h2>
+            <p className="font-['Montserrat'] text-[#9CA3AF] mb-8 max-w-md mx-auto">
+              Discover our premium collection and add some amazing products to
+              your cart.
             </p>
-            <Link href="/products">
-              <Button size="lg" className="bg-[#C5A572] hover:bg-[#B89968] cursor-pointer">
+            <Button size="lg" variant="gold" asChild>
+              <Link href="/products">
                 Continue Shopping
-              </Button>
-            </Link>
-          </div>
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-[#FAFAFA] pt-24">
+      <div className="container mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-3xl font-bold">Shopping Cart</h1>
-            <p className="text-gray-600 mt-2">
-              {totalItems} {totalItems === 1 ? 'item' : 'items'}
+            <h1 className="font-['Playfair_Display'] text-4xl font-bold text-black">
+              Shopping Cart
+            </h1>
+            <p className="font-['Montserrat'] text-[#9CA3AF] mt-2">
+              {totalItems} {totalItems === 1 ? "item" : "items"}
             </p>
           </div>
-          
+
           <Button
             variant="outline"
             onClick={handleClearCart}
-            className="hover:bg-red-50 hover:text-red-600 hover:border-red-600 cursor-pointer"
+            className="hover:bg-red-50 hover:text-red-600 hover:border-red-600"
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Clear Cart
@@ -81,12 +95,19 @@ export default function CartPage() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
-              <Card key={item.product.id} className="p-6">
+              <Card
+                key={item.product.id}
+                variant="elevated"
+                className="p-6 rounded-2xl"
+              >
                 <div className="flex gap-6">
                   {/* Product Image */}
-                  <div className="relative w-24 h-24 flex-shrink-0 rounded-md overflow-hidden bg-gray-100">
+                  <div className="relative w-28 h-28 shrink-0 rounded-xl overflow-hidden bg-[#F8F6F3]">
                     <Image
-                      src={item.product.image_url || '/assets/images/product-placeholder.jpg'}
+                      src={
+                        item.product.image_url ||
+                        "/assets/images/product-placeholder.jpg"
+                      }
                       alt={item.product.name}
                       fill
                       className="object-cover"
@@ -94,56 +115,58 @@ export default function CartPage() {
                   </div>
 
                   {/* Product Info */}
-                  <div className="flex-grow">
+                  <div className="grow">
                     <div className="flex justify-between">
                       <div>
-                        <h3 className="font-semibold text-lg mb-1">
+                        <h3 className="font-['Playfair_Display'] text-lg font-semibold text-black mb-1">
                           {item.product.name}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="font-['Montserrat'] text-sm text-[#9CA3AF]">
                           {formatPrice(item.product.price)} each
                         </p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
+                      <button
                         onClick={() => removeFromCart(item.product.id)}
-                        className="text-gray-400 hover:text-red-600 cursor-pointer"
+                        className="text-[#9CA3AF] hover:text-red-500 transition-colors p-2 h-fit"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                        <Trash2 className="h-5 w-5" />
+                      </button>
                     </div>
 
                     {/* Quantity Controls */}
-                    <div className="flex items-center gap-4 mt-4">
-                      <div className="flex items-center gap-3 border rounded-md">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleUpdateQuantity(item.product.id, item.quantity - 1)}
-                          className="h-10 w-10 cursor-pointer"
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center border border-[#E5E5E5] rounded-lg">
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(
+                              item.product.id,
+                              item.quantity - 1
+                            )
+                          }
+                          className="h-10 w-10 flex items-center justify-center hover:bg-[#F8F6F3] transition-colors rounded-l-lg"
                         >
                           <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="text-base font-semibold min-w-[2rem] text-center">
+                        </button>
+                        <span className="font-['Montserrat'] font-semibold w-12 text-center">
                           {item.quantity}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleUpdateQuantity(item.product.id, item.quantity + 1)}
-                          className="h-10 w-10 cursor-pointer"
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(
+                              item.product.id,
+                              item.quantity + 1
+                            )
+                          }
+                          className="h-10 w-10 flex items-center justify-center hover:bg-[#F8F6F3] transition-colors rounded-r-lg"
                         >
                           <Plus className="h-4 w-4" />
-                        </Button>
+                        </button>
                       </div>
 
                       {/* Item Total */}
-                      <div className="ml-auto">
-                        <p className="text-lg font-bold text-[#C5A572]">
-                          {formatPrice(item.product.price * item.quantity)}
-                        </p>
-                      </div>
+                      <span className="font-['Montserrat'] text-xl font-bold text-[#C5A572]">
+                        {formatPrice(item.product.price * item.quantity)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -153,48 +176,65 @@ export default function CartPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-24">
-              <h2 className="text-xl font-bold mb-6">Order Summary</h2>
-              
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold">{formatPrice(subtotal)}</span>
+            <Card variant="elevated" className="p-8 rounded-2xl sticky top-24">
+              <h2 className="font-['Playfair_Display'] text-2xl font-bold text-black mb-8">
+                Order Summary
+              </h2>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between font-['Montserrat']">
+                  <span className="text-[#9CA3AF]">Subtotal</span>
+                  <span className="font-semibold text-black">
+                    {formatPrice(subtotal)}
+                  </span>
                 </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
+
+                <div className="flex justify-between font-['Montserrat']">
+                  <span className="text-[#9CA3AF]">Shipping</span>
                   <span className="font-semibold">
                     {shipping === 0 ? (
-                      <span className="text-green-600">Free</span>
+                      <span className="text-emerald-500">Free</span>
                     ) : (
-                      formatPrice(shipping)
+                      <span className="text-black">
+                        {formatPrice(shipping)}
+                      </span>
                     )}
                   </span>
                 </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (18% GST)</span>
-                  <span className="font-semibold">{formatPrice(tax)}</span>
+
+                <div className="flex justify-between font-['Montserrat']">
+                  <span className="text-[#9CA3AF]">Tax (18% GST)</span>
+                  <span className="font-semibold text-black">
+                    {formatPrice(tax)}
+                  </span>
                 </div>
-                
-                <Separator />
-                
-                <div className="flex justify-between text-lg">
-                  <span className="font-bold">Total</span>
-                  <span className="font-bold text-[#C5A572]">{formatPrice(total)}</span>
+
+                <div className="h-px bg-[#E5E5E5] my-4" />
+
+                <div className="flex justify-between">
+                  <span className="font-['Montserrat'] text-lg font-semibold text-black">
+                    Total
+                  </span>
+                  <span className="font-['Montserrat'] text-2xl font-bold text-[#C5A572]">
+                    {formatPrice(total)}
+                  </span>
                 </div>
 
                 {subtotal < 2000 && (
-                  <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
-                    Add {formatPrice(2000 - subtotal)} more for free shipping!
-                  </p>
+                  <div className="font-['Montserrat'] text-sm text-[#4B5563] bg-[#C5A572]/10 p-4 rounded-xl mt-4">
+                    Add{" "}
+                    <span className="font-semibold text-[#C5A572]">
+                      {formatPrice(2000 - subtotal)}
+                    </span>{" "}
+                    more for free shipping!
+                  </div>
                 )}
               </div>
 
               <Button
                 size="lg"
-                className="w-full mt-6 bg-[#C5A572] hover:bg-[#B89968] cursor-pointer"
+                variant="gold"
+                className="w-full h-14 text-base"
                 asChild
               >
                 <Link href="/checkout">
@@ -203,15 +243,14 @@ export default function CartPage() {
                 </Link>
               </Button>
 
-              <Link href="/products">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full mt-3 cursor-pointer"
-                >
-                  Continue Shopping
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-12 mt-4"
+                asChild
+              >
+                <Link href="/products">Continue Shopping</Link>
+              </Button>
             </Card>
           </div>
         </div>

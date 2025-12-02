@@ -1,11 +1,11 @@
-import { Suspense } from 'react';
-import { notFound } from 'next/navigation';
-import { ProductImages } from '@/components/products/ProductImages';
-import { ProductInfo } from '@/components/products/ProductInfo';
-import { ProductTabs } from '@/components/products/ProductTabs';
-import { RelatedProducts } from '@/components/products/RelatedProducts';
-import { ProductDetailSkeleton } from '@/components/products/ProductSkeleton';
-import { getProductBySlug } from '@/lib/products';
+import { Suspense } from "react";
+import { notFound } from "next/navigation";
+import { ProductImages } from "@/components/products/ProductImages";
+import { ProductInfo } from "@/components/products/ProductInfo";
+import { ProductTabs } from "@/components/products/ProductTabs";
+import { RelatedProducts } from "@/components/products/RelatedProducts";
+import { ProductDetailSkeleton } from "@/components/products/ProductSkeleton";
+import { getProductBySlug } from "@/lib/products";
 
 interface ProductPageProps {
   params: Promise<{
@@ -37,9 +37,9 @@ async function ProductContent({ slug }: { slug: string }) {
 
       {/* Related Products */}
       <div className="mt-16">
-        <RelatedProducts 
-          currentProductId={product.id} 
-          categoryId={product.category_id} 
+        <RelatedProducts
+          currentProductId={product.id}
+          categoryId={product.category_id}
         />
       </div>
     </>
@@ -50,7 +50,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
 
   return (
-    <div className="min-h-screen bg-background pt-16">
+    <div className="min-h-screen bg-[#FAFAFA] pt-16">
       {/* Product Details Section */}
       <section className="py-12">
         <div className="container mx-auto px-4">

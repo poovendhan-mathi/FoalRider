@@ -327,7 +327,8 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalItems, clearCart } = useCart();
   const { formatPrice, currency, convertPrice } = useCurrency();
-  const { state } = useAuth(); const user = state.user;
+  const { state } = useAuth();
+  const user = state.user;
   const [clientSecret, setClientSecret] = useState<string>("");
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
   const [stripePromise, setStripePromise] = useState<Promise<any> | null>(null);
@@ -561,43 +562,52 @@ export default function CheckoutPage() {
   // Empty cart check
   if (totalItems === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="min-h-screen bg-[#FAFAFA] pt-24">
         <div className="container mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center max-w-md mx-auto">
-            <ShoppingBag className="h-24 w-24 mx-auto text-gray-300 mb-6" />
-            <h2 className="text-2xl font-semibold mb-4">Your cart is empty</h2>
-            <p className="text-gray-600 mb-8">
+          <Card className="bg-white rounded-2xl shadow-sm p-12 text-center max-w-md mx-auto">
+            <div className="w-24 h-24 mx-auto rounded-full bg-[#C5A572]/10 flex items-center justify-center mb-6">
+              <ShoppingBag className="h-12 w-12 text-[#C5A572] stroke-[1.5]" />
+            </div>
+            <h2 className="font-['Playfair_Display'] text-2xl font-semibold mb-4 text-black">
+              Your cart is empty
+            </h2>
+            <p className="font-['Montserrat'] text-[#4B5563] mb-8">
               Add some products to your cart before checking out
             </p>
             <Button
               size="lg"
-              className="bg-[#C5A572] hover:bg-[#B89968] cursor-pointer"
+              variant="gold"
+              className="font-['Montserrat'] cursor-pointer"
               onClick={() => router.push("/products")}
             >
               Continue Shopping
             </Button>
-          </div>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24">
+    <div className="min-h-screen bg-[#FAFAFA] pt-24">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+        <h1 className="font-['Playfair_Display'] text-4xl font-bold mb-8 text-black">
+          Checkout
+        </h1>
 
         <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8">
           {/* Order Summary - First on Mobile, Right on Desktop */}
           <div className="order-1 lg:order-2 lg:col-span-1">
-            <Card className="p-6 lg:sticky lg:top-24">
-              <h2 className="text-xl font-bold mb-6">Order Summary</h2>
+            <Card className="p-6 lg:sticky lg:top-24 rounded-2xl border-[#E5E5E5]">
+              <h2 className="font-['Playfair_Display'] text-xl font-bold mb-6 text-black">
+                Order Summary
+              </h2>
 
               {/* Order Items */}
               <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
                 {items.map((item) => (
                   <div key={item.product.id} className="flex gap-3">
-                    <div className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden bg-gray-100">
+                    <div className="relative w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-[#F8F6F3]">
                       <Image
                         src={
                           item.product.image_url ||
@@ -609,13 +619,13 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <div className="grow min-w-0">
-                      <p className="text-sm font-medium truncate">
+                      <p className="font-['Montserrat'] text-sm font-medium truncate text-black">
                         {item.product.name}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-['Montserrat'] text-sm text-[#9CA3AF]">
                         Qty: {item.quantity}
                       </p>
-                      <p className="text-sm font-semibold text-[#C5A572]">
+                      <p className="font-['Montserrat'] text-sm font-semibold text-[#C5A572]">
                         {formatPrice(item.product.price * item.quantity)}
                       </p>
                     </div>

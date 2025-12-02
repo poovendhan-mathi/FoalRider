@@ -1,856 +1,275 @@
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
-import { ArrowRight, Star, ShoppingBag } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { getFeaturedProducts } from "@/lib/products";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
 import Image from "next/image";
-import { PriceDisplay } from "@/components/PriceDisplay";
-import { getProductImageUrl } from "@/lib/product-helpers";
-
-// Get featured products for sections
-async function getSectionProducts() {
-  const supabase = await getSupabaseServerClient();
-
-  // Get Men's Tapered Fit Dark Indigo Jeans
-  const { data: mensJeansProduct } = await supabase
-    .from("products")
-    .select(
-      `
-      id, name, slug, price, image_url,
-      categories!inner(slug),
-      product_images(url, sort_order)
-    `
-    )
-    .eq("slug", "tapered-fit-dark-indigo-jeans")
-    .eq("is_active", true)
-    .single();
-
-  // Get Women's Bootcut Dark Denim Jeans
-  const { data: womensDenimShirt } = await supabase
-    .from("products")
-    .select(
-      `
-      id, name, slug, price, image_url,
-      categories!inner(slug),
-      product_images(url, sort_order)
-    `
-    )
-    .eq("slug", "bootcut-dark-denim-jeans")
-    .eq("is_active", true)
-    .single();
-
-  return { mensJeansProduct, womensDenimShirt };
-}
+import { ProductCard } from "@/components/products/ProductCard";
 
 export default async function HomePage() {
-  const featuredProducts = await getFeaturedProducts(6);
-  const { mensJeansProduct, womensDenimShirt } = await getSectionProducts();
-
-  // Get image URLs with fallback - High quality 8K images
-  const mensJeansImage =
-    mensJeansProduct?.product_images?.[0]?.url ||
-    mensJeansProduct?.image_url ||
-    "https://images.unsplash.com/photo-1542272604-787c3835535d?w=3840&q=95";
-
-  const womensDenimImage =
-    womensDenimShirt?.product_images?.[0]?.url ||
-    womensDenimShirt?.image_url ||
-    "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=3840&q=95";
+  const featuredProducts = await getFeaturedProducts(8);
 
   return (
-    <div className="min-h-screen pt-16">
-      {/* Men's Premium Denim Jeans Section */}
-      <section className="py-24 bg-[#ecf0f1]">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-            {/* Content - Left on desktop, Bottom on mobile */}
-            <div className="space-y-6 order-2 md:order-1">
-              <Badge
+    <div className="min-h-screen">
+      {/* Hero Section - Bold, Full-width, Adidas style */}
+      <section className="relative h-[85vh] md:h-[90vh] bg-black overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1542272604-787c3835535d?w=1920&q=90"
+          alt="Hero"
+          fill
+          className="object-cover opacity-60"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+        {/* Hero Content */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 lg:p-20">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="fr-display text-white mb-6 max-w-4xl">
+              PREMIUM DENIM
+              <span className="block text-[#C5A572]">COLLECTION</span>
+            </h1>
+            <p className="fr-body-lg text-white/80 max-w-xl mb-8">
+              Crafted from the finest Japanese selvedge denim. Designed for
+              those who appreciate true quality.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Button
+                size="lg"
+                className="bg-white text-black hover:bg-white/90 font-semibold px-8"
+                asChild
+              >
+                <Link href="/products">
+                  SHOP NOW
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
                 variant="outline"
-                className="border-[#2c3e50] text-[#2c3e50]"
-                style={{ fontFamily: "Montserrat, sans-serif" }}
+                className="border-white text-white hover:bg-white hover:text-black font-semibold px-8"
+                asChild
               >
-                SIGNATURE COLLECTION
-              </Badge>
-
-              <h2
-                className="text-4xl md:text-5xl font-bold tracking-tight"
-                style={{
-                  fontFamily: "Playfair Display, serif",
-                  color: "#2c3e50",
-                }}
-              >
-                Premium Denim Jeans
-                <span className="block" style={{ color: "#4169e1" }}>
-                  Engineered for Perfection
-                </span>
-              </h2>
-
-              <p
-                className="text-lg leading-relaxed"
-                style={{
-                  fontFamily: "Montserrat, sans-serif",
-                  color: "#7f8c8d",
-                }}
-              >
-                Our signature denim jeans are crafted from the finest Japanese
-                selvedge denim, combining timeless style with modern comfort.
-                Each pair is designed to become your favorite, featuring:
-              </p>
-
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-[#4169e1]/10 flex items-center justify-center flex-shrink-0">
-                    <div
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: "#4169e1" }}
-                    />
-                  </div>
-                  <div>
-                    <span
-                      className="font-semibold"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#2c3e50",
-                      }}
-                    >
-                      Premium Stretch Denim
-                    </span>
-                    <p
-                      className="text-sm"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#7f8c8d",
-                      }}
-                    >
-                      Flexible fabric that retains its shape
-                    </p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-[#4169e1]/10 flex items-center justify-center flex-shrink-0">
-                    <div
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: "#4169e1" }}
-                    />
-                  </div>
-                  <div>
-                    <span
-                      className="font-semibold"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#2c3e50",
-                      }}
-                    >
-                      Tailored Fit
-                    </span>
-                    <p
-                      className="text-sm"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#7f8c8d",
-                      }}
-                    >
-                      Multiple fits to suit every body type
-                    </p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-[#4169e1]/10 flex items-center justify-center flex-shrink-0">
-                    <div
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: "#4169e1" }}
-                    />
-                  </div>
-                  <div>
-                    <span
-                      className="font-semibold"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#2c3e50",
-                      }}
-                    >
-                      Sustainable Production
-                    </span>
-                    <p
-                      className="text-sm"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#7f8c8d",
-                      }}
-                    >
-                      Eco-friendly processes and materials
-                    </p>
-                  </div>
-                </li>
-              </ul>
-
-              <div className="flex gap-4 pt-4">
-                <Button
-                  size="lg"
-                  style={{
-                    backgroundColor: "#2c3e50",
-                    color: "#ecf0f1",
-                    fontFamily: "Montserrat, sans-serif",
-                  }}
-                  asChild
-                >
-                  <Link href="/products?category=mens-pants">
-                    Shop Denim Collection
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  style={{
-                    borderColor: "#2c3e50",
-                    color: "#2c3e50",
-                    fontFamily: "Montserrat, sans-serif",
-                  }}
-                  asChild
-                >
-                  <Link href="/about">Our Story</Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* Product Image - Right on desktop, First on mobile */}
-            <Link
-              href={
-                mensJeansProduct
-                  ? `/products/${mensJeansProduct.slug}`
-                  : "/products?category=mens-pants"
-              }
-              className="relative aspect-3/4 rounded-2xl overflow-hidden bg-[#2E2E2E] order-1 md:order-2 block cursor-pointer group"
-            >
-              <img
-                src={mensJeansImage}
-                alt={mensJeansProduct?.name || "Premium Men's Denim Jeans"}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-8 left-8 text-white">
-                <div
-                  className="text-4xl md:text-5xl font-bold mb-3"
-                  style={{ fontFamily: "Playfair Display, serif" }}
-                >
-                  {mensJeansProduct?.name || "Premium Denim Jeans"}
-                </div>
-                {mensJeansProduct && (
-                  <div
-                    className="text-lg md:text-xl opacity-90 font-semibold"
-                    style={{ fontFamily: "Montserrat, sans-serif" }}
-                  >
-                    <PriceDisplay priceInINR={mensJeansProduct.price} />
-                  </div>
-                )}
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Women's Denim Shirt Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-            {/* Content */}
-            <div className="space-y-6">
-              <Badge
-                variant="outline"
-                className="border-[#C5A572] text-[#C5A572]"
-                style={{ fontFamily: "Montserrat, sans-serif" }}
-              >
-                WOMEN'S DENIM COLLECTION
-              </Badge>
-
-              <h2
-                className="text-4xl md:text-5xl font-bold tracking-tight"
-                style={{
-                  fontFamily: "Playfair Display, serif",
-                  color: "#2c3e50",
-                }}
-              >
-                Classic Denim Pants
-                <span className="block" style={{ color: "#C5A572" }}>
-                  Timeless & Versatile
-                </span>
-              </h2>
-
-              <p
-                className="text-lg leading-relaxed"
-                style={{
-                  fontFamily: "Montserrat, sans-serif",
-                  color: "#7f8c8d",
-                }}
-              >
-                Our women's denim pants collection features timeless designs
-                crafted with premium denim. Each piece is a wardrobe essential
-                that effortlessly elevates any look.
-              </p>
-
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-[#C5A572]/10 flex items-center justify-center flex-shrink-0">
-                    <div
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: "#C5A572" }}
-                    />
-                  </div>
-                  <div>
-                    <span
-                      className="font-semibold"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#2c3e50",
-                      }}
-                    >
-                      Premium Fabrics
-                    </span>
-                    <p
-                      className="text-sm"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#7f8c8d",
-                      }}
-                    >
-                      Soft, breathable, and luxurious
-                    </p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-[#C5A572]/10 flex items-center justify-center flex-shrink-0">
-                    <div
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: "#C5A572" }}
-                    />
-                  </div>
-                  <div>
-                    <span
-                      className="font-semibold"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#2c3e50",
-                      }}
-                    >
-                      Flattering Silhouettes
-                    </span>
-                    <p
-                      className="text-sm"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#7f8c8d",
-                      }}
-                    >
-                      Designed to enhance every figure
-                    </p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-[#C5A572]/10 flex items-center justify-center flex-shrink-0">
-                    <div
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: "#C5A572" }}
-                    />
-                  </div>
-                  <div>
-                    <span
-                      className="font-semibold"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#2c3e50",
-                      }}
-                    >
-                      Versatile Styles
-                    </span>
-                    <p
-                      className="text-sm"
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        color: "#7f8c8d",
-                      }}
-                    >
-                      From casual to evening wear
-                    </p>
-                  </div>
-                </li>
-              </ul>
-
-              <div className="flex gap-4 pt-4">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-[#C5A572] text-[#C5A572] hover:bg-[#C5A572] hover:text-white"
-                  style={{ fontFamily: "Montserrat, sans-serif" }}
-                  asChild
-                >
-                  <Link href="/products?category=womens-bottoms">
-                    View Denim Pants
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  style={{
-                    borderColor: "#C5A572",
-                    color: "#C5A572",
-                    fontFamily: "Montserrat, sans-serif",
-                  }}
-                  asChild
-                >
-                  <Link href="/products?category=womens-wear">
-                    Explore Collection
-                  </Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* Product Image - High Quality 8K */}
-            <Link
-              href={
-                womensDenimShirt
-                  ? `/products/${womensDenimShirt.slug}`
-                  : "/products?category=womens-tops"
-              }
-              className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#2E2E2E] order-first md:order-last block cursor-pointer group"
-            >
-              <img
-                src={womensDenimImage}
-                alt={womensDenimShirt?.name || "Women's Denim Shirt Collection"}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              <div className="absolute bottom-8 left-8 text-white">
-                <div
-                  className="text-4xl font-bold"
-                  style={{ fontFamily: "Playfair Display, serif" }}
-                >
-                  {womensDenimShirt?.name || "Denim Shirts"}
-                </div>
-                {womensDenimShirt && (
-                  <div
-                    className="text-white text-xl font-semibold mt-2"
-                    style={{ fontFamily: "Montserrat, sans-serif" }}
-                  >
-                    <PriceDisplay priceInINR={womensDenimShirt.price} />
-                  </div>
-                )}
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Craftsmanship Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-            {/* Content */}
-            <div className="space-y-6">
-              <Badge
-                variant="outline"
-                className="border-[#C5A572] text-[#C5A572]"
-              >
-                ARTISAN CRAFTED
-              </Badge>
-
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-                Every Stitch
-                <span className="block text-[#C5A572]">Tells a Story</span>
-              </h2>
-
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Our artisans pour their heart into every garment, blending
-                traditional techniques with modern innovation. Each piece
-                carries the mark of true craftsmanship.
-              </p>
-
-              <div className="grid grid-cols-2 gap-6 pt-4">
-                <div className="space-y-2">
-                  <div className="text-4xl font-bold text-[#C5A572]">50+</div>
-                  <p className="text-sm text-muted-foreground">
-                    Years of Expertise
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-4xl font-bold text-[#C5A572]">100%</div>
-                  <p className="text-sm text-muted-foreground">
-                    Quality Guaranteed
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-4xl font-bold text-[#C5A572]">10K+</div>
-                  <p className="text-sm text-muted-foreground">
-                    Happy Customers
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-4xl font-bold text-[#C5A572]">24/7</div>
-                  <p className="text-sm text-muted-foreground">
-                    Customer Support
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4 pt-6">
-                <Button size="lg" variant="outline" asChild>
-                  <Link href="/about">Discover Our Heritage</Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* Image */}
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#2E2E2E] order-first md:order-last">
-              <img
-                src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800&q=90"
-                alt="Artisan Craftsmanship"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                <Link href="/about">OUR STORY</Link>
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Shirts Section */}
-      <section className="py-24 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-            {/* Content */}
-            <div className="space-y-6 order-2 md:order-1">
-              <Badge variant="outline" className="border-accent text-accent">
-                TIMELESS ELEGANCE
-              </Badge>
-
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-                Sophisticated Shirts
-                <span className="block text-accent">For Every Occasion</span>
-              </h2>
-
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                From casual weekends to formal events, our shirts blend classic
-                design with modern comfort. Crafted from premium fabrics that
-                breathe and move naturally.
-              </p>
-
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <div className="h-2 w-2 rounded-full bg-accent" />
-                  </div>
-                  <div>
-                    <span className="font-semibold">
-                      Premium Cotton & Linen
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      Breathable, natural fabrics
-                    </p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <div className="h-2 w-2 rounded-full bg-accent" />
-                  </div>
-                  <div>
-                    <span className="font-semibold">Precision Tailoring</span>
-                    <p className="text-sm text-muted-foreground">
-                      Perfect fit, every time
-                    </p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <div className="h-2 w-2 rounded-full bg-accent" />
-                  </div>
-                  <div>
-                    <span className="font-semibold">Versatile Styles</span>
-                    <p className="text-sm text-muted-foreground">
-                      Casual to formal options
-                    </p>
-                  </div>
-                </li>
-              </ul>
-
-              <div className="flex gap-4 pt-4">
-                <Button size="lg" asChild>
-                  <Link href="/products/shirts">Shop Shirts Collection</Link>
-                </Button>
-                <Button size="lg" variant="ghost" asChild>
-                  <Link href="/collections">View All Collections</Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* Image */}
-            <Link
-              href="/products?category=mens-wear"
-              className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#2E2E2E] order-1 md:order-2 block cursor-pointer group"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&q=90"
-                alt="Premium Shirts Collection"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              <div className="absolute bottom-8 left-8 text-white">
-                <div className="text-4xl font-bold">Refined Shirts</div>
-                <p className="text-white/90 mt-2">Timeless Elegance</p>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Sustainability Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <Badge className="bg-[#2C5F2D] text-white">
-              SUSTAINABLE FASHION
-            </Badge>
-
-            <h2 className="text-4xl md:text-6xl font-bold tracking-tight">
-              Fashion That
-              <span className="block bg-gradient-to-r from-[#2C5F2D] to-[#C5A572] bg-clip-text text-transparent">
-                Cares for Tomorrow
+      {/* Category Grid - 2 columns, full-bleed images */}
+      <section className="py-2 bg-white">
+        <div className="grid grid-cols-2 gap-2">
+          {/* Men's Category */}
+          <Link
+            href="/products?category=mens-wear"
+            className="relative aspect-[3/4] md:aspect-[4/3] group overflow-hidden"
+          >
+            <Image
+              src="https://images.unsplash.com/photo-1593030103066-0093718e36d5?w=960&q=90"
+              alt="Men's Collection"
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
+            <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8">
+              <span className="fr-label text-white/80 block mb-1">
+                COLLECTION
               </span>
-            </h2>
-
-            <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              We believe in creating beautiful clothing that doesn&apos;t cost
-              the earth. Every thread, every dye, every process is chosen with
-              care for our planet and its people.
-            </p>
-
-            <div className="grid md:grid-cols-3 gap-8 pt-8">
-              <div className="space-y-3">
-                <div className="relative w-20 h-20 mx-auto rounded-full bg-[#2C5F2D]/10 flex items-center justify-center">
-                  <div className="text-4xl">🌱</div>
-                </div>
-                <h3 className="text-xl font-semibold">Organic Materials</h3>
-                <p className="text-sm text-muted-foreground">
-                  100% organic cotton and sustainable fabrics in every piece
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="relative w-20 h-20 mx-auto rounded-full bg-[#2C5F2D]/10 flex items-center justify-center">
-                  <div className="text-4xl">♻️</div>
-                </div>
-                <h3 className="text-xl font-semibold">Zero Waste</h3>
-                <p className="text-sm text-muted-foreground">
-                  Innovative cutting techniques minimize fabric waste to near
-                  zero
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="relative w-20 h-20 mx-auto rounded-full bg-[#2C5F2D]/10 flex items-center justify-center">
-                  <div className="text-4xl">❤️</div>
-                </div>
-                <h3 className="text-xl font-semibold">Ethical Production</h3>
-                <p className="text-sm text-muted-foreground">
-                  Fair wages and safe working conditions for all our artisans
-                </p>
-              </div>
+              <h2 className="fr-h1 text-white text-2xl md:text-4xl">MEN</h2>
+              <span className="fr-meta text-white/70 underline underline-offset-4 mt-2 inline-block">
+                Shop Now
+              </span>
             </div>
+          </Link>
 
-            <Button size="lg" variant="outline" className="mt-8" asChild>
-              <Link href="/sustainability">Learn About Our Impact</Link>
-            </Button>
-          </div>
+          {/* Women's Category */}
+          <Link
+            href="/products?category=womens-wear"
+            className="relative aspect-[3/4] md:aspect-[4/3] group overflow-hidden"
+          >
+            <Image
+              src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=960&q=90"
+              alt="Women's Collection"
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
+            <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8">
+              <span className="fr-label text-white/80 block mb-1">
+                COLLECTION
+              </span>
+              <h2 className="fr-h1 text-white text-2xl md:text-4xl">WOMEN</h2>
+              <span className="fr-meta text-white/70 underline underline-offset-4 mt-2 inline-block">
+                Shop Now
+              </span>
+            </div>
+          </Link>
         </div>
       </section>
 
-      {/* Featured Products Section */}
-      <section className="py-24 bg-muted/30">
+      {/* Featured Products - Clean Grid */}
+      <section className="py-12 md:py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <Badge className="mb-4">NEW ARRIVALS</Badge>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-              Featured Collection
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Discover our latest premium pants and shirts, handpicked for
-              quality and style
-            </p>
+          {/* Section Header */}
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <span className="fr-label text-gray-500 block mb-2">NEW IN</span>
+              <h2 className="fr-h1">FEATURED</h2>
+            </div>
+            <Link
+              href="/products"
+              className="fr-meta text-black underline underline-offset-4 hover:text-gray-600 transition-colors hidden md:block"
+            >
+              View All
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {featuredProducts.map((product) => {
-              const imageUrl =
-                product.product_images?.[0]?.url ||
-                product.image_url ||
-                "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&q=90";
-
-              return (
-                <Card
-                  key={product.id}
-                  className="group overflow-hidden hover:shadow-xl transition-shadow duration-300"
-                >
-                  <Link href={`/products/${product.slug}`}>
-                    <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-                      <img
-                        src={imageUrl}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      {product.inventory < 10 && product.inventory > 0 && (
-                        <Badge className="absolute top-4 right-4 bg-destructive text-destructive-foreground">
-                          Only {product.inventory} left
-                        </Badge>
-                      )}
-                      {product.inventory === 0 && (
-                        <Badge className="absolute top-4 right-4 bg-destructive text-destructive-foreground">
-                          Sold Out
-                        </Badge>
-                      )}
-                    </div>
-                    <CardContent className="p-6">
-                      <div className="space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                            {product.name}
-                          </h3>
-                        </div>
-                        {product.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {product.description}
-                          </p>
-                        )}
-                        <div className="flex items-center justify-between pt-2">
-                          <PriceDisplay
-                            priceInINR={product.price}
-                            className="text-2xl font-bold"
-                          />
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            className="gap-2 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                          >
-                            <ShoppingBag className="h-4 w-4" />
-                            View
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Link>
-                </Card>
-              );
-            })}
+          {/* Products Grid - 2 cols mobile, 4 cols desktop */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+            {featuredProducts.slice(0, 8).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
 
-          <div className="text-center mt-12">
-            <Button size="lg" variant="outline" asChild>
+          {/* Mobile View All Button */}
+          <div className="mt-8 text-center md:hidden">
+            <Button variant="outline" className="w-full" asChild>
               <Link href="/products">
-                View All Products <ArrowRight className="ml-2 h-4 w-4" />
+                VIEW ALL PRODUCTS
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-black/75 backdrop-blur-md text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <img
-                  src="/assets/logo/Gold.png"
-                  alt="Foal Rider Logo"
-                  className="h-12 w-auto"
-                />
-                <span
-                  className="text-xl font-bold"
-                  style={{
-                    fontFamily: "Playfair Display, serif",
-                    color: "#C5A572",
-                  }}
-                >
-                  FOAL RIDER
-                </span>
-              </div>
-              <p
-                className="text-sm"
-                style={{
-                  fontFamily: "Montserrat, sans-serif",
-                  color: "#bdc3c7",
-                }}
+      {/* Banner Section - Full width image with text */}
+      <section className="relative h-[60vh] md:h-[70vh] bg-black overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=1920&q=90"
+          alt="Craftsmanship"
+          fill
+          className="object-cover opacity-70"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent" />
+
+        <div className="absolute inset-0 flex items-center">
+          <div className="container mx-auto px-4">
+            <div className="max-w-xl">
+              <span className="fr-label text-[#C5A572] block mb-4">
+                ARTISAN CRAFTED
+              </span>
+              <h2 className="fr-display text-white text-4xl md:text-6xl mb-6">
+                EVERY STITCH TELLS A STORY
+              </h2>
+              <p className="fr-body text-white/80 mb-8">
+                Our artisans pour their heart into every garment, blending
+                traditional techniques with modern innovation.
+              </p>
+              <Button
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-black"
+                asChild
               >
+                <Link href="/about">DISCOVER MORE</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section - Clean, minimal */}
+      <section className="py-16 bg-[#F5F5F5]">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <span className="fr-display text-3xl md:text-5xl text-black block">
+                50+
+              </span>
+              <span className="fr-meta mt-2 block">Years of Excellence</span>
+            </div>
+            <div>
+              <span className="fr-display text-3xl md:text-5xl text-black block">
+                100%
+              </span>
+              <span className="fr-meta mt-2 block">Quality Guarantee</span>
+            </div>
+            <div>
+              <span className="fr-display text-3xl md:text-5xl text-black block">
+                10K+
+              </span>
+              <span className="fr-meta mt-2 block">Happy Customers</span>
+            </div>
+            <div>
+              <span className="fr-display text-3xl md:text-5xl text-black block">
+                24/7
+              </span>
+              <span className="fr-meta mt-2 block">Customer Support</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer - Clean, minimal */}
+      <footer className="bg-black text-white py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            {/* Brand */}
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-3 mb-4">
+                <Image
+                  src="/assets/logo/Gold.png"
+                  alt="Foal Rider"
+                  width={40}
+                  height={40}
+                  className="h-10 w-auto"
+                />
+                <span className="fr-h3 text-[#C5A572]">FOAL RIDER</span>
+              </div>
+              <p className="fr-meta text-gray-400">
                 Premium textiles crafted with care and precision.
               </p>
             </div>
+
+            {/* Shop Links */}
             <div>
-              <h3
-                className="font-semibold mb-4"
-                style={{
-                  fontFamily: "Montserrat, sans-serif",
-                  color: "#C5A572",
-                }}
-              >
-                Shop
-              </h3>
-              <ul className="space-y-2 text-sm">
+              <h3 className="fr-label text-white mb-4">SHOP</h3>
+              <ul className="space-y-3">
                 <li>
                   <Link
-                    href="/products?category=pants"
-                    className="hover:text-[#C5A572] transition-colors"
-                    style={{
-                      fontFamily: "Montserrat, sans-serif",
-                      color: "#bdc3c7",
-                    }}
+                    href="/products?category=mens-wear"
+                    className="fr-meta text-gray-400 hover:text-white transition-colors"
                   >
-                    Pants
+                    Men
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/products?category=shirts"
-                    className="hover:text-[#C5A572] transition-colors"
-                    style={{
-                      fontFamily: "Montserrat, sans-serif",
-                      color: "#bdc3c7",
-                    }}
+                    href="/products?category=womens-wear"
+                    className="fr-meta text-gray-400 hover:text-white transition-colors"
                   >
-                    Shirts
+                    Women
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/products"
-                    className="hover:text-[#C5A572] transition-colors"
-                    style={{
-                      fontFamily: "Montserrat, sans-serif",
-                      color: "#bdc3c7",
-                    }}
+                    className="fr-meta text-gray-400 hover:text-white transition-colors"
                   >
                     All Products
                   </Link>
                 </li>
               </ul>
             </div>
+
+            {/* Company Links */}
             <div>
-              <h3
-                className="font-semibold mb-4"
-                style={{
-                  fontFamily: "Montserrat, sans-serif",
-                  color: "#C5A572",
-                }}
-              >
-                Company
-              </h3>
-              <ul className="space-y-2 text-sm">
+              <h3 className="fr-label text-white mb-4">COMPANY</h3>
+              <ul className="space-y-3">
                 <li>
                   <Link
                     href="/about"
-                    className="hover:text-[#C5A572] transition-colors"
-                    style={{
-                      fontFamily: "Montserrat, sans-serif",
-                      color: "#bdc3c7",
-                    }}
+                    className="fr-meta text-gray-400 hover:text-white transition-colors"
                   >
                     About Us
                   </Link>
@@ -858,48 +277,30 @@ export default async function HomePage() {
                 <li>
                   <Link
                     href="/contact"
-                    className="hover:text-[#C5A572] transition-colors"
-                    style={{
-                      fontFamily: "Montserrat, sans-serif",
-                      color: "#bdc3c7",
-                    }}
+                    className="fr-meta text-gray-400 hover:text-white transition-colors"
                   >
                     Contact
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/shipping"
-                    className="hover:text-[#C5A572] transition-colors"
-                    style={{
-                      fontFamily: "Montserrat, sans-serif",
-                      color: "#bdc3c7",
-                    }}
+                    href="/journal"
+                    className="fr-meta text-gray-400 hover:text-white transition-colors"
                   >
-                    Shipping
+                    Journal
                   </Link>
                 </li>
               </ul>
             </div>
+
+            {/* Legal Links */}
             <div>
-              <h3
-                className="font-semibold mb-4"
-                style={{
-                  fontFamily: "Montserrat, sans-serif",
-                  color: "#C5A572",
-                }}
-              >
-                Legal
-              </h3>
-              <ul className="space-y-2 text-sm">
+              <h3 className="fr-label text-white mb-4">LEGAL</h3>
+              <ul className="space-y-3">
                 <li>
                   <Link
                     href="/privacy"
-                    className="hover:text-[#C5A572] transition-colors"
-                    style={{
-                      fontFamily: "Montserrat, sans-serif",
-                      color: "#bdc3c7",
-                    }}
+                    className="fr-meta text-gray-400 hover:text-white transition-colors"
                   >
                     Privacy Policy
                   </Link>
@@ -907,11 +308,7 @@ export default async function HomePage() {
                 <li>
                   <Link
                     href="/terms"
-                    className="hover:text-[#C5A572] transition-colors"
-                    style={{
-                      fontFamily: "Montserrat, sans-serif",
-                      color: "#bdc3c7",
-                    }}
+                    className="fr-meta text-gray-400 hover:text-white transition-colors"
                   >
                     Terms of Service
                   </Link>
@@ -919,11 +316,7 @@ export default async function HomePage() {
                 <li>
                   <Link
                     href="/returns"
-                    className="hover:text-[#C5A572] transition-colors"
-                    style={{
-                      fontFamily: "Montserrat, sans-serif",
-                      color: "#bdc3c7",
-                    }}
+                    className="fr-meta text-gray-400 hover:text-white transition-colors"
                   >
                     Returns
                   </Link>
@@ -931,11 +324,12 @@ export default async function HomePage() {
               </ul>
             </div>
           </div>
-          <div
-            className="mt-12 pt-8 border-t border-white/10 text-center text-sm"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "#7f8c8d" }}
-          >
-            © {new Date().getFullYear()} Foal Rider. All rights reserved.
+
+          {/* Copyright */}
+          <div className="pt-8 border-t border-white/10">
+            <p className="fr-meta text-gray-500 text-center">
+              © {new Date().getFullYear()} Foal Rider. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>

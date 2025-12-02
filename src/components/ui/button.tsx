@@ -1,32 +1,54 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive active:scale-95 disabled:active:scale-100",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-[#C5A572]/30 active:scale-95 disabled:active:scale-100",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+        // Default - Solid black with gold hover (Primary CTA)
+        default:
+          "bg-black text-white hover:bg-[#C5A572] hover:text-black border border-black hover:border-[#C5A572] font-semibold",
+
+        // Gold - Primary accent button
+        gold: "bg-[#C5A572] text-black hover:bg-[#A8894E] border border-[#C5A572] hover:border-[#A8894E] font-semibold",
+
+        // Outline - Elegant black border
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border-2 border-black text-black bg-transparent hover:bg-black hover:text-white font-semibold",
+
+        // Outline Gold - Premium gold outline
+        "outline-gold":
+          "border-2 border-[#C5A572] text-[#C5A572] bg-transparent hover:bg-[#C5A572] hover:text-black font-semibold",
+
+        // Secondary - Soft background
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline active:opacity-70",
+          "bg-[#F8F6F3] text-black hover:bg-[#E5E5E5] border border-[#E5E5E5] font-medium",
+
+        // Ghost - Minimal
+        ghost: "text-black hover:bg-black/5 font-medium",
+
+        // Ghost Gold - Minimal accent
+        "ghost-gold": "text-[#C5A572] hover:bg-[#C5A572]/10 font-medium",
+
+        // Link - Underline style
+        link: "text-black underline-offset-4 hover:underline hover:text-[#C5A572] font-medium p-0 h-auto",
+
+        // Destructive - Error/Delete actions
+        destructive:
+          "bg-red-600 text-white hover:bg-red-700 border border-red-600 hover:border-red-700 font-semibold",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
-        "icon-sm": "size-8",
-        "icon-lg": "size-10",
+        sm: "h-9 px-4 text-sm rounded-md",
+        default: "h-11 px-6 text-sm rounded-md",
+        lg: "h-12 px-8 text-base rounded-md",
+        xl: "h-14 px-10 text-base rounded-lg",
+        icon: "size-10 rounded-full",
+        "icon-sm": "size-8 rounded-full",
+        "icon-lg": "size-12 rounded-full",
       },
     },
     defaultVariants: {
@@ -34,7 +56,7 @@ const buttonVariants = cva(
       size: "default",
     },
   }
-)
+);
 
 function Button({
   className,
@@ -44,9 +66,9 @@ function Button({
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
+    asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot : "button"
+  const Comp = asChild ? Slot : "button";
 
   return (
     <Comp
@@ -54,7 +76,7 @@ function Button({
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
-  )
+  );
 }
 
-export { Button, buttonVariants }
+export { Button, buttonVariants };

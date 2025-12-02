@@ -1,8 +1,8 @@
-import { Suspense } from 'react';
-import { ProductGrid } from '@/components/products/ProductGrid';
-import { ProductFilters } from '@/components/products/ProductFilters';
-import { MobileFilters } from '@/components/products/MobileFilters';
-import { ProductGridSkeleton } from '@/components/products/ProductSkeleton';
+import { Suspense } from "react";
+import { ProductGrid } from "@/components/products/ProductGrid";
+import { ProductFilters } from "@/components/products/ProductFilters";
+import { MobileFilters } from "@/components/products/MobileFilters";
+import { ProductGridSkeleton } from "@/components/products/ProductSkeleton";
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -14,11 +14,13 @@ interface ProductsPageProps {
   }>;
 }
 
-export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+export default async function ProductsPage({
+  searchParams,
+}: ProductsPageProps) {
   const params = await searchParams;
-  
+
   return (
-    <div className="min-h-screen bg-background pt-16">
+    <div className="min-h-screen bg-[#FAFAFA] pt-16">
       {/* Main Content */}
       <section className="h-[calc(100vh-4rem)]">
         <div className="container mx-auto px-4 h-full">
@@ -33,7 +35,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
             {/* Products Grid - Scrollable */}
             <div className="flex-1 h-full overflow-y-auto">
-              <Suspense key={JSON.stringify(params)} fallback={<ProductGridSkeleton count={9} />}>
+              <Suspense
+                key={JSON.stringify(params)}
+                fallback={<ProductGridSkeleton count={9} />}
+              >
                 <ProductGrid searchParams={params} />
               </Suspense>
             </div>

@@ -22,7 +22,8 @@ interface Order {
 }
 
 export default function OrdersPage() {
-  const { state } = useAuth(); const user = state.user;
+  const { state } = useAuth();
+  const user = state.user;
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,17 +62,22 @@ export default function OrdersPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="min-h-screen bg-[#FAFAFA] pt-24">
         <div className="container mx-auto px-4 py-8">
-          <Card className="p-12 text-center max-w-md mx-auto">
-            <Package className="h-24 w-24 mx-auto text-gray-300 mb-6" />
-            <h2 className="text-2xl font-semibold mb-4">Login Required</h2>
-            <p className="text-gray-600 mb-8">
+          <Card className="p-12 text-center max-w-md mx-auto rounded-2xl border-[#E5E5E5]">
+            <div className="w-24 h-24 mx-auto rounded-full bg-[#C5A572]/10 flex items-center justify-center mb-6">
+              <Package className="h-12 w-12 text-[#C5A572] stroke-[1.5]" />
+            </div>
+            <h2 className="font-['Playfair_Display'] text-2xl font-semibold mb-4 text-black">
+              Login Required
+            </h2>
+            <p className="font-['Montserrat'] text-[#4B5563] mb-8">
               Please login to view your order history
             </p>
             <Button
               size="lg"
-              className="bg-[#C5A572] hover:bg-[#B89968] cursor-pointer"
+              variant="gold"
+              className="font-['Montserrat'] cursor-pointer"
               onClick={() => router.push("/login?redirect=/profile/orders")}
             >
               Login
@@ -84,7 +90,7 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="min-h-screen bg-[#FAFAFA] pt-24">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-[#C5A572]" />
@@ -95,21 +101,28 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24">
+    <div className="min-h-screen bg-[#FAFAFA] pt-24">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Order History</h1>
+        <h1 className="font-['Playfair_Display'] text-4xl font-bold mb-8 text-black">
+          Order History
+        </h1>
 
         {orders.length === 0 ? (
-          <Card className="p-12 text-center">
-            <ShoppingBag className="h-24 w-24 mx-auto text-gray-300 mb-6" />
-            <h2 className="text-2xl font-semibold mb-4">No Orders Yet</h2>
-            <p className="text-gray-600 mb-8">
+          <Card className="p-12 text-center rounded-2xl border-[#E5E5E5]">
+            <div className="w-24 h-24 mx-auto rounded-full bg-[#C5A572]/10 flex items-center justify-center mb-6">
+              <ShoppingBag className="h-12 w-12 text-[#C5A572] stroke-[1.5]" />
+            </div>
+            <h2 className="font-['Playfair_Display'] text-2xl font-semibold mb-4 text-black">
+              No Orders Yet
+            </h2>
+            <p className="font-['Montserrat'] text-[#4B5563] mb-8">
               You haven't placed any orders yet. Start shopping to see your
               order history here!
             </p>
             <Button
               size="lg"
-              className="bg-[#C5A572] hover:bg-[#B89968] cursor-pointer"
+              variant="gold"
+              className="font-['Montserrat'] cursor-pointer"
               asChild
             >
               <Link href="/products">Start Shopping</Link>

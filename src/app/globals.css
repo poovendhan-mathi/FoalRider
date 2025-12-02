@@ -45,26 +45,61 @@
 
 :root {
   --radius: 0.625rem;
-  
-  /* Figma Design System - Foal Rider Colors */
-  --figma-primary: #2c3e50; /* Midnight Blue */
-  --figma-secondary: #bdc3c7; /* Ash Gray */
-  --figma-accent: #f1c40f; /* Mustard Yellow */
-  --figma-background: #ecf0f1; /* Cloud White */
-  --figma-text-primary: #2c3e50; /* Dark Text */
-  --figma-text-secondary: #7f8c8d; /* Light Text */
-  --figma-text-light: #ecf0f1; /* White Text */
-  --figma-linen-white: #f9f9f9; /* Off-white Linen */
-  --figma-wool-gray: #d3d3d3; /* Soft Wool Gray */
-  --figma-silk-beige: #f5f5dc; /* Silk Beige */
-  --figma-denim-blue: #4169e1; /* Premium Denim */
-  
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     FOAL RIDER LUXURY DESIGN SYSTEM
+     Inspired by: Adidas, Burberry, Ralph Lauren
+     Three-color palette: Black, Gold, White
+     ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* Primary Colors */
+  --luxury-black: #000000;
+  --luxury-charcoal: #1a1a1a;
+  --luxury-dark: #2e2e2e;
+
+  /* Accent Colors - Gold */
+  --luxury-gold: #c5a572;
+  --luxury-gold-light: #d4b98a;
+  --luxury-gold-dark: #a8894e;
+
+  /* Neutral Colors */
+  --luxury-white: #ffffff;
+  --luxury-off-white: #fafafa;
+  --luxury-warm-white: #f8f6f3;
+  --luxury-gray-light: #e5e5e5;
+  --luxury-gray-medium: #9ca3af;
+  --luxury-gray-text: #4b5563;
+
+  /* Transparency Variations */
+  --luxury-black-90: rgba(0, 0, 0, 0.9);
+  --luxury-black-75: rgba(0, 0, 0, 0.75);
+  --luxury-black-50: rgba(0, 0, 0, 0.5);
+  --luxury-black-10: rgba(0, 0, 0, 0.1);
+  --luxury-white-90: rgba(255, 255, 255, 0.9);
+  --luxury-white-70: rgba(255, 255, 255, 0.7);
+  --luxury-white-50: rgba(255, 255, 255, 0.5);
+  --luxury-gold-20: rgba(197, 165, 114, 0.2);
+  --luxury-gold-10: rgba(197, 165, 114, 0.1);
+
+  /* Legacy Figma Colors (kept for backward compatibility) */
+  --figma-primary: #2c3e50;
+  --figma-secondary: #bdc3c7;
+  --figma-accent: #f1c40f;
+  --figma-background: #ecf0f1;
+  --figma-text-primary: #2c3e50;
+  --figma-text-secondary: #7f8c8d;
+  --figma-text-light: #ecf0f1;
+  --figma-linen-white: #f9f9f9;
+  --figma-wool-gray: #d3d3d3;
+  --figma-silk-beige: #f5f5dc;
+  --figma-denim-blue: #4169e1;
+
   /* Foal Rider Brand Colors - Official Guidelines */
-  --brand-primary: #000000; /* Black - Strength, elegance, timelessness */
-  --brand-accent: #C5A572; /* Gold - Luxury, craftsmanship, refinement */
-  --brand-secondary: #2E2E2E; /* Charcoal - Modernity, depth, subtle power */
-  --brand-neutral: #FFFFFF; /* White - Purity, simplicity, sophistication */
-  
+  --brand-primary: #000000;
+  --brand-accent: #c5a572;
+  --brand-secondary: #2e2e2e;
+  --brand-neutral: #ffffff;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -139,7 +174,7 @@
   body {
     @apply bg-background text-foreground;
   }
-  
+
   /* Optimize touch response across the app */
   button,
   a,
@@ -147,7 +182,7 @@
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
-  
+
   /* Ensure minimum touch targets for accessibility */
   button:not(.no-min-size),
   a:not(.no-min-size),
@@ -162,26 +197,357 @@
   .tap-feedback {
     @apply transition-all duration-150 active:scale-95 active:opacity-80;
   }
-  
+
   /* Scale-only tap feedback for cards */
   .tap-scale {
     @apply transition-transform duration-150 active:scale-98;
   }
-  
+
   /* Highlight tap feedback for list items */
   .tap-highlight {
     @apply transition-colors duration-150 active:bg-gray-100 dark:active:bg-gray-800;
   }
-  
+
   /* Opacity-only feedback for links */
   .tap-opacity {
     @apply transition-opacity duration-150 active:opacity-70;
   }
-  
+
   /* Ring pulse feedback for important actions */
   .tap-ring {
     @apply transition-all duration-150 active:ring-2 active:ring-[#C5A572]/30;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FOAL RIDER DESIGN SYSTEM - Adidas/CK Inspired Typography
+   Clean, Modern, Minimal
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* === FUNCTIONAL COLORS === */
+:root {
+  --fr-sale: #cf0000;
+  --fr-success: #00a000;
+  --fr-warning: #ff6b00;
+  --fr-gray-500: #767677;
+  --fr-gray-100: #f5f5f5;
+}
+
+/* === DISPLAY - Hero Headlines (72px mobile / 96px desktop) === */
+.fr-display {
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  color: var(--luxury-black);
+}
+
+/* === H1 - Section Headlines (36px mobile / 48px desktop) === */
+.fr-h1 {
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--luxury-black);
+}
+
+/* === H2 - Subsection Headlines (24px / 32px) === */
+.fr-h2 {
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--luxury-black);
+}
+
+/* === H3 - Card/Component Titles === */
+.fr-h3 {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--luxury-black);
+}
+
+/* === PRODUCT NAME - Clean & Minimal === */
+.fr-product-name {
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--luxury-black);
+  line-height: 1.35;
+}
+
+/* === PRICE STYLES - Adidas Inspired === */
+.fr-price {
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--luxury-black);
+}
+
+.fr-price-sale {
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--fr-sale);
+}
+
+.fr-price-original {
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--fr-gray-500);
+  text-decoration: line-through;
+}
+
+/* === CATEGORY/META TEXT === */
+.fr-meta {
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--fr-gray-500);
+}
+
+/* === LABELS/BADGES === */
+.fr-label {
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* === BODY TEXT === */
+.fr-body {
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.fr-body-lg {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+/* === LEGACY LUXURY CLASSES (kept for backward compatibility) === */
+
+/* Luxury Headings */
+.luxury-display {
+  font-family: "Montserrat", sans-serif;
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--luxury-black);
+}
+
+.luxury-h1 {
+  font-family: "Montserrat", sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--luxury-black);
+}
+
+.luxury-h2 {
+  font-family: "Montserrat", sans-serif;
+  font-size: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--luxury-black);
+}
+
+.luxury-h3 {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--luxury-black);
+}
+
+.luxury-h4 {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--luxury-black);
+}
+
+/* Body Text */
+.luxury-body {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--luxury-gray-text);
+}
+
+.luxury-body-lg {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: 1.8;
+  color: var(--luxury-gray-text);
+}
+
+/* Labels & Badges */
+.luxury-label {
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--luxury-black);
+}
+
+/* Price Display - Updated for Adidas style */
+.luxury-price {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--luxury-black);
+}
+
+.luxury-price-lg {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--luxury-black);
+}
+
+.luxury-price-sale {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fr-sale);
+}
+
+.luxury-price-original {
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--fr-gray-500);
+  text-decoration: line-through;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LUXURY DESIGN SYSTEM - Interactive Classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Smooth transitions for all interactive elements */
+.luxury-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover lift effect for cards */
+.luxury-lift {
+  transition: all 0.3s ease;
+}
+.luxury-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Subtle scale on hover */
+.luxury-scale {
+  transition: transform 0.5s ease;
+}
+.luxury-scale:hover {
+  transform: scale(1.02);
+}
+
+/* Image zoom on card hover */
+.luxury-image-zoom {
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.group:hover .luxury-image-zoom {
+  transform: scale(1.05);
+}
+
+/* Gold underline effect */
+.luxury-underline {
+  position: relative;
+}
+.luxury-underline::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--luxury-gold);
+  transition: width 0.3s ease;
+}
+.luxury-underline:hover::after {
+  width: 100%;
+}
+
+/* Icon container with gold accent */
+.luxury-icon-box {
+  padding: 0.75rem;
+  background-color: var(--luxury-gold-10);
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.luxury-icon-box svg {
+  color: var(--luxury-gold);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LUXURY DESIGN SYSTEM - Background Classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.luxury-bg-primary {
+  background-color: var(--luxury-off-white);
+}
+
+.luxury-bg-warm {
+  background-color: var(--luxury-warm-white);
+}
+
+.luxury-bg-dark {
+  background-color: var(--luxury-black);
+  color: var(--luxury-white);
+}
+
+.luxury-bg-charcoal {
+  background-color: var(--luxury-charcoal);
+  color: var(--luxury-white);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LUXURY DESIGN SYSTEM - Border & Divider Classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.luxury-border {
+  border-color: var(--luxury-gray-light);
+}
+
+.luxury-border-gold {
+  border-color: var(--luxury-gold);
+}
+
+.luxury-divider {
+  height: 1px;
+  background-color: var(--luxury-gray-light);
 }
 
 /* Custom Animations */
@@ -196,4 +562,68 @@
 
 .animate-loading-bar {
   animation: loading-bar 1.5s ease-in-out infinite;
+}
+
+/* Fade up animation */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.6s ease forwards;
+}
+
+/* Shimmer animation for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+/* Staggered animations for lists */
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+.stagger-5 {
+  animation-delay: 0.5s;
+}
+.stagger-6 {
+  animation-delay: 0.6s;
+}
+
+/* Safe area for mobile bottom navigation */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }

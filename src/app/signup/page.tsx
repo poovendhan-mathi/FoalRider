@@ -88,13 +88,13 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] p-4">
+        <Card className="w-full max-w-md rounded-2xl border-[#E5E5E5]">
+          <CardHeader className="text-center">
+            <CardTitle className="font-['Playfair_Display'] text-2xl font-bold text-black">
               Check your email
             </CardTitle>
-            <CardDescription className="text-center">
+            <CardDescription className="font-['Montserrat'] text-[#9CA3AF]">
               We&apos;ve sent you a confirmation email. Please verify your
               account to continue.
             </CardDescription>
@@ -105,25 +105,30 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">
+    <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] p-4">
+      <Card className="w-full max-w-md rounded-2xl border-[#E5E5E5]">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="font-['Playfair_Display'] text-3xl font-bold text-black">
             Create an account
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="font-['Montserrat'] text-[#9CA3AF]">
             Enter your details to create your Foal Rider account
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
+              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-xl font-['Montserrat']">
                 {error}
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
+              <Label
+                htmlFor="fullName"
+                className="font-['Montserrat'] text-black"
+              >
+                Full Name
+              </Label>
               <Input
                 id="fullName"
                 type="text"
@@ -132,10 +137,13 @@ export default function SignupPage() {
                 onChange={(e) => setFullName(e.target.value)}
                 required
                 disabled={loading}
+                className="rounded-xl"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="font-['Montserrat'] text-black">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -144,10 +152,13 @@ export default function SignupPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
+                className="rounded-xl"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number (Optional)</Label>
+              <Label htmlFor="phone" className="font-['Montserrat'] text-black">
+                Phone Number (Optional)
+              </Label>
               <Input
                 id="phone"
                 type="tel"
@@ -155,10 +166,16 @@ export default function SignupPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 disabled={loading}
+                className="rounded-xl"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label
+                htmlFor="password"
+                className="font-['Montserrat'] text-black"
+              >
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -167,10 +184,16 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
+                className="rounded-xl"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label
+                htmlFor="confirmPassword"
+                className="font-['Montserrat'] text-black"
+              >
+                Confirm Password
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -178,18 +201,24 @@ export default function SignupPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={loading}
+                className="rounded-xl"
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              variant="gold"
+              className="w-full font-['Montserrat']"
+              disabled={loading}
+            >
               {loading ? "Creating account..." : "Create account"}
             </Button>
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="font-['Montserrat'] text-sm text-[#9CA3AF] text-center">
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="text-primary hover:underline font-medium"
+                className="text-[#C5A572] hover:underline font-medium"
               >
                 Sign in
               </Link>

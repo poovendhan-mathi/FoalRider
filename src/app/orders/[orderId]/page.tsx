@@ -300,7 +300,7 @@ export default function OrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-24 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAFAFA] pt-24 flex items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-[#C5A572]" />
       </div>
     );
@@ -308,12 +308,16 @@ export default function OrderDetailPage() {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="min-h-screen bg-[#FAFAFA] pt-24">
         <div className="container mx-auto px-4 py-8">
-          <Card className="p-12 text-center max-w-md mx-auto">
-            <Package className="h-24 w-24 mx-auto text-gray-300 mb-6" />
-            <h2 className="text-2xl font-semibold mb-4">Order Not Found</h2>
-            <p className="text-gray-600 mb-8">
+          <Card className="p-12 text-center max-w-md mx-auto rounded-2xl border-[#E5E5E5]">
+            <div className="w-24 h-24 mx-auto rounded-full bg-[#C5A572]/10 flex items-center justify-center mb-6">
+              <Package className="h-12 w-12 text-[#C5A572] stroke-[1.5]" />
+            </div>
+            <h2 className="font-['Playfair_Display'] text-2xl font-semibold mb-4 text-black">
+              Order Not Found
+            </h2>
+            <p className="font-['Montserrat'] text-[#4B5563] mb-8">
               {error || "The order you are looking for does not exist."}
             </p>
             <Button

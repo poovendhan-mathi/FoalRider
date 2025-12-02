@@ -1,13 +1,11 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { WishlistButton } from '@/components/wishlist/WishlistButton';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import type { Product } from '@/lib/products';
+import Image from "next/image";
+import Link from "next/link";
+import { Heart } from "lucide-react";
+import { useWishlist } from "@/contexts/WishlistContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import type { Product } from "@/lib/products";
 
 interface ProductCardProps {
   product: Product;
@@ -16,102 +14,129 @@ interface ProductCardProps {
 function getProductImageUrl(product: Product): string {
   // First, try to get image from product_images relation
   if (product.product_images && product.product_images.length > 0) {
-    const sortedImages = [...product.product_images].sort((a, b) => a.sort_order - b.sort_order);
+    const sortedImages = [...product.product_images].sort(
+      (a, b) => a.sort_order - b.sort_order
+    );
     return sortedImages[0].url;
   }
-  
+
   // Fallback to image_url field
   if (product.image_url) {
     return product.image_url;
   }
-  
+
   // Fallback to placeholder
-  return '/assets/images/product-placeholder.jpg';
+  return "/assets/images/product-placeholder.jpg";
 }
 
+/**
+ * Adidas-style Product Card
+ * - Clean, borderless design
+ * - Large product image (4:5 aspect ratio)
+ * - Minimal wishlist heart icon
+ * - Price below image with sale styling
+ * - No description on card
+ */
 export function ProductCard({ product }: ProductCardProps) {
   const { formatPrice } = useCurrency();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const imageUrl = getProductImageUrl(product);
   const isOutOfStock = product.inventory <= 0;
+  const inWishlist = isInWishlist(product.id);
+
+  // Calculate if on sale (example: 20% off for demo)
+  const originalPrice = product.price * 1.25;
+  const isOnSale = false; // Set to true to show sale styling
+  const discountPercent = isOnSale
+    ? Math.round((1 - product.price / originalPrice) * 100)
+    : 0;
+
+  const handleWishlistClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await toggleWishlist(product.id, product.name);
+  };
 
   return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 tap-scale">
+    <article className="group relative">
+      {/* Image Container - Full width, no border, flat bg */}
       <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative aspect-square overflow-hidden bg-muted">
+        <div className="relative aspect-[4/5] bg-[#F5F5F5] overflow-hidden">
           <Image
             src={imageUrl}
             alt={product.name}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
-          
-          {/* Wishlist Button */}
-          <div className="absolute top-4 right-4 z-10">
-            <WishlistButton productId={product.id} productName={product.name} />
-          </div>
-            
+
+          {/* Wishlist Button - Top right, minimal outline style */}
+          <button
+            onClick={handleWishlistClick}
+            className="absolute top-3 right-3 z-10 p-2 rounded-full transition-all duration-200 bg-white/80 hover:bg-white"
+            aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            <Heart
+              className={`w-5 h-5 transition-all duration-200 ${
+                inWishlist
+                  ? "fill-black stroke-black"
+                  : "stroke-black stroke-[1.5] fill-transparent hover:fill-black/10"
+              }`}
+            />
+          </button>
+
+          {/* Stock Badge - Only show for out of stock or low stock */}
           {isOutOfStock && (
-            <Badge className="absolute top-4 left-4 bg-red-500">
-              Out of Stock
-            </Badge>
+            <span className="absolute top-3 left-3 fr-label bg-black text-white px-2 py-1">
+              SOLD OUT
+            </span>
           )}
-            
+
           {product.inventory <= 5 && product.inventory > 0 && (
-            <Badge className="absolute top-4 left-4 bg-orange-500">
-              Only {product.inventory} left
-            </Badge>
+            <span className="absolute top-3 left-3 fr-label bg-[#FF6B00] text-white px-2 py-1">
+              ONLY {product.inventory} LEFT
+            </span>
+          )}
+
+          {/* Discount Badge */}
+          {isOnSale && (
+            <span className="absolute bottom-3 left-3 fr-label bg-[#CF0000] text-white px-2 py-1">
+              -{discountPercent}%
+            </span>
           )}
         </div>
       </Link>
 
-      <CardContent className="p-4">
-        <h3 
-          className="font-semibold text-lg mb-2 line-clamp-2"
-          style={{ fontFamily: 'Playfair Display, serif' }}
-        >
-          <Link href={`/products/${product.slug}`} className="hover:text-[#C5A572] tap-opacity transition-all">
-            {product.name}
-          </Link>
-        </h3>
-        {product.description && (
-          <p 
-            className="text-sm text-muted-foreground line-clamp-2 mb-3"
-            style={{ fontFamily: 'Montserrat, sans-serif' }}
-          >
-            {product.description}
-          </p>
-        )}
-        <div className="flex items-center justify-between">
-          <span 
-            className="text-2xl font-bold text-[#C5A572]"
-            style={{ fontFamily: 'Montserrat, sans-serif' }}
-          >
-            {formatPrice(product.price)}
-          </span>
-          {product.inventory > 0 && product.inventory <= 10 && (
-            <span className="text-xs text-muted-foreground">
-              {product.inventory} in stock
-            </span>
+      {/* Product Info - Minimal padding, clean layout */}
+      <div className="pt-3 pb-2">
+        {/* Price Row */}
+        <div className="flex items-center gap-2 mb-1">
+          {isOnSale ? (
+            <>
+              <span className="fr-price-sale">
+                {formatPrice(product.price)}
+              </span>
+              <span className="fr-price-original">
+                {formatPrice(originalPrice)}
+              </span>
+            </>
+          ) : (
+            <span className="fr-price">{formatPrice(product.price)}</span>
           )}
         </div>
-      </CardContent>
 
-      <CardFooter className="p-4 pt-0">
-        <Button 
-          className="w-full bg-[#C5A572] hover:bg-[#B08D5B] cursor-pointer"
-          disabled={isOutOfStock}
-          asChild={!isOutOfStock}
-        >
-          {isOutOfStock ? (
-            <span>Out of Stock</span>
-          ) : (
-            <Link href={`/products/${product.slug}`}>
-              View Details
-            </Link>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
+        {/* Product Name */}
+        <Link href={`/products/${product.slug}`}>
+          <h3 className="fr-product-name line-clamp-2 group-hover:underline">
+            {product.name}
+          </h3>
+        </Link>
+
+        {/* Category - Small gray text */}
+        {product.categories && (
+          <p className="fr-meta mt-1">{product.categories.name}</p>
+        )}
+      </div>
+    </article>
   );
 }

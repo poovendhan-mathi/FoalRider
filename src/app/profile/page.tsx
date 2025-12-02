@@ -280,7 +280,7 @@ function ProfileContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-24 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAFAFA] pt-24 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C5A572]"></div>
       </div>
     );
@@ -307,10 +307,12 @@ function ProfileContent() {
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C5A572] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading profile...</p>
+          <p className="font-['Montserrat'] text-[#4B5563]">
+            Loading profile...
+          </p>
         </div>
       </div>
     );
@@ -319,22 +321,24 @@ function ProfileContent() {
   // Show message if no user (while redirecting)
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Redirecting to login...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+        <p className="font-['Montserrat'] text-[#4B5563]">
+          Redirecting to login...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24">
+    <div className="min-h-screen bg-[#FAFAFA] pt-24">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 border border-[#E5E5E5]">
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             <div className="relative">
               <Avatar className="h-24 w-24">
                 <AvatarImage src={profile?.avatar_url} alt={displayName} />
-                <AvatarFallback className="bg-[#C5A572] text-white text-2xl">
+                <AvatarFallback className="bg-[#C5A572] text-white text-2xl font-['Playfair_Display']">
                   {initials}
                 </AvatarFallback>
               </Avatar>

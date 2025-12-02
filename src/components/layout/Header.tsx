@@ -13,7 +13,8 @@ import { useState, useEffect } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function Header() {
-  const { state } = useAuth(); const user = state.user;
+  const { state } = useAuth();
+  const user = state.user;
   const { totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -114,7 +115,7 @@ export function Header() {
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 stroke="currentColor"
                 className="h-5 w-5"
               >
@@ -134,9 +135,9 @@ export function Header() {
             asChild
           >
             <Link href="/wishlist">
-              <Heart className="h-5 w-5" />
+              <Heart className="h-5 w-5 stroke-[1.5]" />
               {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#C5A572] text-black text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                <span className="absolute -top-1 -right-1 bg-[#C5A572] text-black text-xs rounded-full h-5 w-5 flex items-center justify-center font-['Montserrat'] font-bold">
                   {wishlistCount}
                 </span>
               )}
@@ -150,9 +151,9 @@ export function Header() {
             asChild
           >
             <Link href="/cart">
-              <ShoppingCart className="h-5 w-5" />
+              <ShoppingCart className="h-5 w-5 stroke-[1.5]" />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#C5A572] text-black text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                <span className="absolute -top-1 -right-1 bg-[#C5A572] text-black text-xs rounded-full h-5 w-5 flex items-center justify-center font-['Montserrat'] font-bold">
                   {totalItems}
                 </span>
               )}
@@ -167,7 +168,7 @@ export function Header() {
             className="md:hidden text-white/90 hover:text-[#C5A572] hover:bg-white/10 tap-feedback"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5 stroke-[1.5]" />
           </Button>
         </div>
       </div>
