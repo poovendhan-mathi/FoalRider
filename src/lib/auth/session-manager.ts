@@ -370,7 +370,7 @@ export class SessionManager {
   async signOut(): Promise<void> {
     // Set flag to indicate this is an intentional logout
     this.isIntentionalLogout = true;
-    
+
     await this.supabase.auth.signOut();
     this.state = {
       status: "unauthenticated",
@@ -404,16 +404,28 @@ export class SessionManager {
   }
 
   destroy(): void {
+    // CRITICAL: Tab closing should NEVER broadcast logout or clear session
+    // Only clean up local resources - the session persists in cookies/localStorage
+    // Other tabs should continue working normally
+
     this.authSubscription?.unsubscribe();
     this.leaderElection.destroy();
     this.tabSync.destroy();
     this.tokenRefresh.destroy();
+
+    if (this.visibilityChangeTimeout) {
+      clearTimeout(this.visibilityChangeTimeout);
+      this.visibilityChangeTimeout = null;
+    }
+
     if (typeof document !== "undefined") {
       document.removeEventListener(
         "visibilitychange",
         this.handleVisibilityChange
       );
     }
+
+    // Clear instance reference so a new one is created if needed
     SessionManager.instance = null;
     this.listeners.clear();
   }

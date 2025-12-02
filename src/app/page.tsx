@@ -61,70 +61,12 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen pt-16">
-      {/* Featured Products Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center space-y-4 mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Discover Our Collection
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Premium quality textile products crafted with care
-            </p>
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-4">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-4 w-4 fill-[#C5A572] text-[#C5A572]"
-                  />
-                ))}
-              </div>
-              <span>Trusted by 10,000+ customers</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Men's Premium Denim Jeans Section */}
       <section className="py-24 bg-[#ecf0f1]">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-            {/* Product Image - High Quality 8K */}
-            <Link
-              href={
-                mensJeansProduct
-                  ? `/products/${mensJeansProduct.slug}`
-                  : "/products?category=mens-pants"
-              }
-              className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#2E2E2E] order-2 md:order-1 block cursor-pointer group"
-            >
-              <img
-                src={mensJeansImage}
-                alt={mensJeansProduct?.name || "Premium Men's Denim Jeans"}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-8 left-8 text-white">
-                <div
-                  className="text-4xl md:text-5xl font-bold mb-3"
-                  style={{ fontFamily: "Playfair Display, serif" }}
-                >
-                  {mensJeansProduct?.name || "Premium Denim Jeans"}
-                </div>
-                {mensJeansProduct && (
-                  <div
-                    className="text-lg md:text-xl opacity-90 font-semibold"
-                    style={{ fontFamily: "Montserrat, sans-serif" }}
-                  >
-                    <PriceDisplay priceInINR={mensJeansProduct.price} />
-                  </div>
-                )}
-              </div>
-            </Link>
-
-            {/* Content */}
-            <div className="space-y-6 order-1 md:order-2">
+            {/* Content - Left on desktop, Bottom on mobile */}
+            <div className="space-y-6 order-2 md:order-1">
               <Badge
                 variant="outline"
                 className="border-[#2c3e50] text-[#2c3e50]"
@@ -273,6 +215,39 @@ export default async function HomePage() {
                 </Button>
               </div>
             </div>
+
+            {/* Product Image - Right on desktop, First on mobile */}
+            <Link
+              href={
+                mensJeansProduct
+                  ? `/products/${mensJeansProduct.slug}`
+                  : "/products?category=mens-pants"
+              }
+              className="relative aspect-3/4 rounded-2xl overflow-hidden bg-[#2E2E2E] order-1 md:order-2 block cursor-pointer group"
+            >
+              <img
+                src={mensJeansImage}
+                alt={mensJeansProduct?.name || "Premium Men's Denim Jeans"}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+              <div className="absolute bottom-8 left-8 text-white">
+                <div
+                  className="text-4xl md:text-5xl font-bold mb-3"
+                  style={{ fontFamily: "Playfair Display, serif" }}
+                >
+                  {mensJeansProduct?.name || "Premium Denim Jeans"}
+                </div>
+                {mensJeansProduct && (
+                  <div
+                    className="text-lg md:text-xl opacity-90 font-semibold"
+                    style={{ fontFamily: "Montserrat, sans-serif" }}
+                  >
+                    <PriceDisplay priceInINR={mensJeansProduct.price} />
+                  </div>
+                )}
+              </div>
+            </Link>
           </div>
         </div>
       </section>
@@ -778,7 +753,7 @@ export default async function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-br from-[#2c3e50] to-[#1a252f] text-white py-12">
+      <footer className="bg-black/75 backdrop-blur-md text-white py-12">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="space-y-4">

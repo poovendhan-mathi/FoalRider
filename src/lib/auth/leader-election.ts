@@ -5,6 +5,9 @@ import { SessionManagerConfig, STORAGE_KEYS } from "./types";
 /**
  * LeaderElection - Ensures only one tab is the leader for session refresh.
  * Uses localStorage heartbeat pattern for cross-tab coordination.
+ *
+ * CRITICAL: Tab IDs must be stored in sessionStorage (tab-specific), NOT localStorage (shared).
+ * This is how major companies handle multi-tab session management.
  */
 export class LeaderElection {
   private tabId: string;
@@ -24,14 +27,22 @@ export class LeaderElection {
     this.startLeaderCheck();
   }
 
+  /**
+   * CRITICAL FIX: Use sessionStorage for tab ID, NOT localStorage!
+   * - sessionStorage is unique per tab/window
+   * - localStorage is shared across ALL tabs (which was causing the bug)
+   *
+   * This ensures each tab has its own unique identifier.
+   */
   private getOrCreateTabId(): string {
-    let id = localStorage.getItem(STORAGE_KEYS.TAB_ID);
+    // Use sessionStorage - it's unique per tab!
+    let id = sessionStorage.getItem(STORAGE_KEYS.TAB_ID);
     if (!id) {
       id =
         typeof crypto !== "undefined" && crypto.randomUUID
           ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random()}`;
-      localStorage.setItem(STORAGE_KEYS.TAB_ID, id);
+          : `${Date.now()}-${Math.random().toString(36).substring(2)}`;
+      sessionStorage.setItem(STORAGE_KEYS.TAB_ID, id);
     }
     return id;
   }
@@ -119,15 +130,22 @@ export class LeaderElection {
   destroy(): void {
     this.stopHeartbeat();
     this.stopLeaderCheck();
+
+    // Only clean up leadership if THIS tab was the leader
+    // Do NOT clear any session-related data - just relinquish leadership
+    // so another tab can take over
     if (
       this.isLeaderTab &&
       localStorage.getItem(STORAGE_KEYS.LEADER_TAB) === this.tabId
     ) {
+      // Just remove the leader claim - another tab will take over
       localStorage.removeItem(STORAGE_KEYS.LEADER_TAB);
       localStorage.removeItem(STORAGE_KEYS.LEADER_HEARTBEAT);
     }
+
     window.removeEventListener("storage", this.handleStorageEvent);
     this.listeners.clear();
+    this.isLeaderTab = false;
   }
 
   isLeader(): boolean {

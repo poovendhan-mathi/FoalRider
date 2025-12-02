@@ -5,7 +5,7 @@
 
 ---
 
-## 0 - Do not unecessary document files
+## 0 - Do not unnecessary document files
 
 - ** Do not create any documentation files unless explicitly asked to do so. **
 - ** Only create documentation files when there is a specific request for documentation. **

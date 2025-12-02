@@ -74,10 +74,13 @@ export function AuthProvider({
     };
   }, []);
 
-  // Handle page unload
+  // Handle page unload - DO NOT destroy session manager or logout
+  // Just let the leader election handle leadership transfer
   useEffect(() => {
     const handleUnload = () => {
-      managerRef.current?.destroy();
+      // Only relinquish leadership, don't destroy the session
+      // The session persists in cookies/localStorage and other tabs should keep working
+      // managerRef.current?.destroy(); // REMOVED - Don't destroy on tab close
     };
 
     window.addEventListener("beforeunload", handleUnload);
