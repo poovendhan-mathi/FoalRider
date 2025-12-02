@@ -130,24 +130,23 @@ export function ProductFilters({
   };
 
   return (
-    <div className="bg-[#F8F6F3] rounded-2xl p-6 border border-[#E5E5E5]">
-      <div>
-        <h3 className="font-['Playfair_Display'] text-xl font-semibold mb-6 pb-4 border-b border-[#E5E5E5] text-black">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium tracking-wide uppercase text-gray-900">
           Filters
         </h3>
-        <Button
-          variant="outline"
-          size="sm"
+        <button
           onClick={clearFilters}
-          className="w-full mb-6"
+          className="text-xs text-gray-500 hover:text-black transition-colors"
         >
-          Clear All Filters
-        </Button>
+          Clear all
+        </button>
       </div>
 
       {/* Category Filter */}
-      <div className="mb-6">
-        <Label className="font-['Montserrat'] text-xs font-semibold tracking-[0.15em] uppercase mb-4 block text-black/70">
+      <div className="border-t border-gray-100 pt-6">
+        <Label className="text-xs font-medium tracking-wide uppercase mb-4 block text-gray-500">
           Category
         </Label>
         <div className="space-y-1">
@@ -170,12 +169,11 @@ export function ProductFilters({
                   )
                 }
                 disabled={isPending}
-                className={`block w-full text-left px-4 py-2.5 rounded-lg font-['Montserrat'] text-sm transition-all duration-200 disabled:opacity-50 ${
+                className={`block w-full text-left px-3 py-2 text-sm transition-colors ${
                   isSelected
-                    ? "bg-[#C5A572] text-black font-semibold"
-                    : "text-[#4B5563] hover:bg-white hover:text-black"
+                    ? "text-black font-medium"
+                    : "text-gray-500 hover:text-black"
                 }`}
-                style={{ cursor: "pointer" }}
               >
                 {category.name}
               </button>
@@ -184,11 +182,9 @@ export function ProductFilters({
         </div>
       </div>
 
-      <div className="h-px bg-[#E5E5E5] my-6" />
-
       {/* Sort Filter */}
-      <div className="mb-6">
-        <Label className="font-['Montserrat'] text-xs font-semibold tracking-[0.15em] uppercase mb-4 block text-black/70">
+      <div className="border-t border-gray-100 pt-6">
+        <Label className="text-xs font-medium tracking-wide uppercase mb-4 block text-gray-500">
           Sort By
         </Label>
         <div className="space-y-1">
@@ -203,12 +199,11 @@ export function ProductFilters({
                 key={option.value}
                 onClick={() => updateFilters("sort", option.value)}
                 disabled={isPending}
-                className={`block w-full text-left px-4 py-2.5 rounded-lg font-['Montserrat'] text-sm transition-all duration-200 disabled:opacity-50 ${
+                className={`block w-full text-left px-3 py-2 text-sm transition-colors ${
                   isSelected
-                    ? "bg-[#C5A572] text-black font-semibold"
-                    : "text-[#4B5563] hover:bg-white hover:text-black"
+                    ? "text-black font-medium"
+                    : "text-gray-500 hover:text-black"
                 }`}
-                style={{ cursor: "pointer" }}
               >
                 {option.label}
               </button>
@@ -217,11 +212,9 @@ export function ProductFilters({
         </div>
       </div>
 
-      <div className="h-px bg-[#E5E5E5] my-6" />
-
       {/* Price Range Filter */}
-      <div>
-        <Label className="font-['Montserrat'] text-xs font-semibold tracking-[0.15em] uppercase mb-4 block text-black/70">
+      <div className="border-t border-gray-100 pt-6">
+        <Label className="text-xs font-medium tracking-wide uppercase mb-4 block text-gray-500">
           Price Range
         </Label>
         <div className="space-y-4">
@@ -233,18 +226,18 @@ export function ProductFilters({
             step={500}
             className="mb-4"
           />
-          <div className="flex items-center justify-between font-['Montserrat'] text-sm text-[#4B5563]">
+          <div className="flex items-center justify-between text-sm text-gray-600">
             <span>{formatPrice(priceRange[0])}</span>
             <span>{formatPrice(priceRange[1])}</span>
           </div>
           <Button
             onClick={applyPriceFilter}
             disabled={isPending}
-            variant="gold"
-            className="w-full"
+            variant="outline"
+            className="w-full text-sm"
             size="sm"
           >
-            {isPending ? "Applying..." : "Apply Price Filter"}
+            {isPending ? "Applying..." : "Apply"}
           </Button>
         </div>
       </div>

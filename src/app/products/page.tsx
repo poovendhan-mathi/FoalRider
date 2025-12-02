@@ -20,28 +20,40 @@ export default async function ProductsPage({
   const params = await searchParams;
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pt-16">
+    <div className="min-h-screen bg-white pt-20">
+      {/* Page Header */}
+      <section className="border-b border-gray-100">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl md:text-4xl font-light tracking-tight text-black">
+            Collection
+          </h1>
+          <p className="text-gray-500 mt-2 text-sm">
+            Premium denim crafted for the modern wardrobe
+          </p>
+        </div>
+      </section>
+
       {/* Main Content */}
-      <section className="h-[calc(100vh-4rem)]">
-        <div className="container mx-auto px-4 h-full">
-          <div className="flex flex-col lg:flex-row gap-8 h-full py-6">
-            {/* Filters Sidebar - Desktop - Fixed height with own scroll */}
-            <aside className="hidden lg:block lg:w-64 shrink-0 h-full overflow-y-auto">
+      <section className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Filters Sidebar - Desktop */}
+          <aside className="hidden lg:block lg:w-64 shrink-0">
+            <div className="sticky top-24">
               <ProductFilters searchParams={params} />
-            </aside>
-
-            {/* Mobile Filter Button */}
-            <MobileFilters searchParams={params} />
-
-            {/* Products Grid - Scrollable */}
-            <div className="flex-1 h-full overflow-y-auto">
-              <Suspense
-                key={JSON.stringify(params)}
-                fallback={<ProductGridSkeleton count={9} />}
-              >
-                <ProductGrid searchParams={params} />
-              </Suspense>
             </div>
+          </aside>
+
+          {/* Mobile Filter Button */}
+          <MobileFilters searchParams={params} />
+
+          {/* Products Grid */}
+          <div className="flex-1">
+            <Suspense
+              key={JSON.stringify(params)}
+              fallback={<ProductGridSkeleton count={12} />}
+            >
+              <ProductGrid searchParams={params} />
+            </Suspense>
           </div>
         </div>
       </section>

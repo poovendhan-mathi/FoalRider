@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Fetch product variants
     const { data: variants, error } = await supabase
       .from("product_variants")
-      .select("id, size, color, color_hex, color_name, inventory, price")
+      .select("id, size, color, color_hex, color_name, inventory, extra_price")
       .eq("product_id", productId)
       .order("size", { ascending: true });
 

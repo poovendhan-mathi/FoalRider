@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { ProductImagesLevis } from "@/components/products/ProductImagesLevis";
-import { ProductInfoLevis } from "@/components/products/ProductInfoLevis";
+import { ProductGallery } from "@/components/products/ProductGallery";
+import { ProductDetails } from "@/components/products/ProductDetails";
 import { ProductTabs } from "@/components/products/ProductTabs";
 import { RelatedProducts } from "@/components/products/RelatedProducts";
 import { ProductDetailSkeleton } from "@/components/products/ProductSkeleton";
@@ -23,11 +23,11 @@ async function ProductContent({ slug }: { slug: string }) {
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-        {/* Product Images - Levi's Style with vertical thumbnails */}
-        <ProductImagesLevis product={product} />
+        {/* Product Gallery with vertical thumbnails */}
+        <ProductGallery product={product} />
 
-        {/* Product Info - Levi's Style with size selectors, offers */}
-        <ProductInfoLevis product={product} />
+        {/* Product Details with size selectors, offers */}
+        <ProductDetails product={product} />
       </div>
 
       {/* Product Tabs - Description, Specs, Reviews */}

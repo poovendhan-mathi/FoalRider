@@ -99,12 +99,12 @@ interface ProductVariant {
   price: number;
 }
 
-interface ProductInfoLevisProps {
+interface ProductDetailsProps {
   product: Product;
 }
 
 /**
- * Levi's-Inspired Product Info Component
+ * Product Details Component
  * Features:
  * - Breadcrumb navigation
  * - Star rating display
@@ -115,7 +115,7 @@ interface ProductInfoLevisProps {
  * - Quantity selector
  * - Add to Bag button
  */
-export function ProductInfoLevis({ product }: ProductInfoLevisProps) {
+export function ProductDetails({ product }: ProductDetailsProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");

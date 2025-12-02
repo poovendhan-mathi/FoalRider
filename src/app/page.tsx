@@ -10,7 +10,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section - Levi's Inspired: Clean, Bold, Minimal */}
+      {/* Hero Section */}
       <section className="relative h-[70vh] md:h-[85vh] bg-black overflow-hidden">
         <Image
           src="https://images.unsplash.com/photo-1542272604-787c3835535d?w=1920&q=90"
@@ -117,10 +117,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products - Clean Grid */}
+      {/* Featured Products */}
       <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-4">
-          {/* Section Header - Levi's style */}
+          {/* Section Header */}
           <div className="flex items-end justify-between mb-10">
             <div>
               <span className="text-xs font-semibold tracking-[0.15em] text-gray-500 block mb-2">
@@ -162,75 +162,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Brand Story Section - Fixed contrast, reduced headline */}
-      <section className="relative h-[50vh] md:h-[60vh] bg-black overflow-hidden">
-        <Image
-          src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=1920&q=90"
-          alt="Craftsmanship"
-          fill
-          className="object-cover opacity-40"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent" />
-
-        <div className="absolute inset-0 flex items-center">
-          <div className="container mx-auto px-4">
-            <div className="max-w-lg">
-              <span className="text-xs font-semibold tracking-[0.15em] text-[#C5A572] block mb-4">
-                ARTISAN CRAFTED
-              </span>
-              {/* Reduced from text-6xl to text-3xl */}
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-6 leading-tight">
-                EVERY STITCH TELLS A STORY
-              </h2>
-              <p className="text-white/70 mb-8 leading-relaxed">
-                Our artisans pour their heart into every garment, blending
-                traditional techniques with modern innovation.
-              </p>
-              <Button
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-black h-12 px-8"
-                asChild
-              >
-                <Link href="/about">DISCOVER MORE</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section - Clean, minimal */}
-      <section className="py-16 md:py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-            <div className="text-center">
-              <span className="text-3xl md:text-4xl font-bold text-black block mb-2">
-                50+
-              </span>
-              <span className="text-sm text-gray-500">Years of Excellence</span>
-            </div>
-            <div className="text-center">
-              <span className="text-3xl md:text-4xl font-bold text-black block mb-2">
-                100%
-              </span>
-              <span className="text-sm text-gray-500">Quality Guarantee</span>
-            </div>
-            <div className="text-center">
-              <span className="text-3xl md:text-4xl font-bold text-black block mb-2">
-                10K+
-              </span>
-              <span className="text-sm text-gray-500">Happy Customers</span>
-            </div>
-            <div className="text-center">
-              <span className="text-3xl md:text-4xl font-bold text-black block mb-2">
-                24/7
-              </span>
-              <span className="text-sm text-gray-500">Customer Support</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Categories - Levi's Style 4-Column Grid */}
+      {/* Featured Categories - 4-Column Grid */}
       <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
@@ -297,7 +229,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Shop by Category Section - Levi's style */}
+      {/* Shop by Fit Section */}
       <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">

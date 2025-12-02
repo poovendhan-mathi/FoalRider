@@ -72,7 +72,7 @@ export function getProductImageUrl(product: Product): string {
   }
 
   // Fallback to placeholder
-  return "/assets/images/product-placeholder.jpg";
+  return "/assets/images/product-placeholder.svg";
 }
 
 export function formatPrice(price: number, currency: string = "INR"): string {

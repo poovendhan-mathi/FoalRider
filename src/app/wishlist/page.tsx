@@ -60,7 +60,7 @@ function WishlistItemCard({
   };
 
   const imageUrl =
-    product.image_url || "/assets/images/product-placeholder.jpg";
+    product.image_url || "/assets/images/product-placeholder.svg";
 
   if (viewMode === "list") {
     return (

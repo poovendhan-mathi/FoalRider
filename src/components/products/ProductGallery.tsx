@@ -8,17 +8,17 @@ import { Heart, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useWishlist } from "@/contexts/WishlistContext";
 
-interface ProductImagesLevisProps {
+interface ProductGalleryProps {
   product: Product;
 }
 
 /**
- * Levi's-style Product Images Component
+ * Product Gallery Component
  * Features vertical thumbnail strip on the left side
  * Large main image on the right
  * Wishlist button overlay
  */
-export function ProductImagesLevis({ product }: ProductImagesLevisProps) {
+export function ProductGallery({ product }: ProductGalleryProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [thumbnailStartIndex, setThumbnailStartIndex] = useState(0);
   const { isInWishlist, toggleWishlist } = useWishlist();

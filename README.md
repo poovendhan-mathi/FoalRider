@@ -1,206 +1,311 @@
-# 🏇 FOAL RIDER - Premium Textile E-Commerce
+# 🏇 FoalRider
 
-**A modern, full-stack e-commerce platform for premium textiles, clothing, and home decor.**
+**Premium Denim E-Commerce Platform**
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-Database-green)](https://supabase.com/)
-[![Stripe](https://img.shields.io/badge/Stripe-Payments-blueviolet)](https://stripe.com/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC)](https://tailwindcss.com/)
+A modern, full-featured e-commerce application built with Next.js 16, featuring a complete shopping experience with Stripe payments, user authentication, and a comprehensive admin dashboard.
 
 ---
 
-## 🎯 Overview
+## 🚀 Tech Stack
 
-Foal Rider is a premium e-commerce platform specializing in high-quality denim products including jeans and jackets for men and women. Built with Next.js 15, Supabase, and Stripe for a seamless shopping experience with multi-currency support.
-
----
-
-## ✨ Key Features
-
-### 🎉 Currently Live
-- 🔐 **Authentication** - Email/password & Supabase Auth
-- 🛍️ **Product Browsing** - 25+ denim products with advanced filtering
-- 🏷️ **Category System** - Hierarchical categories (parent-child support)
-- 🛒 **Shopping Cart** - Persistent cart with localStorage & real-time updates
-- 💱 **Multi-Currency** - 6 currencies (INR, SGD, USD, EUR, GBP, AUD) with live exchange rates
-- 🖼️ **High-Quality Images** - 8K product photography from Unsplash
-- 📱 **Responsive Design** - Mobile-first approach with Tailwind CSS
-- 🔍 **Product Search** - Advanced filtering by category, price, and search terms
-
-### 🚧 Coming Soon
-- 💳 **Secure Checkout** - Stripe payment integration
-- 📦 **Order Tracking** - Real-time order status
-- ❤️ **Wishlist** - Save favorite products
-- 👤 **User Dashboard** - Profile, orders, and addresses
-- 👨‍💼 **Admin Panel** - Complete product & order management
+| Technology   | Version | Purpose                                     |
+| ------------ | ------- | ------------------------------------------- |
+| Next.js      | 16.0.3  | React framework with App Router & Turbopack |
+| TypeScript   | 5.x     | Type-safe development                       |
+| Supabase     | Latest  | PostgreSQL database, Auth & Storage         |
+| Stripe       | Latest  | Payment processing & webhooks               |
+| Tailwind CSS | 3.x     | Utility-first CSS framework                 |
+| shadcn/ui    | Latest  | Accessible UI components                    |
+| React Query  | 5.x     | Data fetching & caching                     |
+| Zod          | Latest  | Schema validation                           |
 
 ---
 
-## 🛠️ Tech Stack
+## ✨ Features
 
-- **Frontend:** Next.js 15, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend:** Next.js API Routes, Supabase
-- **Database:** PostgreSQL (Supabase)
-- **Auth:** Supabase Auth
-- **Payments:** Stripe
-- **Storage:** Supabase Storage
-- **Hosting:** Vercel
+### 🛍️ Customer Features
+
+| Feature               | Description                                                         |
+| --------------------- | ------------------------------------------------------------------- |
+| **Product Catalog**   | Browse products with category filters, price range, and sorting     |
+| **Product Detail**    | View product images, descriptions, size/color variants, and reviews |
+| **Shopping Cart**     | Add/remove items, update quantities, persistent cart                |
+| **Wishlist**          | Save favorite products, price drop notifications                    |
+| **Checkout**          | Secure Stripe payment integration                                   |
+| **Order History**     | View past orders, order status, download invoices                   |
+| **User Profile**      | Manage account details, addresses, preferences                      |
+| **Search**            | Full-text search across products                                    |
+| **Multi-Currency**    | Support for INR, USD, EUR, GBP, SGD, AUD                            |
+| **Responsive Design** | Optimized for mobile, tablet, and desktop                           |
+
+### 👨‍💼 Admin Features
+
+| Feature        | Description                                            |
+| -------------- | ------------------------------------------------------ |
+| **Dashboard**  | Analytics overview, revenue charts, recent orders      |
+| **Products**   | Create, edit, delete products with images and variants |
+| **Categories** | Hierarchical category management                       |
+| **Orders**     | View orders, update status, track shipments            |
+| **Customers**  | View customer list, order history, details             |
+| **Analytics**  | Revenue trends, top products, order statistics         |
+| **Settings**   | Store configuration, tax rates, shipping               |
+
+### 🔧 Technical Features
+
+| Feature                | Description                             |
+| ---------------------- | --------------------------------------- |
+| **Authentication**     | Supabase Auth with email/password       |
+| **Authorization**      | Role-based access (customer/admin)      |
+| **Row Level Security** | Database-level security policies        |
+| **API Routes**         | RESTful API with validation             |
+| **Error Handling**     | Error boundaries, loading states        |
+| **Performance**        | React Query caching, image optimization |
 
 ---
 
-## 🚀 Getting Started
+## 📁 Project Structure
+
+```
+FoalRider/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── (auth)/            # Auth pages (login, signup)
+│   │   ├── admin/             # Admin panel pages
+│   │   ├── api/               # API routes
+│   │   ├── cart/              # Shopping cart
+│   │   ├── checkout/          # Checkout flow
+│   │   ├── orders/            # Order history
+│   │   ├── products/          # Product pages
+│   │   ├── profile/           # User profile
+│   │   ├── wishlist/          # Wishlist page
+│   │   ├── layout.tsx         # Root layout
+│   │   └── page.tsx           # Homepage
+│   │
+│   ├── components/            # React components
+│   │   ├── admin/             # Admin-specific components
+│   │   ├── layout/            # Header, Footer, Navigation
+│   │   ├── products/          # Product cards, gallery, filters
+│   │   ├── ui/                # shadcn/ui components
+│   │   └── wishlist/          # Wishlist components
+│   │
+│   ├── contexts/              # React Context providers
+│   │   ├── AuthProvider.tsx   # Authentication state
+│   │   ├── CartContext.tsx    # Shopping cart state
+│   │   ├── CurrencyContext.tsx # Currency selection
+│   │   └── WishlistContext.tsx # Wishlist state
+│   │
+│   ├── hooks/                 # Custom React hooks
+│   │   ├── useUser.ts         # Current user hook
+│   │   ├── useAdminQueries.ts # Admin data fetching
+│   │   └── use-toast.ts       # Toast notifications
+│   │
+│   ├── lib/                   # Utilities & helpers
+│   │   ├── supabase/          # Supabase clients
+│   │   ├── stripe/            # Stripe configuration
+│   │   ├── validations/       # Zod schemas
+│   │   ├── currency.ts        # Currency formatting
+│   │   └── products.ts        # Product helpers
+│   │
+│   └── types/                 # TypeScript definitions
+│
+├── public/                    # Static assets
+│   └── assets/               # Images, icons
+│
+├── docs/                      # Documentation
+│   ├── PROJECT_STRUCTURE.md  # Detailed structure
+│   ├── DATABASE.md           # Database schema
+│   ├── ADMIN_GUIDE.md        # Admin panel guide
+│   └── PROJECT_STATUS.md     # Current status
+│
+└── migrations/               # Database migrations
+```
+
+---
+
+## 🛠️ Getting Started
 
 ### Prerequisites
 
-- Node.js 18.17 or higher
-- npm or yarn
-- Accounts on Vercel, Supabase, and Stripe
+- **Node.js** 18.0 or higher
+- **npm** or **yarn**
+- **Supabase** account (free tier works)
+- **Stripe** account (test mode for development)
 
 ### Installation
 
 1. **Clone the repository**
-   ```powershell
-   git clone https://github.com/poovendhan-mathi/FoalRider.git
-   cd FoalRider
-   ```
+
+```bash
+git clone https://github.com/poovendhan-mathi/FoalRider.git
+cd FoalRider
+```
 
 2. **Install dependencies**
-   ```powershell
-   npm install
-   ```
+
+```bash
+npm install
+```
 
 3. **Set up environment variables**
-   ```powershell
-   # Copy example file
-   cp .env.example .env.local
-   
-   # Edit .env.local with your credentials
-   ```
 
-4. **Run development server**
-   ```powershell
-   npm run dev
-   ```
+```bash
+cp .env.example .env.local
+```
 
-5. **Open browser**
-   ```
-   http://localhost:3000
-   ```
+4. **Configure environment variables** (see below)
+
+5. **Run database migrations**
+
+   - Go to Supabase SQL Editor
+   - Run the SQL files from `/migrations` folder
+
+6. **Start development server**
+
+```bash
+npm run dev
+```
+
+7. **Open in browser**
+
+```
+http://localhost:3000
+```
+
+### Environment Variables
+
+Create a `.env.local` file with the following:
+
+```env
+# ===================
+# SUPABASE
+# ===================
+# Get these from: https://app.supabase.com/project/_/settings/api
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# ===================
+# STRIPE
+# ===================
+# Get these from: https://dashboard.stripe.com/apikeys
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
+STRIPE_SECRET_KEY=sk_test_xxxxx
+
+# Webhook secret from: https://dashboard.stripe.com/webhooks
+STRIPE_WEBHOOK_SECRET=whsec_xxxxx
+
+# ===================
+# APP CONFIG
+# ===================
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+---
+
+## 📜 Available Scripts
+
+| Command              | Description                             |
+| -------------------- | --------------------------------------- |
+| `npm run dev`        | Start development server with Turbopack |
+| `npm run build`      | Create production build                 |
+| `npm run start`      | Start production server                 |
+| `npm run lint`       | Run ESLint                              |
+| `npm run test`       | Run Jest tests                          |
+| `npm run test:watch` | Run tests in watch mode                 |
+
+---
+
+## 🗄️ Database Setup
+
+### Supabase Configuration
+
+1. Create a new Supabase project
+2. Go to SQL Editor
+3. Run migrations from `/migrations` folder in order
+4. Enable Row Level Security on all tables
+
+### Setting Up Admin User
+
+After creating a user account, run this SQL to make them admin:
+
+```sql
+UPDATE profiles
+SET role = 'admin'
+WHERE email = 'your-email@example.com';
+```
+
+---
+
+## 💳 Stripe Configuration
+
+### Development (Test Mode)
+
+1. Use Stripe test keys (start with `pk_test_` and `sk_test_`)
+2. Test card number: `4242 4242 4242 4242`
+3. Any future expiry date
+4. Any 3-digit CVC
+
+### Webhook Setup
+
+1. Install Stripe CLI: `brew install stripe/stripe-cli/stripe`
+2. Login: `stripe login`
+3. Forward webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
+4. Copy webhook secret to `.env.local`
 
 ---
 
 ## 📚 Documentation
 
-Complete implementation guide available in `/docs`:
-
-- **[Implementation Roadmap](./docs/IMPLEMENTATION_ROADMAP.md)** - Complete project guide
-- **[Project Status](./docs/PROJECT_STATUS.md)** - Current progress tracker
-- **[Phase Guides](./docs/phases/)** - Step-by-step implementation
-
-### Phase Documentation
-1. [Phase 1: Project Setup](./docs/phases/PHASE_1_PROJECT_SETUP.md)
-2. [Phase 2: Database Setup](./docs/phases/PHASE_2_DATABASE_SETUP.md)
-3. [Phase 3: Authentication](./docs/phases/PHASE_3_AUTHENTICATION.md)
-4. [Phase 4: Frontend Components](./docs/phases/PHASE_4_FRONTEND.md)
-5. [Phase 5: Core Features](./docs/phases/PHASE_5_CORE_FEATURES.md)
-6. [Phase 6: Payment Integration](./docs/phases/PHASE_6_PAYMENTS.md)
-7. [Phase 7: Admin Dashboard](./docs/phases/PHASE_7_ADMIN.md)
-8. [Phase 8: Deployment](./docs/phases/PHASE_8_DEPLOYMENT.md)
+| Document                                       | Description                                          |
+| ---------------------------------------------- | ---------------------------------------------------- |
+| [Project Structure](docs/PROJECT_STRUCTURE.md) | Detailed folder organization and file purposes       |
+| [Database Schema](docs/DATABASE.md)            | Complete database tables, columns, and relationships |
+| [Admin Guide](docs/ADMIN_GUIDE.md)             | How to use the admin panel                           |
+| [Project Status](docs/PROJECT_STATUS.md)       | Current development status                           |
 
 ---
 
-## 📊 Project Status
+## 🚀 Deployment
 
-**Current Phase:** Phase 5 - Core Features (40% Complete)  
-**Overall Progress:** 68%  
-**Start Date:** November 23, 2025
+### Vercel (Recommended)
 
-### ✅ Completed Phases
-- ✅ Phase 1: Project Setup (100%)
-- ✅ Phase 2: Database Setup (100%)
-- ✅ Phase 3: Authentication (100%)
-- ✅ Phase 4: Frontend Components (100%)
-- 🚀 Phase 5: Core Features (40% - In Progress)
+1. Push code to GitHub
+2. Import project in Vercel
+3. Add environment variables
+4. Deploy
 
-### 🎯 Recent Achievements
-- Multi-currency system with 6 currencies
-- Shopping cart with localStorage persistence
-- Hierarchical category filtering
-- 25+ denim products (jeans & jackets) loaded
-- Homepage showcase with actual product data
-- All category filters working correctly
+### Environment Variables for Production
 
-### 📅 Next Up
-- Phase 6: Stripe Payment Integration
-- Checkout flow implementation
-- Order management system
-
-See [PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) for detailed tracking.
+- Update `NEXT_PUBLIC_APP_URL` to your production URL
+- Use Stripe live keys (start with `pk_live_` and `sk_live_`)
+- Set up production Stripe webhook
 
 ---
 
-## 🗂️ Project Structure
+## 🤝 Contributing
 
-```
-FoalRider/
-├── docs/                    # Documentation
-│   ├── phases/             # Phase-by-phase guides
-│   ├── PROJECT_STATUS.md   # Current progress
-│   ├── CATEGORY_HIERARCHY_GUIDE.md
-│   └── WISHLIST_IMPLEMENTATION_PLAN.md
-├── src/
-│   ├── app/                # Next.js App Router pages
-│   │   ├── page.tsx       # Homepage
-│   │   ├── products/      # Products listing & detail
-│   │   ├── login/         # Authentication pages
-│   │   └── signup/
-│   ├── components/         # React components
-│   │   ├── layout/        # Header, Footer, Logo
-│   │   ├── products/      # Product cards, filters, grids
-│   │   ├── cart/          # Cart components
-│   │   └── ui/            # shadcn/ui components
-│   ├── contexts/          # React Contexts
-│   │   ├── CartContext.tsx
-│   │   └── CurrencyContext.tsx
-│   ├── lib/               # Utilities
-│   │   ├── supabase/      # Supabase clients
-│   │   ├── products.ts    # Product queries
-│   │   └── categories.ts  # Category helpers
-│   ├── hooks/             # Custom hooks
-│   ├── types/             # TypeScript types
-│   └── middleware.ts      # Auth middleware
-├── public/                # Static assets
-│   └── assets/logo/      # Brand logos
-├── .env.local             # Environment variables
-└── package.json
-```
+This is a private project. Please contact the author for contribution guidelines.
 
 ---
 
-## ⚙️ Available Scripts
+## 👨‍💻 Author
 
-```powershell
-npm run dev          # Start dev server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-```
+**Poovendhan Mathi**
+
+- GitHub: [@poovendhan-mathi](https://github.com/poovendhan-mathi)
 
 ---
 
 ## 📄 License
 
-This project is proprietary and confidential.
+This project is private and proprietary. All rights reserved.
 
 ---
 
-## 🔗 Links
+## 🙏 Acknowledgments
 
-- **Repository:** https://github.com/poovendhan-mathi/FoalRider
-- **Documentation:** [/docs](./docs)
-- **Design System:** [FoalRider-Figma.md](./FoalRider-Figma.md)
-
----
-
-**Built with ❤️ for premium textile commerce**
+- [Next.js](https://nextjs.org/) - React Framework
+- [Supabase](https://supabase.com/) - Backend as a Service
+- [Stripe](https://stripe.com/) - Payment Processing
+- [shadcn/ui](https://ui.shadcn.com/) - UI Components
+- [Tailwind CSS](https://tailwindcss.com/) - CSS Framework
