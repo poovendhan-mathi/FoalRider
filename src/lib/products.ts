@@ -82,16 +82,31 @@ export function formatPrice(price: number, currency: string = "INR"): string {
   }).format(price);
 }
 
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export async function getFilteredProducts(filters: {
   category?: string;
   sort?: string;
   minPrice?: string;
   maxPrice?: string;
   search?: string;
-}): Promise<Product[]> {
+  page?: string;
+  pageSize?: string;
+}): Promise<PaginatedResult<Product>> {
   console.log("🔍 Fetching products with filters:", filters);
 
   const supabase = await getSupabaseServerClient();
+
+  // Pagination settings
+  const page = parseInt(filters.page || "1", 10);
+  const pageSize = parseInt(filters.pageSize || "12", 10);
+  const offset = (page - 1) * pageSize;
 
   let query = supabase
     .from("products")
@@ -119,6 +134,9 @@ export async function getFilteredProducts(filters: {
 
   console.log("📊 Initial query created");
 
+  // Build filter conditions that will be reused for both count and data queries
+  let categoryIds: string[] | null = null;
+
   // Apply category filter if provided
   if (filters.category && filters.category !== "all") {
     console.log("🏷️ Filtering by category:", filters.category);
@@ -131,7 +149,7 @@ export async function getFilteredProducts(filters: {
 
     if (catError) {
       console.error("❌ Category fetch error:", catError);
-      return [];
+      return { data: [], total: 0, page, pageSize, totalPages: 0 };
     }
 
     if (categoryData) {
@@ -142,7 +160,7 @@ export async function getFilteredProducts(filters: {
         .select("id")
         .eq("parent_id", categoryData.id);
 
-      const categoryIds = [
+      categoryIds = [
         categoryData.id,
         ...(childCategories || []).map((c) => c.id),
       ];
@@ -151,8 +169,7 @@ export async function getFilteredProducts(filters: {
     } else {
       console.log("⚠️ Category slug not found in database:", filters.category);
       // Category doesn't exist in DB - return empty to show no products
-      // This prevents showing all products when an invalid category is selected
-      return [];
+      return { data: [], total: 0, page, pageSize, totalPages: 0 };
     }
   }
 
@@ -171,6 +188,29 @@ export async function getFilteredProducts(filters: {
     console.log("💰 Max price:", filters.maxPrice);
     query = query.lte("price", parseFloat(filters.maxPrice));
   }
+
+  // Get total count for pagination
+  let countQuery = supabase
+    .from("products")
+    .select("id", { count: "exact", head: true })
+    .eq("is_active", true);
+
+  if (categoryIds) {
+    countQuery = countQuery.in("category_id", categoryIds);
+  }
+  if (filters.search) {
+    countQuery = countQuery.ilike("name", `%${filters.search}%`);
+  }
+  if (filters.minPrice) {
+    countQuery = countQuery.gte("price", parseFloat(filters.minPrice));
+  }
+  if (filters.maxPrice) {
+    countQuery = countQuery.lte("price", parseFloat(filters.maxPrice));
+  }
+
+  const { count } = await countQuery;
+  const total = count || 0;
+  const totalPages = Math.ceil(total / pageSize);
 
   // Apply sorting
   const sortOption = filters.sort || "newest";
@@ -198,21 +238,36 @@ export async function getFilteredProducts(filters: {
       break;
   }
 
+  // Apply pagination
+  query = query.range(offset, offset + pageSize - 1);
+
   console.log("⏳ Executing query...");
   const { data: products, error } = await query;
 
   if (error) {
     console.error("❌ Error fetching filtered products:", error);
     console.error("❌ Error details:", JSON.stringify(error, null, 2));
-    return [];
+    return { data: [], total: 0, page, pageSize, totalPages: 0 };
   }
 
-  console.log("✅ Products fetched:", products?.length || 0);
+  console.log(
+    "✅ Products fetched:",
+    products?.length || 0,
+    "of",
+    total,
+    "total"
+  );
   if (products && products.length > 0) {
     console.log("📦 Sample product:", products[0]);
   }
 
-  return (products || []) as unknown as Product[];
+  return {
+    data: (products || []) as unknown as Product[],
+    total,
+    page,
+    pageSize,
+    totalPages,
+  };
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {

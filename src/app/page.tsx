@@ -26,7 +26,7 @@ export default async function HomePage() {
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 lg:p-20">
           <div className="max-w-7xl mx-auto">
             {/* Reduced headline size, better contrast */}
-            <span className="inline-block text-xs md:text-sm font-semibold tracking-[0.2em] text-white/80 mb-4 uppercase">
+            <span className="inline-block text-xs md:text-sm font-semibold tracking-[0.2em] text-[#C5A572] mb-4 uppercase">
               New Collection
             </span>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-4 tracking-tight leading-[1.1]">
@@ -69,7 +69,7 @@ export default async function HomePage() {
             className="relative aspect-[4/5] md:aspect-[3/4] group overflow-hidden"
           >
             <Image
-              src="https://images.unsplash.com/photo-1593030103066-0093718e36d5?w=960&q=90"
+              src="https://images.unsplash.com/photo-1617137968427-85924c800a22?w=960&q=90"
               alt="Men's Collection"
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -285,21 +285,6 @@ export default async function HomePage() {
                 </div>
               </Link>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Promotional Banner */}
-      <section className="bg-black text-white py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-4 text-center">
-            <span className="text-sm md:text-base font-medium">
-              FREE SHIPPING ON ORDERS OVER ₹2,000
-            </span>
-            <span className="hidden md:inline text-white/50">|</span>
-            <span className="hidden md:inline text-sm text-white/70">
-              Easy 30-Day Returns
-            </span>
           </div>
         </div>
       </section>

@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Heart,
   ShoppingCart,
   Trash2,
@@ -19,6 +27,7 @@ import {
   Grid,
   LayoutList,
   X,
+  AlertTriangle,
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
@@ -257,6 +266,7 @@ export default function WishlistPage() {
     useWishlist();
   const { addToCart } = useCart();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showClearDialog, setShowClearDialog] = useState(false);
 
   const handleMoveAllToCart = async () => {
     if (items.length === 0) return;
@@ -330,14 +340,18 @@ export default function WishlistPage() {
   };
 
   const handleClearAll = async () => {
-    if (confirm("Are you sure you want to clear your entire wishlist?")) {
-      await clearWishlist();
-    }
+    setShowClearDialog(true);
+  };
+
+  const confirmClearAll = async () => {
+    await clearWishlist();
+    setShowClearDialog(false);
+    toast.success("Wishlist cleared");
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] pt-24">
+      <div className="min-h-screen bg-[#FAFAFA] pt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C5A572]"></div>
@@ -349,7 +363,7 @@ export default function WishlistPage() {
 
   if (totalItems === 0) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] pt-24">
+      <div className="min-h-screen bg-[#FAFAFA] pt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center mb-8">
             <Badge variant="outline-gold" className="mb-4">
@@ -387,7 +401,40 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pt-24">
+    <div className="min-h-screen bg-[#FAFAFA] pt-16">
+      {/* Clear Confirmation Dialog */}
+      <Dialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+            <DialogTitle className="text-center">Clear Wishlist?</DialogTitle>
+            <DialogDescription className="text-center">
+              Are you sure you want to remove all items from your wishlist? This
+              action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-3 sm:gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowClearDialog(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmClearAll}
+              className="flex-1 bg-red-600 hover:bg-red-700"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col gap-4 mb-8">

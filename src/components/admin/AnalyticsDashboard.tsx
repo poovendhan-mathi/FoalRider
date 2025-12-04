@@ -57,18 +57,27 @@ const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 export default function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<"7d" | "30d" | "90d" | "1y">("30d");
 
   const fetchAnalytics = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(`/api/admin/analytics?period=${period}`);
       if (response.ok) {
         const analyticsData = await response.json();
         setData(analyticsData);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(
+          errorData.error ||
+            `Error ${response.status}: Failed to load analytics`
+        );
       }
-    } catch (error) {
-      console.error("Failed to fetch analytics:", error);
+    } catch (err) {
+      console.error("Failed to fetch analytics:", err);
+      setError("Network error: Failed to connect to server");
     } finally {
       setLoading(false);
     }
@@ -88,12 +97,15 @@ export default function AnalyticsDashboard() {
     );
   }
 
-  if (!data) {
+  if (error || !data) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex flex-col items-center justify-center h-96 gap-4">
         <div className="text-lg text-red-500">
-          Failed to load analytics data
+          {error || "Failed to load analytics data"}
         </div>
+        <Button onClick={fetchAnalytics} variant="outline">
+          Try Again
+        </Button>
       </div>
     );
   }

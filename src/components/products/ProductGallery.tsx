@@ -118,7 +118,7 @@ export function ProductGallery({ product }: ProductGalleryProps) {
       )}
 
       {/* Main Image */}
-      <div className="relative flex-1 aspect-[3/4] bg-gray-100">
+      <div className="relative flex-1 w-full aspect-[3/4] md:aspect-[3/4] bg-gray-100 overflow-hidden">
         <Image
           src={images[currentImageIndex]}
           alt={`${product.name}`}

@@ -1,18 +1,27 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 
 export default function CartPage() {
   const { items, totalItems, removeFromCart, updateQuantity, clearCart } =
     useCart();
   const { formatPrice } = useCurrency();
+  const [showClearDialog, setShowClearDialog] = useState(false);
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -31,9 +40,12 @@ export default function CartPage() {
   };
 
   const handleClearCart = () => {
-    if (confirm("Are you sure you want to clear your cart?")) {
-      clearCart();
-    }
+    setShowClearDialog(true);
+  };
+
+  const confirmClearCart = () => {
+    clearCart();
+    setShowClearDialog(false);
   };
 
   if (totalItems === 0) {
@@ -255,6 +267,35 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+
+      {/* Clear Cart Confirmation Dialog */}
+      <Dialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-['Playfair_Display'] text-xl">
+              Clear Shopping Cart?
+            </DialogTitle>
+            <DialogDescription className="font-['Montserrat']">
+              This will remove all {totalItems} item
+              {totalItems !== 1 ? "s" : ""} from your cart. This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowClearDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmClearCart}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear Cart
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

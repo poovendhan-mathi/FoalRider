@@ -6,15 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useCart } from "@/contexts/CartContext";
 import type { Product } from "@/lib/products";
-import {
-  Star,
-  Truck,
-  CreditCard,
-  Info,
-  ChevronRight,
-  Minus,
-  Plus,
-} from "lucide-react";
+import { Star, ChevronRight, Minus, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 /**
@@ -123,7 +115,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [loadingFeatures, setLoadingFeatures] = useState(true);
   const { toast } = useToast();
-  const { formatPrice, currency } = useCurrency();
+  const { formatPrice } = useCurrency();
   const { addToCart } = useCart();
 
   const isOutOfStock = product.inventory <= 0;
@@ -184,9 +176,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const getColorVariant = (color: string) => {
     return variants.find((v) => v.color === color);
   };
-
-  // Calculate installment price (4 installments)
-  const installmentPrice = product.price / 4;
 
   const handleAddToCart = () => {
     if (!selectedSize && displaySizes.length > 0) {
@@ -250,7 +239,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       </nav>
 
       {/* Product Name */}
-      <h1 className="text-xl md:text-2xl font-bold text-black uppercase tracking-wide">
+      <h1 className="font-['Playfair_Display'] text-xl md:text-2xl font-bold text-black tracking-wide">
         {product.name}
       </h1>
 
@@ -260,7 +249,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           {[1, 2, 3, 4, 5].map((star) => (
             <Star
               key={star}
-              className="h-4 w-4 text-gray-300"
+              className="h-4 w-4 text-[#C5A572]"
               strokeWidth={1.5}
             />
           ))}
@@ -270,13 +259,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
       {/* Price Section */}
       <div className="space-y-1">
-        <div className="text-2xl font-bold text-black">
+        <div className="text-2xl font-bold text-[#C5A572]">
           {formatPrice(product.price)}
-        </div>
-        <div className="text-sm text-gray-600">
-          Or 4 installments of {formatPrice(installmentPrice)} with{" "}
-          <span className="font-semibold">Afterpay</span>{" "}
-          <Info className="inline h-4 w-4 text-gray-400" />
         </div>
       </div>
 
@@ -353,36 +337,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         </div>
       </div>
 
-      {/* Offers Section */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="border border-gray-200 p-4">
-          <div className="flex items-start gap-2">
-            <Truck className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <div className="text-red-600 font-semibold text-sm">
-                FREE SHIPPING
-              </div>
-              <div className="text-xs text-gray-600 mt-1">
-                {currency === "INR" ? "On orders over ₹2,000" : "On all orders"}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="border border-gray-200 p-4">
-          <div className="flex items-start gap-2">
-            <CreditCard className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <div className="text-red-600 font-semibold text-sm">
-                BUY NOW PAY LATER
-              </div>
-              <div className="text-xs text-gray-600 mt-1">
-                0% interest options available
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Quantity Selector */}
       <div className="space-y-2">
         <span className="text-sm font-medium">Select Quantity</span>
@@ -418,7 +372,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <Button
         onClick={handleAddToCart}
         disabled={isOutOfStock}
-        className="w-full h-14 bg-black text-white hover:bg-gray-800 text-base font-semibold uppercase tracking-wide"
+        className="w-full h-14 bg-[#C5A572] text-white hover:bg-[#B89968] text-base font-semibold uppercase tracking-wide"
       >
         {isOutOfStock ? "Out of Stock" : "Add to Bag"}
       </Button>

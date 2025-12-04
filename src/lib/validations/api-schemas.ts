@@ -26,7 +26,7 @@ export const createProductSchema = z.object({
   stock_quantity: z.number().int().min(0).default(0),
   is_active: z.boolean().default(true),
   is_featured: z.boolean().default(false),
-  main_image: z.string().url().optional().nullable(),
+  main_image: z.string().url().optional().nullable().or(z.literal("")),
   images: z.array(z.string().url()).optional().nullable(),
   variants: z.any().optional().nullable(), // Could be more specific based on your schema
 });
@@ -43,7 +43,7 @@ export const updateProductSchema = z.object({
   stock_quantity: z.number().int().min(0).optional(),
   is_active: z.boolean().optional(),
   is_featured: z.boolean().optional(),
-  main_image: z.string().url().optional().nullable(),
+  main_image: z.string().url().optional().nullable().or(z.literal("")),
   images: z.array(z.string().url()).optional().nullable(),
   variants: z.any().optional().nullable(),
 });

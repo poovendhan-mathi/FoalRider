@@ -1,7 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
 
 export const metadata = {
   title: "About Us | Foal Rider - Premium Denim Collection",
@@ -276,38 +274,6 @@ export default function AboutPage() {
                   </p>
                 </CardContent>
               </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-24 bg-black">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="font-['Playfair_Display'] text-4xl font-bold mb-6 text-white">
-                Ready to Find Your Perfect Denim?
-              </h2>
-              <p className="font-['Montserrat'] text-xl text-white/70 mb-8">
-                Explore our curated collection of premium jeans and denim wear
-              </p>
-              <div className="flex gap-4 justify-center">
-                <Button
-                  size="lg"
-                  variant="gold"
-                  className="font-['Montserrat']"
-                  asChild
-                >
-                  <Link href="/products">Shop Now</Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="font-['Montserrat'] border-white text-white hover:bg-white hover:text-black"
-                  asChild
-                >
-                  <Link href="/contact">Contact Us</Link>
-                </Button>
-              </div>
             </div>
           </div>
         </section>

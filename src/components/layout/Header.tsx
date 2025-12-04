@@ -82,13 +82,6 @@ export function Header() {
             About Us
           </Link>
           <Link
-            href="/journal"
-            className="text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
-          >
-            Journal
-          </Link>
-          <Link
             href="/contact"
             className="text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
             style={{ fontFamily: "Montserrat, sans-serif" }}
@@ -212,14 +205,6 @@ export function Header() {
               style={{ fontFamily: "Montserrat, sans-serif" }}
             >
               About Us
-            </Link>
-            <Link
-              href="/journal"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
-              style={{ fontFamily: "Montserrat, sans-serif" }}
-            >
-              Journal
             </Link>
             <Link
               href="/contact"

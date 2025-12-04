@@ -35,18 +35,26 @@ export default function SettingsForm() {
   const [settings, setSettings] = useState<SettingsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch("/api/admin/settings");
       if (response.ok) {
         const data = await response.json();
         setSettings(data);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(
+          errorData.error || `Error ${response.status}: Failed to load settings`
+        );
       }
-    } catch (error) {
-      console.error("Failed to fetch settings:", error);
+    } catch (err) {
+      console.error("Failed to fetch settings:", err);
+      setError("Network error: Failed to connect to server");
       toast({
         title: "Error",
         description: "Failed to load settings",
@@ -100,10 +108,15 @@ export default function SettingsForm() {
     );
   }
 
-  if (!settings) {
+  if (error || !settings) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-lg text-red-500">Failed to load settings</div>
+      <div className="flex flex-col items-center justify-center h-96 gap-4">
+        <div className="text-lg text-red-500">
+          {error || "Failed to load settings"}
+        </div>
+        <Button onClick={fetchSettings} variant="outline">
+          Try Again
+        </Button>
       </div>
     );
   }

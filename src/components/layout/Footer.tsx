@@ -6,12 +6,13 @@ import Link from "next/link";
 /**
  * Simple Footer Component
  * Clean, minimal design with essential links
+ * Matches header with transparent/dark style
  */
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-white border-t border-gray-200">
+    <footer className="bg-black/90 backdrop-blur-md border-t border-white/10">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -25,19 +26,19 @@ export function Footer() {
                 className="h-10 w-auto"
               />
             </Link>
-            <p className="text-gray-600 text-sm">
+            <p className="text-white/60 text-sm">
               Premium textiles crafted with care and precision since 1970.
             </p>
           </div>
 
           {/* Shop */}
           <div>
-            <h4 className="font-semibold text-sm mb-4 text-black">SHOP</h4>
+            <h4 className="font-semibold text-sm mb-4 text-[#C5A572]">SHOP</h4>
             <ul className="space-y-2">
               <li>
                 <Link
                   href="/products?category=mens-wear"
-                  className="text-gray-600 hover:text-black text-sm"
+                  className="text-white/60 hover:text-[#C5A572] text-sm transition-colors"
                 >
                   Men
                 </Link>
@@ -45,7 +46,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products?category=womens-wear"
-                  className="text-gray-600 hover:text-black text-sm"
+                  className="text-white/60 hover:text-[#C5A572] text-sm transition-colors"
                 >
                   Women
                 </Link>
@@ -53,7 +54,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products"
-                  className="text-gray-600 hover:text-black text-sm"
+                  className="text-white/60 hover:text-[#C5A572] text-sm transition-colors"
                 >
                   New Arrivals
                 </Link>
@@ -61,7 +62,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products"
-                  className="text-gray-600 hover:text-black text-sm"
+                  className="text-white/60 hover:text-[#C5A572] text-sm transition-colors"
                 >
                   All Products
                 </Link>
@@ -71,12 +72,12 @@ export function Footer() {
 
           {/* Help */}
           <div>
-            <h4 className="font-semibold text-sm mb-4 text-black">HELP</h4>
+            <h4 className="font-semibold text-sm mb-4 text-[#C5A572]">HELP</h4>
             <ul className="space-y-2">
               <li>
                 <Link
                   href="/contact"
-                  className="text-gray-600 hover:text-black text-sm"
+                  className="text-white/60 hover:text-[#C5A572] text-sm transition-colors"
                 >
                   Contact Us
                 </Link>
@@ -84,7 +85,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/orders"
-                  className="text-gray-600 hover:text-black text-sm"
+                  className="text-white/60 hover:text-[#C5A572] text-sm transition-colors"
                 >
                   Track Order
                 </Link>
@@ -92,7 +93,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/about"
-                  className="text-gray-600 hover:text-black text-sm"
+                  className="text-white/60 hover:text-[#C5A572] text-sm transition-colors"
                 >
                   About Us
                 </Link>
@@ -102,13 +103,15 @@ export function Footer() {
 
           {/* Connect */}
           <div>
-            <h4 className="font-semibold text-sm mb-4 text-black">CONNECT</h4>
+            <h4 className="font-semibold text-sm mb-4 text-[#C5A572]">
+              CONNECT
+            </h4>
             <div className="flex gap-4">
               <a
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 hover:text-black"
+                className="text-white/60 hover:text-[#C5A572] transition-colors"
                 aria-label="Instagram"
               >
                 <svg
@@ -123,7 +126,7 @@ export function Footer() {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 hover:text-black"
+                className="text-white/60 hover:text-[#C5A572] transition-colors"
                 aria-label="Facebook"
               >
                 <svg
@@ -138,7 +141,7 @@ export function Footer() {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 hover:text-black"
+                className="text-white/60 hover:text-[#C5A572] transition-colors"
                 aria-label="Twitter"
               >
                 <svg
@@ -154,8 +157,8 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-200 mt-8 pt-6 text-center">
-          <p className="text-gray-500 text-sm">
+        <div className="border-t border-white/10 mt-8 pt-6 text-center">
+          <p className="text-white/40 text-sm">
             © {currentYear} Foal Rider. All rights reserved.
           </p>
         </div>

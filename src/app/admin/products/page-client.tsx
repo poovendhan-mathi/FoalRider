@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, Search, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Search,
+  RefreshCw,
+  Eye,
+  ExternalLink,
+  Package,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +27,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -69,7 +83,9 @@ export default function ProductsClientPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [totalCount, setTotalCount] = useState(0);
+  const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
   const pageSize = 20;
 
   const fetchProducts = async () => {
@@ -342,10 +358,7 @@ export default function ProductsClientPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-semibold text-sm sm:text-base">
-                          {formatCurrency(
-                            product.price,
-                            (product as any).currency || "INR"
-                          )}
+                          {formatCurrency(product.price, "INR")}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <span
@@ -371,14 +384,14 @@ export default function ProductsClientPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Link
-                              href={`/products/${product.slug || product.id}`}
-                              target="_blank"
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setPreviewProduct(product)}
                             >
-                              <Button variant="ghost" size="sm">
-                                View
-                              </Button>
-                            </Link>
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
                             <Link href={`/admin/products/${product.id}/edit`}>
                               <Button variant="ghost" size="sm">
                                 Edit
@@ -457,6 +470,109 @@ export default function ProductsClientPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Product Preview Dialog */}
+      <Dialog
+        open={!!previewProduct}
+        onOpenChange={(open) => !open && setPreviewProduct(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Product Details
+            </DialogTitle>
+          </DialogHeader>
+
+          {previewProduct && (
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Product Image */}
+              <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                {previewProduct.main_image ? (
+                  <Image
+                    src={previewProduct.main_image}
+                    alt={previewProduct.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <Package className="h-16 w-16" />
+                  </div>
+                )}
+              </div>
+
+              {/* Product Info */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-semibold">
+                    {previewProduct.name}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    SKU: {previewProduct.sku}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Price:</span>
+                    <span className="font-semibold text-[#C5A572]">
+                      {formatCurrency(previewProduct.price, "INR")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Stock:</span>
+                    <span
+                      className={
+                        previewProduct.stock_quantity > 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }
+                    >
+                      {previewProduct.stock_quantity} units
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Category:</span>
+                    <Badge variant="outline">
+                      {previewProduct.category_name || "Uncategorized"}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <Badge
+                      className={
+                        previewProduct.is_active
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }
+                    >
+                      {previewProduct.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="pt-4 flex gap-2">
+                  <Link
+                    href={`/products/${
+                      previewProduct.slug || previewProduct.id
+                    }`}
+                    target="_blank"
+                  >
+                    <Button variant="outline" size="sm">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View on Store
+                    </Button>
+                  </Link>
+                  <Link href={`/admin/products/${previewProduct.id}/edit`}>
+                    <Button size="sm">Edit Product</Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
