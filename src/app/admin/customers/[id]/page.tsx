@@ -65,10 +65,11 @@ async function getCustomerDetails(customerId: string) {
   };
 }
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-IN", {
+function formatCurrency(amount: number, currency: string = "INR"): string {
+  const locale = currency === "USD" ? "en-US" : "en-IN";
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "INR",
+    currency: currency,
   }).format(amount / 100);
 }
 
@@ -181,15 +182,18 @@ export default async function CustomerDetailPage({
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Total Spent</span>
                 <span className="font-semibold">
-                  {formatCurrency(totalSpent)}
+                  {formatCurrency(totalSpent, orders[0]?.currency || "INR")}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Average Order</span>
                 <span className="font-semibold">
                   {orders.length > 0
-                    ? formatCurrency(Math.round(totalSpent / orders.length))
-                    : "₹0"}
+                    ? formatCurrency(
+                        Math.round(totalSpent / orders.length),
+                        orders[0]?.currency || "INR"
+                      )
+                    : formatCurrency(0)}
                 </span>
               </div>
             </CardContent>
@@ -239,7 +243,7 @@ export default async function CustomerDetailPage({
                             </Badge>
                           </TableCell>
                           <TableCell className="font-semibold">
-                            {formatCurrency(order.total_amount)}
+                            {formatCurrency(order.total_amount, order.currency)}
                           </TableCell>
                           <TableCell className="text-right">
                             <Link href={`/admin/orders/${order.id}`}>

@@ -150,13 +150,12 @@ function ProfileContent() {
       } else {
         log("⚠️ No profile data returned");
       }
-      // Load orders
+      // Load orders (all orders for accurate totals)
       const { data: ordersData, error: ordersError } = await supabase
         .from("orders")
         .select("id, created_at, status, total_amount, currency")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
+        .order("created_at", { ascending: false });
       if (ordersError) {
         log("❌ Orders load error:", ordersError);
       } else if (ordersData) {
@@ -643,7 +642,17 @@ function ProfileContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold">$0.00</div>
+                  <div className="text-3xl font-bold">
+                    {new Intl.NumberFormat("en-IN", {
+                      style: "currency",
+                      currency: orders[0]?.currency || "INR",
+                    }).format(
+                      orders.reduce(
+                        (sum, order) => sum + (order.total || 0),
+                        0
+                      ) / 100
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">
                     Across all orders
                   </p>

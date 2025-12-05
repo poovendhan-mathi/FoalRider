@@ -20,10 +20,11 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin";
 
 // Helper functions
-const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat("en-IN", {
+const formatCurrency = (amount: number, currency: string = "INR"): string => {
+  const locale = currency === "USD" ? "en-US" : "en-IN";
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "INR",
+    currency: currency,
   }).format(amount / 100);
 };
 
@@ -252,7 +253,8 @@ export default async function AdminPage() {
                       id: string;
                       customer_name: string;
                       status: string;
-                      total: number;
+                      total_amount: number;
+                      currency: string;
                       created_at: string;
                     }) => (
                       <div
@@ -272,7 +274,7 @@ export default async function AdminPage() {
                             {order.status}
                           </Badge>
                           <p className="font-semibold">
-                            {formatCurrency(order.total)}
+                            {formatCurrency(order.total_amount, order.currency)}
                           </p>
                           <Link href={`/admin/orders/${order.id}`}>
                             <Button variant="ghost" size="sm">

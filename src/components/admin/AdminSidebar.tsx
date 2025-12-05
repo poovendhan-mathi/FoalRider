@@ -63,8 +63,11 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
 
   // Close sidebar on navigation (mobile)
   useEffect(() => {
-    onClose();
-  }, [pathname, onClose]);
+    if (isOpen) {
+      onClose();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   return (
     <>

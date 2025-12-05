@@ -59,10 +59,11 @@ async function getOrderDetails(orderId: string) {
   };
 }
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-IN", {
+function formatCurrency(amount: number, currency: string = "INR"): string {
+  const locale = currency === "USD" ? "en-US" : "en-IN";
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "INR",
+    currency: currency,
   }).format(amount / 100);
 }
 
@@ -151,11 +152,14 @@ export default async function OrderDetailPage({
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">
-                        {formatCurrency(item.price)}
+                        {formatCurrency(item.price, order.currency)}
                       </p>
                       <p className="text-sm text-gray-500">
                         × {item.quantity} ={" "}
-                        {formatCurrency(item.price * item.quantity)}
+                        {formatCurrency(
+                          item.price * item.quantity,
+                          order.currency
+                        )}
                       </p>
                     </div>
                   </div>
@@ -167,16 +171,20 @@ export default async function OrderDetailPage({
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal</span>
-                  <span>{formatCurrency(order.subtotal)}</span>
+                  <span>{formatCurrency(order.subtotal, order.currency)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Shipping</span>
-                  <span>{formatCurrency(order.shipping_amount)}</span>
+                  <span>
+                    {formatCurrency(order.shipping_amount, order.currency)}
+                  </span>
                 </div>
                 <Separator className="my-2" />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>{formatCurrency(order.total_amount)}</span>
+                  <span>
+                    {formatCurrency(order.total_amount, order.currency)}
+                  </span>
                 </div>
               </div>
             </CardContent>

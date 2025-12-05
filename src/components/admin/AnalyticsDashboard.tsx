@@ -163,7 +163,7 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatPrice(summary.totalRevenue, "INR")}
+              {formatPrice(summary.totalRevenue / 100, "INR")}
             </div>
             <div className="flex items-center text-xs text-muted-foreground mt-1">
               {summary.revenueGrowth >= 0 ? (
@@ -217,7 +217,7 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatPrice(summary.avgOrderValue, "INR")}
+              {formatPrice(summary.avgOrderValue / 100, "INR")}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Per completed order
@@ -265,7 +265,7 @@ export default function AnalyticsDashboard() {
                   }
                   formatter={(value: number, name: string) => {
                     if (name === "revenue") {
-                      return [formatPrice(value, "INR"), "Revenue"];
+                      return [formatPrice(value / 100, "INR"), "Revenue"];
                     }
                     return [value, "Orders"];
                   }}
@@ -311,7 +311,7 @@ export default function AnalyticsDashboard() {
                 <Tooltip
                   formatter={(value: number, name: string) => {
                     if (name === "revenue") {
-                      return [formatPrice(value, "INR"), "Revenue"];
+                      return [formatPrice(value / 100, "INR"), "Revenue"];
                     }
                     return [value, "Sales"];
                   }}
