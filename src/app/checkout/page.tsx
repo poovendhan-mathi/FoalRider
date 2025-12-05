@@ -216,13 +216,16 @@ function CheckoutForm({
           console.log("✅ Order created successfully:", order.id);
 
           // Create order items
+          // Note: Prices are in PAISE (smallest currency unit)
           console.log("📦 Creating order items for", items.length, "products");
           const orderItems = items.map((item) => ({
             order_id: order.id,
             product_id: item.product.id,
+            product_name: item.product.name,
+            product_description: item.product.description || null,
             quantity: item.quantity,
-            price: item.product.price, // Database uses 'price' NOT 'unit_price'!
-            subtotal: item.product.price * item.quantity, // Database uses 'subtotal' NOT 'total_price'!
+            price: item.product.price, // Price per unit in paise
+            subtotal: item.product.price * item.quantity, // Total in paise
           }));
 
           const { error: orderItemsError } = await supabase

@@ -91,25 +91,52 @@ export async function GET(request: NextRequest) {
       throw customersError;
     }
 
-    // Calculate revenue (convert all to INR for simplicity)
-    const totalRevenue =
+    // Fetch exchange rates for proper currency conversion
+    const { data: currencyRates } = await supabase
+      .from("currency_rates")
+      .select("currency_code, rate_to_inr");
+
+    const ratesMap: Record<string, number> = {};
+    currencyRates?.forEach((rate) => {
+      ratesMap[rate.currency_code] = rate.rate_to_inr;
+    });
+
+    /**
+     * Convert order amount to INR (paise)
+     * Note: All prices in database are stored in paise (smallest unit)
+     * @param amount - Amount in paise
+     * @param currency - Currency code (INR, USD, etc.)
+     * @returns Amount in INR paise
+     */
+    const convertToINRPaise = (amount: number, currency: string): number => {
+      if (currency === "INR" || !ratesMap[currency]) return amount;
+      // If stored in foreign currency, convert to INR using rate
+      // rate_to_inr means 1 foreign unit = X INR
+      return amount * ratesMap[currency];
+    };
+
+    // Calculate revenue (convert all to INR paise, then to rupees for display)
+    // Note: total_amount is stored in paise (smallest unit)
+    const totalRevenuePaise =
       orders
         ?.filter((o) => o.status === "delivered" || o.status === "paid")
         .reduce((sum, order) => {
           const amount = order.total_amount || 0;
-          // If currency is USD, convert to INR (approx 83 rate)
-          const inrAmount = order.currency === "USD" ? amount * 83 : amount;
+          const inrAmount = convertToINRPaise(amount, order.currency || "INR");
           return sum + inrAmount;
         }, 0) || 0;
 
-    // Calculate average order value
+    // Convert paise to rupees for display
+    const totalRevenue = totalRevenuePaise / 100;
+
+    // Calculate average order value (in rupees for display)
     const completedOrders =
       orders?.filter((o) => o.status === "delivered" || o.status === "paid") ||
       [];
     const avgOrderValue =
       completedOrders.length > 0 ? totalRevenue / completedOrders.length : 0;
 
-    // Group orders by date for chart
+    // Group orders by date for chart (revenue in rupees)
     const ordersByDate = orders?.reduce((acc, order) => {
       const date = new Date(order.created_at).toISOString().split("T")[0];
       if (!acc[date]) {
@@ -118,8 +145,8 @@ export async function GET(request: NextRequest) {
       acc[date].count += 1;
       if (order.status === "delivered" || order.status === "paid") {
         const amount = order.total_amount || 0;
-        const inrAmount = order.currency === "USD" ? amount * 83 : amount;
-        acc[date].revenue += inrAmount;
+        const inrAmount = convertToINRPaise(amount, order.currency || "INR");
+        acc[date].revenue += inrAmount / 100; // Convert to rupees
       }
       return acc;
     }, {} as Record<string, { date: string; count: number; revenue: number }>);
@@ -129,12 +156,13 @@ export async function GET(request: NextRequest) {
     );
 
     // Top selling products (by order count - would need order_items table for real data)
+    // Note: product prices are in paise, convert to rupees for display
     const topProducts =
       products?.slice(0, 5).map((p) => ({
         id: p.id,
         name: p.name,
         sales: Math.floor(Math.random() * 50) + 10, // Mock data - needs order_items table
-        revenue: p.price * (Math.floor(Math.random() * 50) + 10),
+        revenue: (p.price / 100) * (Math.floor(Math.random() * 50) + 10), // Convert paise to rupees
       })) || [];
 
     // Order status breakdown
@@ -145,6 +173,7 @@ export async function GET(request: NextRequest) {
     }, {} as Record<string, number>);
 
     // Calculate growth rates (compare with previous period)
+    // Revenue values are in rupees
     const midDate = new Date(
       now.getTime() - (daysAgo / 2) * 24 * 60 * 60 * 1000
     );
@@ -157,16 +186,16 @@ export async function GET(request: NextRequest) {
       .filter((o) => o.status === "delivered" || o.status === "paid")
       .reduce((sum, order) => {
         const amount = order.total_amount || 0;
-        const inrAmount = order.currency === "USD" ? amount * 83 : amount;
-        return sum + inrAmount;
+        const inrAmount = convertToINRPaise(amount, order.currency || "INR");
+        return sum + inrAmount / 100; // Convert to rupees
       }, 0);
 
     const olderRevenue = olderOrders
       .filter((o) => o.status === "delivered" || o.status === "paid")
       .reduce((sum, order) => {
         const amount = order.total_amount || 0;
-        const inrAmount = order.currency === "USD" ? amount * 83 : amount;
-        return sum + inrAmount;
+        const inrAmount = convertToINRPaise(amount, order.currency || "INR");
+        return sum + inrAmount / 100; // Convert to rupees
       }, 0);
 
     const revenueGrowth =

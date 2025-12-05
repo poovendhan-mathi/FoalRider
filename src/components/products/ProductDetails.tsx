@@ -51,7 +51,7 @@ function MobileStickyAddToBag({
         <Button
           onClick={onAddToCart}
           disabled={isOutOfStock}
-          className="flex-1 max-w-[180px] bg-black text-white hover:bg-gray-800 h-11 font-semibold uppercase text-sm"
+          className="flex-1 max-w-[180px] bg-black text-white hover:bg-gray-800 h-12 font-semibold uppercase text-sm tap-feedback"
         >
           {isOutOfStock ? "Sold Out" : "Add to Bag"}
         </Button>
@@ -283,7 +283,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   <button
                     key={color}
                     onClick={() => setSelectedColor(color)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all ${
+                    className={`w-10 h-10 rounded-full border-2 transition-all tap-feedback active:scale-90 ${
                       selectedColor === color
                         ? "border-black ring-2 ring-offset-2 ring-black"
                         : "border-gray-300 hover:border-gray-500"
@@ -322,11 +322,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 key={size}
                 onClick={() => isAvailable && setSelectedSize(size)}
                 disabled={!isAvailable}
-                className={`min-w-[48px] h-12 px-4 border transition-all text-sm font-medium ${
+                className={`min-w-[52px] h-14 px-4 border transition-all text-sm font-medium tap-feedback active:scale-95 ${
                   selectedSize === size
                     ? "border-black bg-black text-white"
                     : isAvailable
-                    ? "border-gray-300 bg-white text-black hover:border-black"
+                    ? "border-gray-300 bg-white text-black hover:border-black active:bg-gray-100"
                     : "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through"
                 }`}
               >
@@ -345,7 +345,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             <button
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
               disabled={quantity <= 1}
-              className="h-12 w-12 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+              className="h-14 w-14 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 tap-feedback active:bg-gray-200 transition-all"
               aria-label="Decrease quantity"
             >
               <Minus className="h-4 w-4" />
@@ -356,7 +356,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 setQuantity(Math.min(product.inventory, quantity + 1))
               }
               disabled={quantity >= product.inventory}
-              className="h-12 w-12 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+              className="h-14 w-14 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 tap-feedback active:bg-gray-200 transition-all"
               aria-label="Increase quantity"
             >
               <Plus className="h-4 w-4" />
@@ -372,7 +372,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <Button
         onClick={handleAddToCart}
         disabled={isOutOfStock}
-        className="w-full h-14 bg-[#C5A572] text-white hover:bg-[#B89968] text-base font-semibold uppercase tracking-wide"
+        className="w-full h-14 bg-[#C5A572] text-white hover:bg-[#B89968] text-base font-semibold uppercase tracking-wide tap-feedback"
       >
         {isOutOfStock ? "Out of Stock" : "Add to Bag"}
       </Button>

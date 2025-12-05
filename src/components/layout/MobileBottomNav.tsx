@@ -20,19 +20,20 @@ function NavItem({ href, icon: Icon, label, badge, isActive }: NavItemProps) {
     <Link
       href={href}
       className={cn(
-        "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-colors duration-200",
+        "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-all duration-150 touch-manipulation active:scale-90 active:opacity-70",
         isActive ? "text-[#C5A572]" : "text-gray-500"
       )}
+      style={{ WebkitTapHighlightColor: "transparent" }}
     >
       <div className="relative">
         <Icon
           className={cn(
-            "w-5 h-5 transition-all duration-200",
+            "w-6 h-6 transition-all duration-200",
             isActive ? "stroke-2" : "stroke-[1.5]"
           )}
         />
         {badge !== undefined && badge > 0 && (
-          <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] flex items-center justify-center bg-[#C5A572] text-black text-[9px] font-bold rounded-full px-1">
+          <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] flex items-center justify-center bg-[#C5A572] text-black text-[10px] font-bold rounded-full px-1">
             {badge > 99 ? "99+" : badge}
           </span>
         )}
@@ -78,7 +79,7 @@ export function MobileBottomNav() {
       role="navigation"
       aria-label="Mobile navigation"
     >
-      <div className="flex items-stretch justify-around h-14">
+      <div className="flex items-stretch justify-around h-16">
         {navItems.map((item) => (
           <NavItem
             key={item.href}

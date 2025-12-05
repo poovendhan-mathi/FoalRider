@@ -195,27 +195,38 @@
 @layer utilities {
   /* Tap feedback with scale and opacity */
   .tap-feedback {
-    @apply transition-all duration-150 active:scale-95 active:opacity-80;
+    @apply transition-all duration-150 active:scale-95 active:opacity-80 touch-manipulation select-none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Scale-only tap feedback for cards */
   .tap-scale {
-    @apply transition-transform duration-150 active:scale-98;
+    @apply transition-transform duration-150 active:scale-[0.98] touch-manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Highlight tap feedback for list items */
   .tap-highlight {
-    @apply transition-colors duration-150 active:bg-gray-100 dark:active:bg-gray-800;
+    @apply transition-colors duration-150 active:bg-gray-100 dark:active:bg-gray-800 touch-manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Opacity-only feedback for links */
   .tap-opacity {
-    @apply transition-opacity duration-150 active:opacity-70;
+    @apply transition-opacity duration-150 active:opacity-70 touch-manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Ring pulse feedback for important actions */
   .tap-ring {
-    @apply transition-all duration-150 active:ring-2 active:ring-[#C5A572]/30;
+    @apply transition-all duration-150 active:ring-2 active:ring-[#C5A572]/30 touch-manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Base interactive class for all clickable elements */
+  .interactive {
+    @apply touch-manipulation select-none cursor-pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 

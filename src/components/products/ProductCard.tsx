@@ -42,7 +42,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <article className="group">
       {/* Image Container */}
-      <Link href={`/products/${product.slug}`} className="block">
+      <Link href={`/products/${product.slug}`} className="block tap-scale">
         <div className="relative aspect-[3/4] bg-[#F5F5F5] overflow-hidden">
           <Image
             src={imageUrl}
@@ -52,14 +52,14 @@ export function ProductCard({ product }: ProductCardProps) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
 
-          {/* Wishlist Button */}
+          {/* Wishlist Button - Always visible on mobile */}
           <button
             onClick={handleWishlistClick}
-            className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white"
+            className="absolute top-3 right-3 z-10 w-10 h-10 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:bg-white tap-feedback active:scale-90"
             aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
           >
             <Heart
-              className={`w-4 h-4 transition-colors ${
+              className={`w-5 h-5 transition-colors ${
                 inWishlist
                   ? "fill-black stroke-black"
                   : "stroke-gray-700 fill-transparent"
@@ -80,7 +80,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
       {/* Product Info */}
       <div className="pt-4 space-y-1">
-        <Link href={`/products/${product.slug}`}>
+        <Link href={`/products/${product.slug}`} className="tap-opacity">
           <h3 className="text-sm font-normal text-gray-900 line-clamp-1 group-hover:underline underline-offset-2">
             {product.name}
           </h3>

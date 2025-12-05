@@ -323,8 +323,8 @@ export interface Database {
           product_description: string | null;
           variant_details: Json | null;
           quantity: number;
-          unit_price: number;
-          total_price: number;
+          price: number; // Price per unit in paise
+          subtotal: number; // Total price (price × quantity) in paise
           created_at: string;
         };
         Insert: {
@@ -336,8 +336,8 @@ export interface Database {
           product_description?: string | null;
           variant_details?: Json | null;
           quantity: number;
-          unit_price: number;
-          total_price: number;
+          price: number; // Price per unit in paise
+          subtotal: number; // Total price (price × quantity) in paise
           created_at?: string;
         };
         Update: {
@@ -349,8 +349,8 @@ export interface Database {
           product_description?: string | null;
           variant_details?: Json | null;
           quantity?: number;
-          unit_price?: number;
-          total_price?: number;
+          price?: number; // Price per unit in paise
+          subtotal?: number; // Total price (price × quantity) in paise
           created_at?: string;
         };
       };

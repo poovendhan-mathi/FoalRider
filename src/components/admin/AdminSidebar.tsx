@@ -90,7 +90,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         {/* Mobile Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 lg:hidden text-gray-500 hover:text-gray-700"
+          className="absolute top-4 right-4 lg:hidden text-gray-500 hover:text-gray-700 p-2 tap-feedback"
           aria-label="Close menu"
         >
           <X className="h-6 w-6" />
@@ -106,10 +106,10 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all tap-highlight",
                   isActive
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-gray-900 text-white active:bg-gray-800"
+                    : "text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                 )}
               >
                 <Icon className="h-5 w-5" />

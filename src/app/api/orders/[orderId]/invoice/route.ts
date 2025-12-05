@@ -20,6 +20,7 @@ export async function GET(
           quantity,
           price,
           subtotal,
+          product_name,
           products (
             id,
             name,

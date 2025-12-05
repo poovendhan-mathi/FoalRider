@@ -141,7 +141,8 @@ export default function CartPage() {
                       </div>
                       <button
                         onClick={() => removeFromCart(item.product.id)}
-                        className="text-[#9CA3AF] hover:text-red-500 transition-colors p-2 h-fit"
+                        className="text-[#9CA3AF] hover:text-red-500 transition-colors p-2 h-fit tap-feedback active:scale-90"
+                        aria-label="Remove item"
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>
@@ -157,7 +158,8 @@ export default function CartPage() {
                               item.quantity - 1
                             )
                           }
-                          className="h-10 w-10 flex items-center justify-center hover:bg-[#F8F6F3] transition-colors rounded-l-lg"
+                          className="h-12 w-12 flex items-center justify-center hover:bg-[#F8F6F3] transition-all rounded-l-lg tap-feedback active:bg-[#E5E5E5]"
+                          aria-label="Decrease quantity"
                         >
                           <Minus className="h-4 w-4" />
                         </button>
@@ -171,7 +173,8 @@ export default function CartPage() {
                               item.quantity + 1
                             )
                           }
-                          className="h-10 w-10 flex items-center justify-center hover:bg-[#F8F6F3] transition-colors rounded-r-lg"
+                          className="h-12 w-12 flex items-center justify-center hover:bg-[#F8F6F3] transition-all rounded-r-lg tap-feedback active:bg-[#E5E5E5]"
+                          aria-label="Increase quantity"
                         >
                           <Plus className="h-4 w-4" />
                         </button>

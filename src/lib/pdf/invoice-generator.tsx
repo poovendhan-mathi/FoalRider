@@ -9,13 +9,18 @@ import {
 } from "@react-pdf/renderer";
 import { format } from "date-fns";
 
+/**
+ * Order Item structure from database
+ * Prices are stored in PAISE (smallest currency unit)
+ */
 interface OrderItem {
   products: {
     name: string;
-  };
+  } | null;
+  product_name: string;
   quantity: number;
-  price: number;
-  subtotal: number;
+  price: number; // Price per unit in paise
+  subtotal: number; // Total (price × quantity) in paise
 }
 
 interface ShippingAddress {
@@ -258,7 +263,9 @@ const InvoicePDF: React.FC<{ order: Order }> = ({ order }) => {
           </View>
           {order.order_items.map((item, index) => (
             <View key={index} style={styles.tableRow}>
-              <Text style={styles.col1}>{item.products.name}</Text>
+              <Text style={styles.col1}>
+                {item.products?.name || item.product_name}
+              </Text>
               <Text style={styles.col2}>
                 {formatCurrency(item.price, order.currency)}
               </Text>
