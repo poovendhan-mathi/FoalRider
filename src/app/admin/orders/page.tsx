@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth/admin";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import OrderStatusFilter from "@/components/admin/OrderStatusFilter";
+import InlineStatusUpdate from "@/components/admin/InlineStatusUpdate";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -104,17 +105,6 @@ function formatDate(dateString: string): string {
     day: "numeric",
     year: "numeric",
   });
-}
-
-function getStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
-    processing: "bg-blue-100 text-blue-800 hover:bg-blue-200",
-    shipped: "bg-purple-100 text-purple-800 hover:bg-purple-200",
-    delivered: "bg-green-100 text-green-800 hover:bg-green-200",
-    cancelled: "bg-red-100 text-red-800 hover:bg-red-200",
-  };
-  return colors[status] || "bg-gray-100 text-gray-800 hover:bg-gray-200";
 }
 
 function getPaymentStatusColor(status: string): string {
@@ -229,13 +219,10 @@ export default async function OrdersPage({
                           {formatDate(order.created_at)}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            className={`${getStatusColor(
-                              order.status
-                            )} text-xs`}
-                          >
-                            {order.status}
-                          </Badge>
+                          <InlineStatusUpdate
+                            orderId={order.id}
+                            currentStatus={order.status}
+                          />
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           <Badge
@@ -254,11 +241,9 @@ export default async function OrdersPage({
                         </TableCell>
                         <TableCell className="text-right">
                           <Link href={`/admin/orders/${order.id}`}>
-                            <Button variant="ghost" size="sm">
-                              <span className="hidden sm:inline">
-                                View Details
-                              </span>
-                              <span className="sm:hidden">View</span>
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4 mr-1" />
+                              <span className="hidden sm:inline">Details</span>
                             </Button>
                           </Link>
                         </TableCell>

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -15,20 +14,54 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import UpdateOrderStatus from "@/components/admin/UpdateOrderStatus";
 
+interface OrderItem {
+  id: string;
+  quantity: number;
+  price: number;
+  size?: string;
+  products?: {
+    name: string;
+    image_url?: string;
+  };
+}
+
 async function getOrderDetails(orderId: string) {
   const supabase = await getSupabaseServerClient();
 
+  // First get the order without joins to avoid relationship issues
   const { data: order, error } = await supabase
     .from("orders")
-    .select("*, profiles(full_name, email), order_items(*, products(name))")
+    .select("*")
     .eq("id", orderId)
     .single();
 
   if (error || !order) {
+    console.error("Error fetching order:", error);
     return null;
   }
 
-  return order;
+  // Get order items with product names
+  const { data: orderItems } = await supabase
+    .from("order_items")
+    .select("*, products(name, image_url)")
+    .eq("order_id", orderId);
+
+  // Get profile if user_id exists
+  let profile = null;
+  if (order.user_id) {
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", order.user_id)
+      .single();
+    profile = profileData;
+  }
+
+  return {
+    ...order,
+    order_items: orderItems || [],
+    profiles: profile,
+  };
 }
 
 function formatCurrency(amount: number): string {
@@ -103,7 +136,7 @@ export default async function OrderDetailPage({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {order.order_items?.map((item: any) => (
+                {order.order_items?.map((item: OrderItem) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between border-b pb-4 last:border-0"
