@@ -32,6 +32,20 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+/**
+ * Returns Tailwind CSS classes for order status badge styling
+ */
+function getOrderStatusColor(status: string): string {
+  const colors: Record<string, string> = {
+    pending: "bg-yellow-100 text-yellow-800",
+    processing: "bg-blue-100 text-blue-800",
+    shipped: "bg-purple-100 text-purple-800",
+    delivered: "bg-green-100 text-green-800",
+    cancelled: "bg-red-100 text-red-800",
+  };
+  return colors[status] || "bg-gray-100 text-gray-800";
+}
+
 interface Profile {
   full_name?: string;
   avatar_url?: string;
@@ -51,8 +65,9 @@ interface Order {
 interface Address {
   id: string;
   full_name: string;
+  phone: string;
   address_line1: string;
-  address_line2?: string;
+  address_line2?: string | null;
   city: string;
   state: string;
   postal_code: string;
@@ -66,8 +81,11 @@ function ProfileContent() {
   const { user, loading } = useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [addresses] = useState<Address[]>([]); // TODO: Implement addresses feature
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [addressFormLoading, setAddressFormLoading] = useState(false);
 
   // Debug logging helper
   const log = (...args: unknown[]) => {
@@ -162,11 +180,184 @@ function ProfileContent() {
           )
         );
       }
+
+      // Load addresses
+      const { data: addressesData, error: addressesError } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      if (addressesError) {
+        log("❌ Addresses load error:", addressesError);
+      } else if (addressesData) {
+        log("✅ Addresses loaded:", addressesData.length);
+        setAddresses(addressesData);
+      }
     } catch (error) {
       log("❌ Error loading profile data:", error);
       toast.error("Failed to load profile data");
     } finally {
       log("✅ Profile loading complete");
+    }
+  };
+
+  // Address handlers
+  const handleAddAddress = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setAddressFormLoading(true);
+    const formData = new FormData(e.currentTarget);
+
+    try {
+      const response = await fetch("/api/addresses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: formData.get("address_full_name"),
+          phone: formData.get("address_phone"),
+          address_line1: formData.get("address_line1"),
+          address_line2: formData.get("address_line2") || null,
+          city: formData.get("city"),
+          state: formData.get("state"),
+          postal_code: formData.get("postal_code"),
+          country: "India",
+          is_default: formData.get("is_default") === "on",
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to add address");
+      }
+
+      toast.success("Address added successfully!");
+      setShowAddressForm(false);
+      setEditingAddress(null);
+      // Reload addresses
+      const supabase = getSupabaseBrowserClient();
+      const { data: addressesData } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
+      if (addressesData) setAddresses(addressesData);
+    } catch (error) {
+      console.error("Error adding address:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add address"
+      );
+    } finally {
+      setAddressFormLoading(false);
+    }
+  };
+
+  const handleUpdateAddress = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user || !editingAddress) return;
+
+    setAddressFormLoading(true);
+    const formData = new FormData(e.currentTarget);
+
+    try {
+      const response = await fetch(`/api/addresses/${editingAddress.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: formData.get("address_full_name"),
+          phone: formData.get("address_phone"),
+          address_line1: formData.get("address_line1"),
+          address_line2: formData.get("address_line2") || null,
+          city: formData.get("city"),
+          state: formData.get("state"),
+          postal_code: formData.get("postal_code"),
+          is_default: formData.get("is_default") === "on",
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to update address");
+      }
+
+      toast.success("Address updated successfully!");
+      setShowAddressForm(false);
+      setEditingAddress(null);
+      // Reload addresses
+      const supabase = getSupabaseBrowserClient();
+      const { data: addressesData } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
+      if (addressesData) setAddresses(addressesData);
+    } catch (error) {
+      console.error("Error updating address:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update address"
+      );
+    } finally {
+      setAddressFormLoading(false);
+    }
+  };
+
+  const handleDeleteAddress = async (addressId: string) => {
+    if (!user) return;
+
+    try {
+      const response = await fetch(`/api/addresses/${addressId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to delete address");
+      }
+
+      toast.success("Address deleted successfully!");
+      setAddresses((prev) => prev.filter((a) => a.id !== addressId));
+    } catch (error) {
+      console.error("Error deleting address:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete address"
+      );
+    }
+  };
+
+  const handleSetDefaultAddress = async (addressId: string) => {
+    if (!user) return;
+
+    try {
+      const response = await fetch(`/api/addresses/${addressId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_default: true }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to set default address");
+      }
+
+      toast.success("Default address updated!");
+      // Reload addresses
+      const supabase = getSupabaseBrowserClient();
+      const { data: addressesData } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
+      if (addressesData) setAddresses(addressesData);
+    } catch (error) {
+      console.error("Error setting default address:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to set default address"
+      );
     }
   };
 
@@ -489,8 +680,49 @@ function ProfileContent() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {/* Orders will be mapped here when implemented */}
+                  <div className="space-y-3">
+                    {orders.slice(0, 3).map((order) => (
+                      <div
+                        key={order.id}
+                        className="flex items-center justify-between p-3 border border-[#E5E5E5] rounded-lg hover:border-[#C5A572] transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Package className="h-5 w-5 text-[#C5A572]" />
+                          <div>
+                            <p className="font-mono text-sm">
+                              #{order.id.slice(0, 8)}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(order.created_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                }
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          className={`text-xs ${getOrderStatusColor(
+                            order.status
+                          )}`}
+                        >
+                          {order.status.charAt(0).toUpperCase() +
+                            order.status.slice(1)}
+                        </Badge>
+                      </div>
+                    ))}
+                    {orders.length > 3 && (
+                      <Button
+                        variant="link"
+                        className="w-full"
+                        onClick={() => setActiveTab("orders")}
+                      >
+                        View all orders →
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -522,7 +754,53 @@ function ProfileContent() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {/* Order list will be implemented here */}
+                    {orders.map((order) => (
+                      <div
+                        key={order.id}
+                        className="border border-[#E5E5E5] rounded-lg p-4 hover:border-[#C5A572] transition-colors"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-3">
+                              <p className="font-mono text-sm text-gray-500">
+                                #{order.id.slice(0, 8)}
+                              </p>
+                              <Badge
+                                className={`text-xs ${getOrderStatusColor(
+                                  order.status
+                                )}`}
+                              >
+                                {order.status.charAt(0).toUpperCase() +
+                                  order.status.slice(1)}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                              {new Date(order.created_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                }
+                              )}
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between sm:justify-end gap-4">
+                            <p className="font-semibold text-lg">
+                              {new Intl.NumberFormat("en-IN", {
+                                style: "currency",
+                                currency: order.currency || "INR",
+                              }).format(order.total / 100)}
+                            </p>
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/orders/${order.id}`}>
+                                View Details
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
@@ -540,14 +818,151 @@ function ProfileContent() {
                       Manage your delivery addresses
                     </CardDescription>
                   </div>
-                  <Button>
+                  <Button
+                    onClick={() => {
+                      setEditingAddress(null);
+                      setShowAddressForm(true);
+                    }}
+                    className="bg-[#C5A572] hover:bg-[#B89968]"
+                  >
                     <MapPin className="h-4 w-4 mr-2" />
                     Add Address
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
-                {addresses.length === 0 ? (
+                {/* Address Form */}
+                {showAddressForm && (
+                  <div className="mb-6 p-4 border border-[#E5E5E5] rounded-lg bg-gray-50">
+                    <h3 className="text-lg font-semibold mb-4">
+                      {editingAddress ? "Edit Address" : "Add New Address"}
+                    </h3>
+                    <form
+                      onSubmit={
+                        editingAddress ? handleUpdateAddress : handleAddAddress
+                      }
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="address_full_name">Full Name</Label>
+                          <Input
+                            id="address_full_name"
+                            name="address_full_name"
+                            defaultValue={editingAddress?.full_name || ""}
+                            placeholder="Enter full name"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="address_phone">Phone Number</Label>
+                          <Input
+                            id="address_phone"
+                            name="address_phone"
+                            type="tel"
+                            defaultValue={editingAddress?.phone || ""}
+                            placeholder="Enter phone number"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="address_line1">Address Line 1</Label>
+                        <Input
+                          id="address_line1"
+                          name="address_line1"
+                          defaultValue={editingAddress?.address_line1 || ""}
+                          placeholder="House number, street name"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="address_line2">
+                          Address Line 2 (Optional)
+                        </Label>
+                        <Input
+                          id="address_line2"
+                          name="address_line2"
+                          defaultValue={editingAddress?.address_line2 || ""}
+                          placeholder="Apartment, suite, etc."
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="city">City</Label>
+                          <Input
+                            id="city"
+                            name="city"
+                            defaultValue={editingAddress?.city || ""}
+                            placeholder="City"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="state">State</Label>
+                          <Input
+                            id="state"
+                            name="state"
+                            defaultValue={editingAddress?.state || ""}
+                            placeholder="State"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="postal_code">Postal Code</Label>
+                          <Input
+                            id="postal_code"
+                            name="postal_code"
+                            defaultValue={editingAddress?.postal_code || ""}
+                            placeholder="PIN Code"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="is_default"
+                          name="is_default"
+                          defaultChecked={editingAddress?.is_default || false}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <Label
+                          htmlFor="is_default"
+                          className="text-sm font-normal"
+                        >
+                          Set as default address
+                        </Label>
+                      </div>
+                      <div className="flex gap-3">
+                        <Button
+                          type="submit"
+                          disabled={addressFormLoading}
+                          className="bg-[#C5A572] hover:bg-[#B89968]"
+                        >
+                          {addressFormLoading
+                            ? "Saving..."
+                            : editingAddress
+                            ? "Update Address"
+                            : "Save Address"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setShowAddressForm(false);
+                            setEditingAddress(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* Address List */}
+                {addresses.length === 0 && !showAddressForm ? (
                   <div className="text-center py-12">
                     <MapPin className="h-16 w-16 mx-auto text-gray-300 mb-4" />
                     <h3 className="text-xl font-semibold mb-2">
@@ -556,12 +971,85 @@ function ProfileContent() {
                     <p className="text-gray-600 mb-6">
                       Add a shipping address for faster checkout
                     </p>
-                    <Button size="lg">Add Your First Address</Button>
+                    <Button
+                      size="lg"
+                      onClick={() => setShowAddressForm(true)}
+                      className="bg-[#C5A572] hover:bg-[#B89968]"
+                    >
+                      Add Your First Address
+                    </Button>
                   </div>
                 ) : (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {/* Address cards will be mapped here */}
-                  </div>
+                  addresses.length > 0 && (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {addresses.map((address) => (
+                        <div
+                          key={address.id}
+                          className={`border rounded-lg p-4 relative ${
+                            address.is_default
+                              ? "border-[#C5A572] bg-[#C5A572]/5"
+                              : "border-[#E5E5E5]"
+                          }`}
+                        >
+                          {address.is_default && (
+                            <Badge className="absolute top-2 right-2 bg-[#C5A572] text-white text-xs">
+                              Default
+                            </Badge>
+                          )}
+                          <div className="pr-16">
+                            <p className="font-semibold">{address.full_name}</p>
+                            <p className="text-sm text-gray-600">
+                              {address.phone}
+                            </p>
+                            <p className="text-sm text-gray-600 mt-2">
+                              {address.address_line1}
+                              {address.address_line2 && (
+                                <>, {address.address_line2}</>
+                              )}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {address.city}, {address.state}{" "}
+                              {address.postal_code}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {address.country}
+                            </p>
+                          </div>
+                          <div className="flex gap-2 mt-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingAddress(address);
+                                setShowAddressForm(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            {!address.is_default && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleSetDefaultAddress(address.id)
+                                }
+                              >
+                                Set Default
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 hover:bg-red-50"
+                              onClick={() => handleDeleteAddress(address.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
                 )}
               </CardContent>
             </Card>

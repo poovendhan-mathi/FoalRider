@@ -1,7 +1,7 @@
 # FoalRider Enhancement & Bug Fix Tracker
 
 > **Created**: 4 December 2025  
-> **Last Updated**: 4 December 2025  
+> **Last Updated**: 5 December 2025  
 > **Status Legend**: ⬜ Not Started | 🟡 In Progress | ✅ Completed | ❌ Blocked
 
 ---
@@ -21,7 +21,8 @@
 | Cart            | 1            | 1         | 0           | 0           |
 | Checkout        | 1            | 1         | 0           | 0           |
 | Admin           | 6            | 6         | 0           | 0           |
-| **TOTAL**       | **29**       | **29**    | **0**       | **0**       |
+| Profile         | 2            | 2         | 0           | 0           |
+| **TOTAL**       | **32**       | **32**    | **0**       | **0**       |
 
 ---
 
@@ -280,13 +281,50 @@
 
 ---
 
-## 📝 Development Log
+## � Profile Page Issues
+
+### PRF-001: Order details not shown in profile Orders tab
+
+- **Status**: ✅ Completed
+- **Priority**: High
+- **File(s)**: `src/app/profile/page.tsx`
+- **Notes**:
+  - Orders tab was placeholder only - now displays order cards with ID, date, status, total
+  - Added View Details button linking to `/orders/[orderId]`
+  - Recent Orders in Overview tab also now displays order list
+
+### PRF-002: Address functionality not implemented
+
+- **Status**: ✅ Completed
+- **Priority**: Critical
+- **File(s)**:
+  - `src/app/profile/page.tsx`
+  - `src/app/api/addresses/route.ts` (NEW)
+  - `src/app/api/addresses/[id]/route.ts` (NEW)
+- **Notes**:
+  - Created full CRUD API for addresses
+  - Added address form (add/edit)
+  - Display address cards with default badge
+  - Actions: Edit, Delete, Set as Default
+
+---
+
+## �📝 Development Log
 
 ### Session 1 - 4 December 2025
 
 - Created enhancement tracker document
 - Identified 29 total issues across 11 sections
 - Starting development...
+
+### Session 2 - 5 December 2025
+
+- Fixed Profile page Orders tab - orders now display properly with links to order details
+- Implemented full Address management feature (CRUD operations)
+- Created API routes for address management
+- Updated Recent Orders in profile Overview tab
+- Admin orders View Details was already working (links to `/admin/orders/[id]`)
+- Admin order status update was already implemented via UpdateOrderStatus component
 
 ---
 
