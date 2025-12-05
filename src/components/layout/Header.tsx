@@ -1,6 +1,5 @@
 "use client";
 
-import { Logo } from "./Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useCart } from "@/contexts/CartContext";
@@ -8,7 +7,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { CurrencySelectorCompact } from "@/components/CurrencySelector";
 import { UserDropdown } from "./UserDropdown";
 import Link from "next/link";
-import { ShoppingCart, Menu, Heart } from "lucide-react";
+import { ShoppingCart, Menu, Heart, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -18,7 +17,11 @@ export function Header() {
   const { totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<{
+    full_name?: string;
+    avatar_url?: string;
+    role?: string;
+  } | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -46,10 +49,25 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/75 backdrop-blur-md shadow-lg">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo - Left */}
+        {/* Mobile: Menu Button (Left) */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden text-white/90 hover:text-[#C5A572] hover:bg-white/10 tap-feedback"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Menu"
+        >
+          {mobileMenuOpen ? (
+            <X className="h-5 w-5 stroke-[1.5]" />
+          ) : (
+            <Menu className="h-5 w-5 stroke-[1.5]" />
+          )}
+        </Button>
+
+        {/* Logo - Center on mobile, Left on desktop */}
         <Link
           href="/"
-          className="flex items-center hover:opacity-80 transition-opacity"
+          className="flex items-center hover:opacity-80 transition-opacity md:flex-none absolute left-1/2 -translate-x-1/2 md:relative md:left-0 md:translate-x-0"
         >
           <img
             src="/assets/logo/Gold.png"
@@ -92,15 +110,16 @@ export function Header() {
 
         {/* Actions - Right */}
         <div className="flex items-center gap-3">
-          {/* Currency Selector - Desktop */}
+          {/* Currency Selector - Desktop only */}
           <div className="hidden md:block">
             <CurrencySelectorCompact />
           </div>
 
+          {/* Search - Desktop only (mobile has bottom nav) */}
           <Button
             variant="ghost"
             size="icon"
-            className="text-white/90 hover:text-[#C5A572] hover:bg-white/10 tap-feedback"
+            className="hidden md:flex text-white/90 hover:text-[#C5A572] hover:bg-white/10 tap-feedback"
             asChild
           >
             <Link href="/search">
@@ -121,10 +140,11 @@ export function Header() {
             </Link>
           </Button>
 
+          {/* Wishlist - Desktop only (mobile has bottom nav) */}
           <Button
             variant="ghost"
             size="icon"
-            className="text-white/90 hover:text-[#C5A572] hover:bg-white/10 relative tap-feedback"
+            className="hidden md:flex text-white/90 hover:text-[#C5A572] hover:bg-white/10 relative tap-feedback"
             asChild
           >
             <Link href="/wishlist">
@@ -137,10 +157,11 @@ export function Header() {
             </Link>
           </Button>
 
+          {/* Cart - Desktop only (mobile has bottom nav) */}
           <Button
             variant="ghost"
             size="icon"
-            className="text-white/90 hover:text-[#C5A572] hover:bg-white/10 relative tap-feedback"
+            className="hidden md:flex text-white/90 hover:text-[#C5A572] hover:bg-white/10 relative tap-feedback"
             asChild
           >
             <Link href="/cart">
@@ -153,20 +174,12 @@ export function Header() {
             </Link>
           </Button>
 
+          {/* User - Always visible */}
           <UserDropdown user={user} profile={profile} showName={true} />
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden text-white/90 hover:text-[#C5A572] hover:bg-white/10 tap-feedback"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            <Menu className="h-5 w-5 stroke-[1.5]" />
-          </Button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Slide down */}
       {mobileMenuOpen && (
         <>
           {/* Overlay */}
@@ -176,7 +189,7 @@ export function Header() {
           />
 
           {/* Menu Content */}
-          <div className="relative z-50 md:hidden border-t border-white/10 bg-black/80 backdrop-blur-md p-6 space-y-4">
+          <div className="relative z-50 md:hidden border-t border-white/10 bg-black/95 backdrop-blur-md p-6 space-y-4">
             {/* Currency Selector for Mobile */}
             <div className="pb-4 border-b border-white/10">
               <CurrencySelectorCompact />
@@ -185,7 +198,7 @@ export function Header() {
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
+              className="block text-lg font-medium text-white/90 hover:text-[#C5A572] py-2 tap-opacity transition-all duration-150"
               style={{ fontFamily: "Montserrat, sans-serif" }}
             >
               Home
@@ -193,7 +206,7 @@ export function Header() {
             <Link
               href="/products"
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
+              className="block text-lg font-medium text-white/90 hover:text-[#C5A572] py-2 tap-opacity transition-all duration-150"
               style={{ fontFamily: "Montserrat, sans-serif" }}
             >
               Collections
@@ -201,7 +214,7 @@ export function Header() {
             <Link
               href="/about"
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
+              className="block text-lg font-medium text-white/90 hover:text-[#C5A572] py-2 tap-opacity transition-all duration-150"
               style={{ fontFamily: "Montserrat, sans-serif" }}
             >
               About Us
@@ -209,7 +222,7 @@ export function Header() {
             <Link
               href="/contact"
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-base font-medium text-white/90 hover:text-[#C5A572] tap-opacity transition-all duration-150"
+              className="block text-lg font-medium text-white/90 hover:text-[#C5A572] py-2 tap-opacity transition-all duration-150"
               style={{ fontFamily: "Montserrat, sans-serif" }}
             >
               Contact

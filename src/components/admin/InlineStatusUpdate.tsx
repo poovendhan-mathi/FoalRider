@@ -13,10 +13,26 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const statuses = [
-  { value: "pending", label: "Pending", color: "bg-yellow-100 text-yellow-800" },
-  { value: "processing", label: "Processing", color: "bg-blue-100 text-blue-800" },
-  { value: "shipped", label: "Shipped", color: "bg-purple-100 text-purple-800" },
-  { value: "delivered", label: "Delivered", color: "bg-green-100 text-green-800" },
+  {
+    value: "pending",
+    label: "Pending",
+    color: "bg-yellow-100 text-yellow-800",
+  },
+  {
+    value: "processing",
+    label: "Processing",
+    color: "bg-blue-100 text-blue-800",
+  },
+  {
+    value: "shipped",
+    label: "Shipped",
+    color: "bg-purple-100 text-purple-800",
+  },
+  {
+    value: "delivered",
+    label: "Delivered",
+    color: "bg-green-100 text-green-800",
+  },
   { value: "cancelled", label: "Cancelled", color: "bg-red-100 text-red-800" },
 ];
 
@@ -82,16 +98,22 @@ export default function InlineStatusUpdate({
           <Loader2 className="h-4 w-4 animate-spin" />
         </div>
       )}
-      <Select value={selectedStatus} onValueChange={handleStatusChange} disabled={loading}>
-        <SelectTrigger 
-          className={`w-[130px] h-8 text-xs font-medium ${currentStatusConfig?.color || "bg-gray-100"}`}
+      <Select
+        value={selectedStatus}
+        onValueChange={handleStatusChange}
+        disabled={loading}
+      >
+        <SelectTrigger
+          className={`w-[130px] h-8 text-xs font-medium ${
+            currentStatusConfig?.color || "bg-gray-100"
+          }`}
         >
           <SelectValue placeholder="Select status" />
         </SelectTrigger>
         <SelectContent>
           {statuses.map((status) => (
-            <SelectItem 
-              key={status.value} 
+            <SelectItem
+              key={status.value}
               value={status.value}
               className={`text-xs ${status.color}`}
             >

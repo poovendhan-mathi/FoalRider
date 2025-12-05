@@ -21,18 +21,18 @@ function NavItem({ href, icon: Icon, label, badge, isActive }: NavItemProps) {
       href={href}
       className={cn(
         "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-colors duration-200",
-        isActive ? "text-black" : "text-gray-500"
+        isActive ? "text-[#C5A572]" : "text-gray-500"
       )}
     >
       <div className="relative">
         <Icon
           className={cn(
-            "w-6 h-6 transition-all duration-200",
+            "w-5 h-5 transition-all duration-200",
             isActive ? "stroke-2" : "stroke-[1.5]"
           )}
         />
         {badge !== undefined && badge > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-black text-white text-[10px] font-semibold rounded-full px-1">
+          <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] flex items-center justify-center bg-[#C5A572] text-black text-[9px] font-bold rounded-full px-1">
             {badge > 99 ? "99+" : badge}
           </span>
         )}
@@ -40,7 +40,7 @@ function NavItem({ href, icon: Icon, label, badge, isActive }: NavItemProps) {
       <span
         className={cn(
           "text-[10px] font-medium transition-all duration-200",
-          isActive ? "font-semibold" : ""
+          isActive ? "font-semibold text-[#C5A572]" : ""
         )}
       >
         {label}
@@ -50,7 +50,7 @@ function NavItem({ href, icon: Icon, label, badge, isActive }: NavItemProps) {
 }
 
 /**
- * Mobile Bottom Navigation - Adidas-style
+ * Mobile Bottom Navigation - Premium style
  * Fixed at bottom on mobile only (hidden on md+)
  * Shows: Home, Search, Wishlist, Bag, Account
  */
@@ -59,8 +59,8 @@ export function MobileBottomNav() {
   const { totalItems: cartTotal } = useCart();
   const { totalItems: wishlistTotal } = useWishlist();
 
-  // Hide on admin pages
-  if (pathname.startsWith("/admin")) {
+  // Hide on admin pages and checkout
+  if (pathname.startsWith("/admin") || pathname.startsWith("/checkout")) {
     return null;
   }
 
@@ -74,11 +74,11 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 md:hidden safe-area-bottom"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200 md:hidden safe-area-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.1)]"
       role="navigation"
       aria-label="Mobile navigation"
     >
-      <div className="flex items-stretch justify-around">
+      <div className="flex items-stretch justify-around h-14">
         {navItems.map((item) => (
           <NavItem
             key={item.href}
