@@ -38,10 +38,10 @@ function MobileStickyAddToBag({
   if (!isVisible) return null;
 
   return (
-    <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg safe-area-bottom animate-in slide-in-from-bottom duration-300">
-      <div className="flex items-center justify-between gap-3 p-3">
-        <div className="flex flex-col">
-          <span className="font-semibold text-black">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg pb-safe animate-in slide-in-from-bottom duration-300">
+      <div className="flex items-center justify-between gap-3 p-3 pb-4">
+        <div className="flex flex-col min-w-0">
+          <span className="font-semibold text-black truncate">
             {formatPrice(product.price)}
           </span>
           {selectedSize && (
@@ -51,7 +51,7 @@ function MobileStickyAddToBag({
         <Button
           onClick={onAddToCart}
           disabled={isOutOfStock}
-          className="flex-1 max-w-[200px] bg-black text-white hover:bg-gray-800 h-12 font-semibold uppercase"
+          className="flex-1 max-w-[180px] bg-black text-white hover:bg-gray-800 h-11 font-semibold uppercase text-sm"
         >
           {isOutOfStock ? "Sold Out" : "Add to Bag"}
         </Button>
@@ -209,7 +209,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24 md:pb-0">
       {/* Breadcrumb Navigation */}
       <nav className="flex items-center gap-2 text-sm">
         <Link

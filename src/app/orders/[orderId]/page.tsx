@@ -221,11 +221,11 @@ export default function OrderDetailPage() {
             <td style="text-align: right;">${new Intl.NumberFormat("en-IN", {
               style: "currency",
               currency: order.currency || "INR",
-            }).format(item.price)}</td>
+            }).format(item.price / 100)}</td>
             <td style="text-align: right;">${new Intl.NumberFormat("en-IN", {
               style: "currency",
               currency: order.currency || "INR",
-            }).format(item.subtotal)}</td>
+            }).format(item.subtotal / 100)}</td>
           </tr>
         `
           )
@@ -235,7 +235,7 @@ export default function OrderDetailPage() {
           <td style="text-align: right;">${new Intl.NumberFormat("en-IN", {
             style: "currency",
             currency: order.currency || "INR",
-          }).format(order.total_amount)}</td>
+          }).format(order.total_amount / 100)}</td>
         </tr>
       </tbody>
     </table>
@@ -273,7 +273,7 @@ export default function OrderDetailPage() {
       }\nTotal: ${new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: order.currency || "INR",
-      }).format(order.total_amount)}`,
+      }).format(order.total_amount / 100)}`,
       url: window.location.href,
     };
 
@@ -448,7 +448,7 @@ export default function OrderDetailPage() {
                       {new Intl.NumberFormat("en-IN", {
                         style: "currency",
                         currency: order.currency || "INR",
-                      }).format(item.price)}
+                      }).format(item.price / 100)}
                     </p>
                   </div>
                   <div className="text-right">
@@ -456,7 +456,7 @@ export default function OrderDetailPage() {
                       {new Intl.NumberFormat("en-IN", {
                         style: "currency",
                         currency: order.currency || "INR",
-                      }).format(item.subtotal)}
+                      }).format(item.subtotal / 100)}
                     </p>
                   </div>
                 </div>
@@ -471,7 +471,7 @@ export default function OrderDetailPage() {
                   {new Intl.NumberFormat("en-IN", {
                     style: "currency",
                     currency: order.currency || "INR",
-                  }).format(order.total_amount)}
+                  }).format(order.total_amount / 100)}
                 </span>
               </div>
             </div>

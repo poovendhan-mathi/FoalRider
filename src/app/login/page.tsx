@@ -25,6 +25,9 @@ function LoginForm() {
   const { signIn } = useAuth();
   const searchParams = useSearchParams();
 
+  // Get redirect URL from query params, default to profile
+  const redirectTo = searchParams.get("redirect") || "/profile";
+
   // Check for verification errors or messages
   useEffect(() => {
     const error = searchParams.get("error");
@@ -49,10 +52,10 @@ function LoginForm() {
 
       // Wait a bit for session to sync across tabs
       await new Promise((resolve) => setTimeout(resolve, 500));
-      console.log("[Login] Redirecting to profile");
+      console.log("[Login] Redirecting to:", redirectTo);
 
       // Use window.location for a full page reload to ensure middleware runs
-      window.location.href = "/profile";
+      window.location.href = redirectTo;
     } catch (err: unknown) {
       console.error("[Login] Sign in error:", err);
       setError((err as Error)?.message || "Failed to sign in");

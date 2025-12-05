@@ -93,15 +93,19 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
     setPreferredCurrency(newCurrency);
   };
 
-  // Convert price from INR to selected currency
-  const convertPrice = (priceInINR: number): number => {
-    if (!exchangeRates) return priceInINR;
-    return convertPriceUtil(priceInINR, currency, exchangeRates);
+  // Convert price from INR (paise) to selected currency (main unit)
+  // Note: Database stores prices in smallest unit (paise for INR)
+  const convertPrice = (priceInPaise: number): number => {
+    // First convert paise to rupees
+    const priceInRupees = priceInPaise / 100;
+    if (!exchangeRates) return priceInRupees;
+    return convertPriceUtil(priceInRupees, currency, exchangeRates);
   };
 
   // Format price with currency symbol
-  const formatPrice = (priceInINR: number): string => {
-    const convertedPrice = convertPrice(priceInINR);
+  // Input is in paise (smallest unit), output is formatted string
+  const formatPrice = (priceInPaise: number): string => {
+    const convertedPrice = convertPrice(priceInPaise);
     return formatPriceUtil(convertedPrice, currency);
   };
 

@@ -27,8 +27,10 @@ export default function CartPage() {
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
-  const shipping = subtotal > 2000 ? 0 : 200; // Free shipping over $2000
-  const tax = subtotal * 0.18; // 18% GST
+  // Free shipping over ₹2000 (200000 paise)
+  // Shipping cost is ₹200 (20000 paise)
+  const shipping = subtotal > 200000 ? 0 : 20000;
+  const tax = Math.round(subtotal * 0.18); // 18% GST
   const total = subtotal + shipping + tax;
 
   const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
@@ -232,11 +234,11 @@ export default function CartPage() {
                   </span>
                 </div>
 
-                {subtotal < 2000 && (
+                {subtotal < 200000 && (
                   <div className="font-['Montserrat'] text-sm text-[#4B5563] bg-[#C5A572]/10 p-4 rounded-xl mt-4">
                     Add{" "}
                     <span className="font-semibold text-[#C5A572]">
-                      {formatPrice(2000 - subtotal)}
+                      {formatPrice(200000 - subtotal)}
                     </span>{" "}
                     more for free shipping!
                   </div>

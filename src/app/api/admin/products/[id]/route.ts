@@ -3,6 +3,7 @@ import { getSupabaseServerActionClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { updateProductSchema } from "@/lib/validations/api-schemas";
 import { ZodError } from "zod";
+import { logger } from "@/lib/logger";
 
 // GET - Get single product
 export async function GET(
@@ -22,15 +23,19 @@ export async function GET(
       .single();
 
     if (error || !product) {
+      logger.warn("Product not found", {
+        context: "AdminProductDetail",
+        data: { id },
+      });
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     return NextResponse.json({ product });
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error("Error in product GET:", error.message);
-    } else {
-      console.error("Error in product GET: Unknown error");
+      logger.error("Error in product GET", error, {
+        context: "AdminProductDetail",
+      });
     }
     return NextResponse.json(
       { error: "Internal server error" },
@@ -50,6 +55,11 @@ export async function PUT(
 
     const body = await request.json();
 
+    logger.info("Updating product", {
+      context: "AdminProductDetail",
+      data: { id, name: body.name },
+    });
+
     // Validate input with Zod
     const validated = updateProductSchema.parse(body);
 
@@ -66,17 +76,29 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error("Error updating product:", error);
+      logger.error("Error updating product", error, {
+        context: "AdminProductDetail",
+        data: { id },
+      });
       return NextResponse.json(
         { error: "Failed to update product" },
         { status: 500 }
       );
     }
 
+    logger.info("Product updated successfully", {
+      context: "AdminProductDetail",
+      data: { id: product.id },
+    });
+
     return NextResponse.json({ product });
   } catch (error: unknown) {
     // Handle Zod validation errors
     if (error instanceof ZodError) {
+      logger.warn("Product update validation failed", {
+        context: "AdminProductDetail",
+        data: { issues: error.issues },
+      });
       return NextResponse.json(
         { error: "Invalid input", details: error.issues },
         { status: 400 }
@@ -84,9 +106,9 @@ export async function PUT(
     }
 
     if (error instanceof Error) {
-      console.error("Error in product PUT:", error.message);
-    } else {
-      console.error("Error in product PUT: Unknown error");
+      logger.error("Error in product PUT", error, {
+        context: "AdminProductDetail",
+      });
     }
     return NextResponse.json(
       { error: "Internal server error" },
@@ -104,6 +126,11 @@ export async function DELETE(
     await requireAdmin();
     const { id } = await params;
 
+    logger.info("Deleting product (soft delete)", {
+      context: "AdminProductDetail",
+      data: { id },
+    });
+
     const supabase = await getSupabaseServerActionClient();
 
     // Soft delete by setting is_active to false
@@ -113,19 +140,27 @@ export async function DELETE(
       .eq("id", id);
 
     if (error) {
-      console.error("Error deleting product:", error);
+      logger.error("Error deleting product", error, {
+        context: "AdminProductDetail",
+        data: { id },
+      });
       return NextResponse.json(
         { error: "Failed to delete product" },
         { status: 500 }
       );
     }
 
+    logger.info("Product deleted successfully", {
+      context: "AdminProductDetail",
+      data: { id },
+    });
+
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error("Error in product DELETE:", error.message);
-    } else {
-      console.error("Error in product DELETE: Unknown error");
+      logger.error("Error in product DELETE", error, {
+        context: "AdminProductDetail",
+      });
     }
     return NextResponse.json(
       { error: "Internal server error" },

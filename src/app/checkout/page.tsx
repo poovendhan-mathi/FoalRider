@@ -385,14 +385,16 @@ export default function CheckoutPage() {
     loadProfileData();
   }, [user]);
 
-  // Calculate totals - prices are stored in INR in database
+  // Calculate totals - prices are stored in paise (smallest unit) in database
   // formatPrice() will convert to selected currency automatically
   const subtotal = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
-  const shipping = subtotal > 2000 ? 0 : 200; // Free shipping over ₹2000
-  const tax = subtotal * 0.18; // 18% GST
+  // Free shipping over ₹2000 (200000 paise)
+  // Shipping cost is ₹200 (20000 paise)
+  const shipping = subtotal > 200000 ? 0 : 20000;
+  const tax = Math.round(subtotal * 0.18); // 18% GST
   const total = subtotal + shipping + tax;
 
   // For Stripe: Convert from INR to selected currency

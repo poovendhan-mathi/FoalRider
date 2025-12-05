@@ -7,7 +7,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Routes that require authentication
-const protectedRoutes = ["/profile", "/orders", "/wishlist", "/checkout"];
+const protectedRoutes = ["/profile", "/orders", "/wishlist"];
 
 // Admin routes that require admin role
 const adminRoutes = ["/admin"];
@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest) {
   if (isAdminRoute) {
     if (!session) {
       const redirectUrl = new URL("/login", request.url);
-      redirectUrl.searchParams.set("redirectTo", path);
+      redirectUrl.searchParams.set("redirect", path);
       return NextResponse.redirect(redirectUrl);
     }
 
@@ -72,7 +72,7 @@ export async function middleware(request: NextRequest) {
   // Redirect logic for protected routes
   if (!session && isProtectedRoute) {
     const redirectUrl = new URL("/login", request.url);
-    redirectUrl.searchParams.set("redirectTo", path);
+    redirectUrl.searchParams.set("redirect", path);
     return NextResponse.redirect(redirectUrl);
   }
 

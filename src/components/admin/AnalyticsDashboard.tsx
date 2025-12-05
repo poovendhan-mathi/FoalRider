@@ -89,10 +89,9 @@ export default function AnalyticsDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-lg text-muted-foreground">
-          Loading analytics...
-        </div>
+      <div className="flex flex-col items-center justify-center h-96 gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C5A572]"></div>
+        <p className="text-muted-foreground">Loading analytics...</p>
       </div>
     );
   }

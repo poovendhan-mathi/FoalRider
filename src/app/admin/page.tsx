@@ -21,6 +21,7 @@ import { requireAdmin } from "@/lib/auth/admin";
 
 // Helper functions
 const formatCurrency = (amount: number, currency: string = "INR"): string => {
+  // amount is stored in smallest unit (paise/cents)
   const locale = currency === "USD" ? "en-US" : "en-IN";
   return new Intl.NumberFormat(locale, {
     style: "currency",

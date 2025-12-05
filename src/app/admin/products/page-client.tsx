@@ -53,9 +53,13 @@ interface Product {
   price: number;
   stock_quantity: number;
   is_active: boolean;
+  is_featured?: boolean;
   main_image: string | null;
   category_id: string | null;
   category_name?: string;
+  description?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Category {
@@ -295,7 +299,8 @@ export default function ProductsClientPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-12">
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C5A572]"></div>
               <p className="text-gray-500">Loading products...</p>
             </div>
           ) : paginatedProducts.length === 0 ? (
@@ -476,7 +481,7 @@ export default function ProductsClientPage() {
         open={!!previewProduct}
         onOpenChange={(open) => !open && setPreviewProduct(null)}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
@@ -511,9 +516,23 @@ export default function ProductsClientPage() {
                   <p className="text-sm text-gray-500">
                     SKU: {previewProduct.sku}
                   </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    ID: {previewProduct.id}
+                  </p>
                 </div>
 
-                <div className="space-y-2">
+                {previewProduct.description && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-600 mb-1">
+                      Description
+                    </h4>
+                    <p className="text-sm text-gray-700 line-clamp-3">
+                      {previewProduct.description}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-2 border-t pt-4">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Price:</span>
                     <span className="font-semibold text-[#C5A572]">
@@ -525,11 +544,13 @@ export default function ProductsClientPage() {
                     <span
                       className={
                         previewProduct.stock_quantity > 0
-                          ? "text-green-600"
-                          : "text-red-600"
+                          ? "text-green-600 font-medium"
+                          : "text-red-600 font-medium"
                       }
                     >
-                      {previewProduct.stock_quantity} units
+                      {previewProduct.stock_quantity > 0
+                        ? `${previewProduct.stock_quantity} units`
+                        : "Out of Stock"}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -550,7 +571,54 @@ export default function ProductsClientPage() {
                       {previewProduct.is_active ? "Active" : "Inactive"}
                     </Badge>
                   </div>
+                  {previewProduct.is_featured !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Featured:</span>
+                      <Badge
+                        className={
+                          previewProduct.is_featured
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }
+                      >
+                        {previewProduct.is_featured ? "Yes" : "No"}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
+
+                {previewProduct.created_at && (
+                  <div className="text-xs text-gray-400 border-t pt-4">
+                    <p>
+                      Created:{" "}
+                      {new Date(previewProduct.created_at).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
+                    </p>
+                    {previewProduct.updated_at && (
+                      <p>
+                        Updated:{" "}
+                        {new Date(previewProduct.updated_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="pt-4 flex gap-2">
                   <Link

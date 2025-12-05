@@ -643,15 +643,23 @@ function ProfileContent() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">
-                    {new Intl.NumberFormat("en-IN", {
-                      style: "currency",
-                      currency: orders[0]?.currency || "INR",
-                    }).format(
-                      orders.reduce(
-                        (sum, order) => sum + (order.total || 0),
-                        0
-                      ) / 100
-                    )}
+                    {(() => {
+                      // Group totals by currency and convert appropriately
+                      const totalInINR = orders.reduce((sum, order) => {
+                        const amount = order.total || 0;
+                        // Convert paise to rupees or cents to dollars, then to INR
+                        if (order.currency === "USD") {
+                          // USD cents to INR (approximate rate: 83)
+                          return sum + (amount / 100) * 83;
+                        }
+                        // INR paise to rupees
+                        return sum + amount / 100;
+                      }, 0);
+                      return new Intl.NumberFormat("en-IN", {
+                        style: "currency",
+                        currency: "INR",
+                      }).format(totalInINR);
+                    })()}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     Across all orders

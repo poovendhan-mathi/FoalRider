@@ -53,15 +53,15 @@ export function ProductFilters({
   const router = useRouter();
   const params = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000]);
   const [optimisticCategory, setOptimisticCategory] = useState<string | null>(
     null
   );
   const [optimisticSort, setOptimisticSort] = useState<string | null>(null);
   const { currency, formatPrice, convertPrice } = useCurrency();
 
-  // Calculate max price in current currency
-  const maxPriceInCurrency = Math.ceil(convertPrice(50000));
+  // Calculate max price in current currency (5000000 paise = ₹50,000)
+  const maxPriceInCurrency = Math.ceil(convertPrice(5000000));
   const stepSize = Math.ceil(maxPriceInCurrency / 100);
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export function ProductFilters({
       : 0;
     const maxPrice = searchParams.maxPrice
       ? parseInt(searchParams.maxPrice)
-      : 50000;
+      : 5000000;
     setPriceRange([minPrice, maxPrice]);
   }, [searchParams.minPrice, searchParams.maxPrice]);
 
@@ -122,7 +122,7 @@ export function ProductFilters({
   const clearFilters = () => {
     setOptimisticCategory(null);
     setOptimisticSort(null);
-    setPriceRange([0, 50000]);
+    setPriceRange([0, 5000000]);
 
     startTransition(() => {
       router.replace("/products", { scroll: false });
@@ -221,9 +221,9 @@ export function ProductFilters({
           <Slider
             value={priceRange}
             onValueChange={(value) => setPriceRange(value as [number, number])}
-            max={50000}
+            max={5000000}
             min={0}
-            step={500}
+            step={50000}
             className="mb-4"
           />
           <div className="flex items-center justify-between text-sm text-gray-600">

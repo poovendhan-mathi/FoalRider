@@ -3,6 +3,7 @@ import { getSupabaseServerActionClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { createProductSchema } from "@/lib/validations/api-schemas";
 import { ZodError } from "zod";
+import { logger } from "@/lib/logger";
 
 // GET - List all products with pagination
 export async function GET(request: NextRequest) {
@@ -18,6 +19,11 @@ export async function GET(request: NextRequest) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
+    logger.info("Fetching products", {
+      context: "AdminProducts",
+      data: { page, limit },
+    });
+
     // Get total count
     const { count } = await supabase
       .from("products")
@@ -31,7 +37,9 @@ export async function GET(request: NextRequest) {
       .range(from, to);
 
     if (error) {
-      console.error("Error fetching products:", error);
+      logger.error("Error fetching products", error, {
+        context: "AdminProducts",
+      });
       return NextResponse.json(
         { error: "Failed to fetch products" },
         { status: 500 }
@@ -77,9 +85,13 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error("Error in products GET:", error.message);
+      logger.error("Error in products GET", error, {
+        context: "AdminProducts",
+      });
     } else {
-      console.error("Error in products GET: Unknown error");
+      logger.error("Error in products GET: Unknown error", undefined, {
+        context: "AdminProducts",
+      });
     }
     return NextResponse.json(
       { error: "Internal server error" },
@@ -95,6 +107,11 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
+    logger.info("Creating new product", {
+      context: "AdminProducts",
+      data: { name: body.name, sku: body.sku },
+    });
+
     // Validate input with Zod
     const validated = createProductSchema.parse(body);
 
@@ -108,6 +125,10 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existingProduct) {
+      logger.warn("Product with SKU already exists", {
+        context: "AdminProducts",
+        data: { sku: validated.sku },
+      });
       return NextResponse.json(
         { error: "Product with this SKU already exists" },
         { status: 400 }
@@ -133,17 +154,28 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error("Error creating product:", error);
+      logger.error("Error creating product", error, {
+        context: "AdminProducts",
+      });
       return NextResponse.json(
         { error: "Failed to create product" },
         { status: 500 }
       );
     }
 
+    logger.info("Product created successfully", {
+      context: "AdminProducts",
+      data: { id: product.id, name: product.name },
+    });
+
     return NextResponse.json({ product }, { status: 201 });
   } catch (error: unknown) {
     // Handle Zod validation errors
     if (error instanceof ZodError) {
+      logger.warn("Product validation failed", {
+        context: "AdminProducts",
+        data: { issues: error.issues },
+      });
       return NextResponse.json(
         { error: "Invalid input", details: error.issues },
         { status: 400 }
@@ -151,9 +183,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (error instanceof Error) {
-      console.error("Error in products POST:", error.message);
+      logger.error("Error in products POST", error, {
+        context: "AdminProducts",
+      });
     } else {
-      console.error("Error in products POST: Unknown error");
+      logger.error("Error in products POST: Unknown error", undefined, {
+        context: "AdminProducts",
+      });
     }
     return NextResponse.json(
       { error: "Internal server error" },

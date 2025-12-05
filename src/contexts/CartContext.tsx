@@ -19,8 +19,10 @@ import {
   clearUserCart,
   clearGuestCart,
   CartItem as DBCartItem,
+  syncGuestCart,
 } from "@/lib/supabase/cart";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 interface CartItem {
   product: Product;
@@ -108,7 +110,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }));
       setItems(transformedItems);
     } catch (error) {
-      console.error("Error loading cart:", error);
+      logger.error("Error loading cart", error, { context: "CartContext" });
       if (hasLoadedInitialCart) {
         toast.error("Failed to load cart");
       }
@@ -119,6 +121,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [user, sessionId, hasLoadedInitialCart]);
 
   // Sync guest cart when user logs in
+  const syncGuestCartToUser = React.useCallback(async () => {
+    if (!user || !sessionId) return;
+
+    try {
+      logger.info("Syncing guest cart to user", { context: "CartContext" });
+      const success = await syncGuestCart(sessionId, user.id);
+      if (success) {
+        logger.info("Guest cart synced successfully", {
+          context: "CartContext",
+        });
+        // Reload the cart after sync
+        await loadCart();
+      }
+    } catch (error) {
+      logger.error("Failed to sync guest cart", error, {
+        context: "CartContext",
+      });
+    }
+  }, [user, sessionId, loadCart]);
 
   useEffect(() => {
     // Wait for session to resolve
@@ -126,11 +147,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     // Only load once sessionId is ready
     if (!sessionId) return;
 
-    // If user is logged in and user id changed, or first load
+    // If user is logged in and user id changed (e.g., login happened)
     if (user && user.id !== lastUserId) {
-      loadCart();
-      setLastUserId(user.id);
-      setHasLoadedInitialCart(true);
+      // If there was a previous guest session, sync the cart
+      if (lastUserId === null && hasLoadedInitialCart) {
+        // User just logged in - sync guest cart first
+        syncGuestCartToUser().then(() => {
+          setLastUserId(user.id);
+        });
+      } else {
+        loadCart();
+        setLastUserId(user.id);
+        setHasLoadedInitialCart(true);
+      }
       return;
     }
     // If guest and not loaded yet
@@ -147,6 +176,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     hasLoadedInitialCart,
     lastUserId,
     loadCart,
+    syncGuestCartToUser,
   ]);
 
   const addToCart = async (product: Product, quantity: number = 1) => {

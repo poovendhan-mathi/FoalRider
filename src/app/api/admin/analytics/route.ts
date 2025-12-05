@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerActionClient } from "@/lib/supabase/server";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 const querySchema = z.object({
   period: z.enum(["7d", "30d", "90d", "1y"]).default("30d"),
@@ -17,6 +18,9 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      logger.warn("Analytics API: Unauthorized access attempt", {
+        context: "Analytics",
+      });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -28,6 +32,10 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (profile?.role !== "admin") {
+      logger.warn("Analytics API: Non-admin access attempt", {
+        context: "Analytics",
+        data: { userId: user.id },
+      });
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -50,7 +58,12 @@ export async function GET(request: NextRequest) {
       .gte("created_at", startDate.toISOString())
       .order("created_at", { ascending: true });
 
-    if (ordersError) throw ordersError;
+    if (ordersError) {
+      logger.error("Analytics API: Failed to fetch orders", ordersError, {
+        context: "Analytics",
+      });
+      throw ordersError;
+    }
 
     // Fetch products data
     const { data: products, error: productsError } = await supabase
@@ -58,7 +71,12 @@ export async function GET(request: NextRequest) {
       .select("id, name, price, stock_quantity, created_at")
       .order("created_at", { ascending: false });
 
-    if (productsError) throw productsError;
+    if (productsError) {
+      logger.error("Analytics API: Failed to fetch products", productsError, {
+        context: "Analytics",
+      });
+      throw productsError;
+    }
 
     // Fetch customers data
     const { data: customers, error: customersError } = await supabase
@@ -66,7 +84,12 @@ export async function GET(request: NextRequest) {
       .select("id, created_at")
       .gte("created_at", startDate.toISOString());
 
-    if (customersError) throw customersError;
+    if (customersError) {
+      logger.error("Analytics API: Failed to fetch customers", customersError, {
+        context: "Analytics",
+      });
+      throw customersError;
+    }
 
     // Calculate revenue (convert all to INR for simplicity)
     const totalRevenue =
@@ -157,6 +180,15 @@ export async function GET(request: NextRequest) {
           100
         : 0;
 
+    logger.info("Analytics API: Data fetched successfully", {
+      context: "Analytics",
+      data: {
+        period,
+        ordersCount: orders?.length,
+        customersCount: customers?.length,
+      },
+    });
+
     return NextResponse.json({
       summary: {
         totalRevenue,
@@ -173,7 +205,7 @@ export async function GET(request: NextRequest) {
       period,
     });
   } catch (error) {
-    console.error("Analytics API error:", error);
+    logger.error("Analytics API error", error, { context: "Analytics" });
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

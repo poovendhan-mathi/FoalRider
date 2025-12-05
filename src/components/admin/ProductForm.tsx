@@ -25,6 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { Loader2, Upload, X, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { logger } from "@/lib/logger";
 
 interface Category {
   id: string;
@@ -36,12 +37,41 @@ interface Category {
 interface ProductFormProps {
   categories: Category[];
   mode: "create" | "edit";
-  initialData?: any;
+  initialData?: {
+    id?: string;
+    name?: string;
+    description?: string;
+    sku?: string;
+    category_id?: string;
+    price?: number;
+    stock_quantity?: number;
+    is_active?: boolean;
+    is_featured?: boolean;
+    main_image?: string;
+    images?: string[];
+    variants?: ProductVariant[];
+  };
 }
 
 interface ProductVariant {
   size: string;
   stock_quantity: number;
+}
+
+interface FormErrors {
+  name?: string;
+  sku?: string;
+  price?: string;
+  categoryId?: string;
+  stockQuantity?: string;
+}
+
+/**
+ * Inline field error component
+ */
+function FieldError({ error }: { error?: string }) {
+  if (!error) return null;
+  return <p className="text-sm text-red-500 mt-1">{error}</p>;
 }
 
 export default function ProductForm({
@@ -52,6 +82,7 @@ export default function ProductForm({
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   // Form state
   const [name, setName] = useState(initialData?.name || "");
@@ -80,6 +111,47 @@ export default function ProductForm({
 
   // Image upload state
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  /**
+   * Validates the form and returns true if valid
+   */
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!name.trim()) {
+      newErrors.name = "Product name is required";
+    } else if (name.length < 2) {
+      newErrors.name = "Product name must be at least 2 characters";
+    }
+
+    if (!sku.trim()) {
+      newErrors.sku = "SKU is required";
+    } else if (!/^[A-Za-z0-9-_]+$/.test(sku)) {
+      newErrors.sku =
+        "SKU can only contain letters, numbers, hyphens, and underscores";
+    }
+
+    if (!price) {
+      newErrors.price = "Price is required";
+    } else if (isNaN(parseFloat(price)) || parseFloat(price) < 0) {
+      newErrors.price = "Price must be a valid positive number";
+    }
+
+    if (!categoryId) {
+      newErrors.categoryId = "Category is required";
+    }
+
+    if (
+      stockQuantity &&
+      (isNaN(parseInt(stockQuantity)) || parseInt(stockQuantity) < 0)
+    ) {
+      newErrors.stockQuantity =
+        "Stock quantity must be a valid non-negative number";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleImageUpload = async (
     file: File,
@@ -115,6 +187,7 @@ export default function ProductForm({
         description: "Image uploaded successfully",
       });
     } catch (error) {
+      logger.error("Image upload failed", error, { context: "ProductForm" });
       toast({
         title: "Error",
         description: "Failed to upload image",
@@ -150,10 +223,14 @@ export default function ProductForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !sku || !price || !categoryId) {
+    // Clear previous errors
+    setErrors({});
+
+    // Validate form
+    if (!validateForm()) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: "Validation Error",
+        description: "Please fix the errors below",
         variant: "destructive",
       });
       return;
@@ -176,6 +253,11 @@ export default function ProductForm({
         variants: variants.length > 0 ? variants : null,
       };
 
+      logger.info(`${mode === "create" ? "Creating" : "Updating"} product`, {
+        context: "ProductForm",
+        data: { name, sku },
+      });
+
       const url =
         mode === "create"
           ? "/api/admin/products"
@@ -192,7 +274,24 @@ export default function ProductForm({
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("Product save error:", data);
+        logger.error("Product save error", data, { context: "ProductForm" });
+
+        // Handle validation errors from server
+        if (data.details && Array.isArray(data.details)) {
+          const serverErrors: FormErrors = {};
+          data.details.forEach((issue: { path: string[]; message: string }) => {
+            const field = issue.path[0];
+            if (field === "name") serverErrors.name = issue.message;
+            if (field === "sku") serverErrors.sku = issue.message;
+            if (field === "price") serverErrors.price = issue.message;
+            if (field === "category_id")
+              serverErrors.categoryId = issue.message;
+            if (field === "stock_quantity")
+              serverErrors.stockQuantity = issue.message;
+          });
+          setErrors(serverErrors);
+        }
+
         throw new Error(data.error || "Failed to save product");
       }
 
@@ -206,7 +305,7 @@ export default function ProductForm({
       router.push("/admin/products");
       router.refresh();
     } catch (error) {
-      console.error("Product save error:", error);
+      logger.error("Product save error", error, { context: "ProductForm" });
       toast({
         title: "Error",
         description:
@@ -240,10 +339,14 @@ export default function ProductForm({
                 <Input
                   id="name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (errors.name) setErrors({ ...errors, name: undefined });
+                  }}
                   placeholder="e.g., Classic Blue Denim Jeans"
-                  required
+                  className={errors.name ? "border-red-500" : ""}
                 />
+                <FieldError error={errors.name} />
               </div>
 
               <div>
@@ -265,18 +368,31 @@ export default function ProductForm({
                   <Input
                     id="sku"
                     value={sku}
-                    onChange={(e) => setSku(e.target.value)}
+                    onChange={(e) => {
+                      setSku(e.target.value);
+                      if (errors.sku) setErrors({ ...errors, sku: undefined });
+                    }}
                     placeholder="e.g., JEANS-001"
-                    required
+                    className={errors.sku ? "border-red-500" : ""}
                   />
+                  <FieldError error={errors.sku} />
                 </div>
 
                 <div>
                   <Label htmlFor="category">
                     Category <span className="text-red-500">*</span>
                   </Label>
-                  <Select value={categoryId} onValueChange={setCategoryId}>
-                    <SelectTrigger>
+                  <Select
+                    value={categoryId}
+                    onValueChange={(value) => {
+                      setCategoryId(value);
+                      if (errors.categoryId)
+                        setErrors({ ...errors, categoryId: undefined });
+                    }}
+                  >
+                    <SelectTrigger
+                      className={errors.categoryId ? "border-red-500" : ""}
+                    >
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -287,6 +403,7 @@ export default function ProductForm({
                       ))}
                     </SelectContent>
                   </Select>
+                  <FieldError error={errors.categoryId} />
                 </div>
               </div>
             </CardContent>
@@ -296,25 +413,38 @@ export default function ProductForm({
           <Card>
             <CardHeader>
               <CardTitle>Pricing & Inventory</CardTitle>
+              <CardDescription>
+                Prices are in INR (paise will be converted automatically)
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="price">
-                    Price (₹) <span className="text-red-500">*</span>
+                    Price (₹) - INR <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    placeholder="0.00"
-                    required
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      ₹
+                    </span>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      value={price}
+                      onChange={(e) => {
+                        setPrice(e.target.value);
+                        if (errors.price)
+                          setErrors({ ...errors, price: undefined });
+                      }}
+                      placeholder="0.00"
+                      className={`pl-7 ${errors.price ? "border-red-500" : ""}`}
+                    />
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Enter price in rupees
+                    Enter price in rupees (e.g., 999.00 for ₹999)
                   </p>
+                  <FieldError error={errors.price} />
                 </div>
 
                 <div>
@@ -323,9 +453,15 @@ export default function ProductForm({
                     id="stock"
                     type="number"
                     value={stockQuantity}
-                    onChange={(e) => setStockQuantity(e.target.value)}
+                    onChange={(e) => {
+                      setStockQuantity(e.target.value);
+                      if (errors.stockQuantity)
+                        setErrors({ ...errors, stockQuantity: undefined });
+                    }}
                     placeholder="0"
+                    className={errors.stockQuantity ? "border-red-500" : ""}
                   />
+                  <FieldError error={errors.stockQuantity} />
                 </div>
               </div>
             </CardContent>
