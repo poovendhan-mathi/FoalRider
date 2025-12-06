@@ -644,21 +644,17 @@ function ProfileContent() {
                 <CardContent>
                   <div className="text-3xl font-bold">
                     {(() => {
-                      // Group totals by currency and convert appropriately
-                      const totalInINR = orders.reduce((sum, order) => {
+                      // Calculate total in USD (base currency)
+                      const totalInUSD = orders.reduce((sum, order) => {
                         const amount = order.total || 0;
-                        // Convert paise to rupees or cents to dollars, then to INR
-                        if (order.currency === "USD") {
-                          // USD cents to INR (approximate rate: 83)
-                          return sum + (amount / 100) * 83;
-                        }
-                        // INR paise to rupees
+                        // All orders are now in USD cents
+                        // Convert cents to dollars
                         return sum + amount / 100;
                       }, 0);
-                      return new Intl.NumberFormat("en-IN", {
+                      return new Intl.NumberFormat("en-US", {
                         style: "currency",
-                        currency: "INR",
-                      }).format(totalInINR);
+                        currency: "USD",
+                      }).format(totalInUSD);
                     })()}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
@@ -804,9 +800,9 @@ function ProfileContent() {
                           </div>
                           <div className="flex items-center justify-between sm:justify-end gap-4">
                             <p className="font-semibold text-lg">
-                              {new Intl.NumberFormat("en-IN", {
+                              {new Intl.NumberFormat("en-US", {
                                 style: "currency",
-                                currency: order.currency || "INR",
+                                currency: order.currency || "USD",
                               }).format(order.total / 100)}
                             </p>
                             <Button variant="outline" size="sm" asChild>

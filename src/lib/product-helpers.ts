@@ -13,7 +13,7 @@ export function getProductImageUrl(product: { image_url?: string | null }): stri
 /**
  * Format currency with locale
  */
-export function formatCurrency(amount: number, currency: string = 'INR'): string {
+export function formatCurrency(amount: number, currency: string = 'USD'): string {
   const currencyMap: Record<string, string> = {
     'INR': 'en-IN',
     'SGD': 'en-SG',
@@ -23,7 +23,7 @@ export function formatCurrency(amount: number, currency: string = 'INR'): string
     'AUD': 'en-AU',
   };
 
-  const locale = currencyMap[currency] || 'en-IN';
+  const locale = currencyMap[currency] || 'en-US';
   
   return new Intl.NumberFormat(locale, {
     style: 'currency',

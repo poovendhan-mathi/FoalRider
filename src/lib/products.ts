@@ -75,8 +75,9 @@ export function getProductImageUrl(product: Product): string {
   return "/assets/images/product-placeholder.svg";
 }
 
-export function formatPrice(price: number, currency: string = "INR"): string {
-  return new Intl.NumberFormat("en-IN", {
+export function formatPrice(price: number, currency: string = "USD"): string {
+  const locale = currency === "INR" ? "en-IN" : "en-US";
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currency,
   }).format(price);

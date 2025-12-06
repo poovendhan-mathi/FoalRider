@@ -23,19 +23,19 @@ const MAX_PRODUCT_PRICE_PAISE = 10000000;
 
 /**
  * Payment Intent Creation Schema
- * @property amount - Amount in PAISE (smallest currency unit). Min 50 paise.
- * @property currency - 3-letter currency code (default: "inr")
+ * @property amount - Amount in CENTS (smallest currency unit). Min 50 cents.
+ * @property currency - 3-letter currency code (default: "usd")
  * @property metadata - Optional key-value metadata for the payment
  */
 export const createPaymentIntentSchema = z.object({
   amount: z
     .number()
-    .int("Amount must be a whole number (paise)")
+    .int("Amount must be a whole number (cents)")
     .min(
       MIN_PAYMENT_AMOUNT_PAISE,
-      `Amount must be at least ${MIN_PAYMENT_AMOUNT_PAISE} paise`
+      `Amount must be at least ${MIN_PAYMENT_AMOUNT_PAISE} cents`
     ),
-  currency: z.string().min(3).max(3).toLowerCase().default("inr"),
+  currency: z.string().min(3).max(3).toLowerCase().default("usd"),
   metadata: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
 });
 
@@ -134,11 +134,11 @@ export const orderItemSchema = z.object({
 
 /**
  * Create Order Schema
- * @property subtotal - Order subtotal in PAISE
- * @property shipping_cost - Shipping cost in PAISE
- * @property tax - Tax amount in PAISE
- * @property discount - Discount amount in PAISE
- * @property total_amount - Total order amount in PAISE
+ * @property subtotal - Order subtotal in CENTS (USD)
+ * @property shipping_cost - Shipping cost in CENTS (USD)
+ * @property tax - Tax amount in CENTS (USD)
+ * @property discount - Discount amount in CENTS (USD)
+ * @property total_amount - Total order amount in CENTS (USD)
  */
 export const createOrderSchema = z.object({
   email: z.string().email("Valid email is required"),
@@ -147,7 +147,7 @@ export const createOrderSchema = z.object({
   tax: z.number().int().min(0).default(0),
   discount: z.number().int().min(0).default(0),
   total_amount: z.number().int().min(1, "Total amount must be positive"),
-  currency: z.string().min(3).max(3).default("INR"),
+  currency: z.string().min(3).max(3).default("USD"),
   customer_name: z.string().min(1, "Customer name is required"),
   customer_email: z.string().email("Valid email is required"),
   customer_phone: z.string().optional(),

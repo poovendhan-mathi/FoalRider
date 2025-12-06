@@ -218,13 +218,13 @@ export default function OrderDetailPage() {
           <tr>
             <td>${item.products.name}</td>
             <td style="text-align: center;">${item.quantity}</td>
-            <td style="text-align: right;">${new Intl.NumberFormat("en-IN", {
+            <td style="text-align: right;">${new Intl.NumberFormat("en-US", {
               style: "currency",
-              currency: order.currency || "INR",
+              currency: order.currency || "USD",
             }).format(item.price / 100)}</td>
-            <td style="text-align: right;">${new Intl.NumberFormat("en-IN", {
+            <td style="text-align: right;">${new Intl.NumberFormat("en-US", {
               style: "currency",
-              currency: order.currency || "INR",
+              currency: order.currency || "USD",
             }).format(item.subtotal / 100)}</td>
           </tr>
         `
@@ -232,9 +232,9 @@ export default function OrderDetailPage() {
           .join("")}
         <tr class="total-row">
           <td colspan="3" style="text-align: right;">Total Amount:</td>
-          <td style="text-align: right;">${new Intl.NumberFormat("en-IN", {
+          <td style="text-align: right;">${new Intl.NumberFormat("en-US", {
             style: "currency",
-            currency: order.currency || "INR",
+            currency: order.currency || "USD",
           }).format(order.total_amount / 100)}</td>
         </tr>
       </tbody>
@@ -270,9 +270,9 @@ export default function OrderDetailPage() {
       title: `Order Receipt - ${order.order_number}`,
       text: `My order from FoalRider\nOrder Number: ${
         order.order_number
-      }\nTotal: ${new Intl.NumberFormat("en-IN", {
+      }\nTotal: ${new Intl.NumberFormat("en-US", {
         style: "currency",
-        currency: order.currency || "INR",
+        currency: order.currency || "USD",
       }).format(order.total_amount / 100)}`,
       url: window.location.href,
     };
@@ -445,17 +445,17 @@ export default function OrderDetailPage() {
                       Quantity: {item.quantity}
                     </p>
                     <p className="text-sm font-medium text-[#C5A572]">
-                      {new Intl.NumberFormat("en-IN", {
+                      {new Intl.NumberFormat("en-US", {
                         style: "currency",
-                        currency: order.currency || "INR",
+                        currency: order.currency || "USD",
                       }).format(item.price / 100)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold">
-                      {new Intl.NumberFormat("en-IN", {
+                      {new Intl.NumberFormat("en-US", {
                         style: "currency",
-                        currency: order.currency || "INR",
+                        currency: order.currency || "USD",
                       }).format(item.subtotal / 100)}
                     </p>
                   </div>
@@ -468,9 +468,9 @@ export default function OrderDetailPage() {
               <div className="flex justify-between items-center">
                 <span className="text-lg font-semibold">Total</span>
                 <span className="text-2xl font-bold text-[#C5A572]">
-                  {new Intl.NumberFormat("en-IN", {
+                  {new Intl.NumberFormat("en-US", {
                     style: "currency",
-                    currency: order.currency || "INR",
+                    currency: order.currency || "USD",
                   }).format(order.total_amount / 100)}
                 </span>
               </div>

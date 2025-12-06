@@ -414,18 +414,18 @@ export default function ProductForm({
             <CardHeader>
               <CardTitle>Pricing & Inventory</CardTitle>
               <CardDescription>
-                Prices are in INR (paise will be converted automatically)
+                Prices are in USD (cents will be converted automatically)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="price">
-                    Price (₹) - INR <span className="text-red-500">*</span>
+                    Price ($) - USD <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                      ₹
+                      $
                     </span>
                     <Input
                       id="price"
@@ -442,7 +442,7 @@ export default function ProductForm({
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Enter price in rupees (e.g., 999.00 for ₹999)
+                    Enter price in dollars (e.g., 99.00 for $99)
                   </p>
                   <FieldError error={errors.price} />
                 </div>

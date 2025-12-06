@@ -16,12 +16,12 @@ export function getStripe(): Promise<Stripe | null> {
 /**
  * Create payment intent and get client secret
  * @param amount - Amount in smallest currency unit (cents/paise)
- * @param currency - Currency code (default: 'inr')
+ * @param currency - Currency code (default: 'usd')
  * @param metadata - Optional metadata to attach to payment intent
  */
 export async function createPaymentIntent(
   amount: number,
-  currency: string = "inr",
+  currency: string = "usd",
   metadata?: Record<string, string | number>
 ) {
   try {

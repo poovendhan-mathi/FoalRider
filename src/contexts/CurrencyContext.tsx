@@ -259,15 +259,15 @@ export function useCurrencySafe(): CurrencyContextType {
   try {
     return useCurrency();
   } catch {
-    // Fallback for SSR or outside provider
+    // Fallback for SSR or outside provider - use USD as base currency
     return {
-      currency: "INR" as SupportedCurrency,
+      currency: "USD" as SupportedCurrency,
       setCurrency: () => {},
       exchangeRates: null,
       isLoading: false,
       convertPrice: (price: number) => price / 100,
-      formatPrice: (price: number) => formatCurrencyValue(price / 100, "INR"),
-      currencySymbol: "₹",
+      formatPrice: (price: number) => formatCurrencyValue(price / 100, "USD"),
+      currencySymbol: "$",
     };
   }
 }
