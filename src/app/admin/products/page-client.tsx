@@ -67,15 +67,8 @@ interface Category {
   name: string;
 }
 
-function formatCurrency(amount: number, currency: string = "INR"): string {
-  // Default to INR, but support USD and others
-  let locale = "en-IN";
-  if (currency === "USD") locale = "en-US";
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-  }).format(amount / 100);
-}
+// Import centralized pricing function
+import { formatAdminPrice } from "@/lib/pricing";
 
 export default function ProductsClientPage() {
   const { toast } = useToast();
@@ -363,7 +356,7 @@ export default function ProductsClientPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-semibold text-sm sm:text-base">
-                          {formatCurrency(product.price, "INR")}
+                          {formatAdminPrice(product.price)}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <span
@@ -536,7 +529,7 @@ export default function ProductsClientPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Price:</span>
                     <span className="font-semibold text-[#C5A572]">
-                      {formatCurrency(previewProduct.price, "INR")}
+                      {formatAdminPrice(previewProduct.price)}
                     </span>
                   </div>
                   <div className="flex justify-between">

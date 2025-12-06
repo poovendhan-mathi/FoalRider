@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { getSupportedCurrencies, SupportedCurrency } from '@/lib/currency';
+import { useCurrency, SupportedCurrency } from "@/contexts/CurrencyContext";
+import { getSupportedCurrencies } from "@/lib/pricing";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 export function CurrencySelector() {
   const { currency, setCurrency, isLoading } = useCurrency();
@@ -26,7 +26,7 @@ export function CurrencySelector() {
             <span className="text-muted-foreground">Loading...</span>
           ) : (
             <span className="flex items-center gap-2">
-              <span>{currencies.find(c => c.code === currency)?.flag}</span>
+              <span>{currencies.find((c) => c.code === currency)?.flag}</span>
               <span className="font-medium">{currency}</span>
             </span>
           )}
@@ -38,8 +38,12 @@ export function CurrencySelector() {
             <div className="flex items-center gap-3 py-1">
               <span className="text-lg">{curr.flag}</span>
               <div className="flex flex-col">
-                <span className="font-medium">{curr.symbol} {curr.code}</span>
-                <span className="text-xs text-muted-foreground">{curr.name}</span>
+                <span className="font-medium">
+                  {curr.symbol} {curr.code}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {curr.name}
+                </span>
               </div>
             </div>
           </SelectItem>
@@ -55,7 +59,7 @@ export function CurrencySelector() {
 export function CurrencySelectorCompact() {
   const { currency, setCurrency, isLoading } = useCurrency();
   const currencies = getSupportedCurrencies();
-  const currentCurrency = currencies.find(c => c.code === currency);
+  const currentCurrency = currencies.find((c) => c.code === currency);
 
   return (
     <Select

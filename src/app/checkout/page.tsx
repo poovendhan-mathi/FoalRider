@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import type { Stripe } from "@stripe/stripe-js";
 import {
   Elements,
   PaymentElement,
@@ -19,12 +20,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingBag, Lock, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  getStripe,
-  createPaymentIntent,
-  toStripeAmount,
-} from "@/lib/stripe/client";
+import { getStripe } from "@/lib/stripe/client";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { calculateOrderTotals } from "@/lib/pricing";
 
 // Payment Form Component
 function CheckoutForm({
@@ -329,12 +327,13 @@ function CheckoutForm({
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalItems, clearCart } = useCart();
-  const { formatPrice, currency, convertPrice } = useCurrency();
+  const { formatPrice, currency } = useCurrency();
   const { state } = useAuth();
   const user = state.user;
   const [clientSecret, setClientSecret] = useState<string>("");
-  const [paymentIntentId, setPaymentIntentId] = useState<string>("");
-  const [stripePromise, setStripePromise] = useState<Promise<any> | null>(null);
+  const [, setPaymentIntentId] = useState<string>("");
+  const [stripePromise, setStripePromise] =
+    useState<Promise<Stripe | null> | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
 
   // Use ref to track if payment intent is already being created
@@ -388,26 +387,25 @@ export default function CheckoutPage() {
     loadProfileData();
   }, [user]);
 
-  // Calculate totals - prices are stored in paise (smallest unit) in database
-  // formatPrice() will convert to selected currency automatically
-  const subtotal = items.reduce(
+  // Calculate totals using centralized pricing
+  // Prices are stored in cents (smallest unit) in database
+  const subtotalInCents = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
-  // Free shipping over ₹2000 (200000 paise)
-  // Shipping cost is ₹200 (20000 paise)
-  const shipping = subtotal > 200000 ? 0 : 20000;
-  const tax = Math.round(subtotal * 0.18); // 18% GST
-  const total = subtotal + shipping + tax;
 
-  // For Stripe: Convert from INR to selected currency
-  const totalInSelectedCurrency = convertPrice(total);
+  // Use centralized pricing functions
+  const { subtotal, shipping, tax, total } =
+    calculateOrderTotals(subtotalInCents);
 
-  console.log("💰 Checkout calculations:", {
+  // For display: formatPrice() will convert to selected currency automatically
+  console.log("💰 Checkout calculations (USD cents):", {
     currency,
-    totalINR: total,
-    totalConverted: totalInSelectedCurrency,
-    note: "Display uses formatPrice (auto-converts), Stripe uses converted amount",
+    subtotal,
+    shipping,
+    tax,
+    total,
+    note: "Server will recalculate from product IDs for payment security",
   });
 
   // Initialize Stripe (only once)
@@ -415,7 +413,7 @@ export default function CheckoutPage() {
     setStripePromise(getStripe());
   }, []);
 
-  // Create payment intent - with proper duplicate prevention
+  // Create payment intent - SECURE: Server validates prices from database
   const initializePayment = useCallback(async () => {
     // Prevent duplicate creation
     if (paymentIntentCreated.current || isInitializing || clientSecret) {
@@ -429,37 +427,50 @@ export default function CheckoutPage() {
     paymentIntentCreated.current = true;
 
     try {
-      console.log(
-        "💰 Creating payment intent for amount:",
-        totalInSelectedCurrency,
-        currency
-      );
-      const stripeAmount = toStripeAmount(totalInSelectedCurrency, currency);
-      const { clientSecret: secret, paymentIntentId: id } =
-        await createPaymentIntent(stripeAmount, currency, {
-          userId: user?.id || "guest",
-          items: totalItems,
-        });
+      // Send only product IDs and quantities - server will fetch prices from database
+      const cartItems = items.map((item) => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+      }));
 
-      console.log("✅ Payment intent created:", id);
-      setClientSecret(secret);
-      setPaymentIntentId(id);
+      console.log(
+        "🔒 Creating secure payment intent with cart items:",
+        cartItems
+      );
+
+      const response = await fetch("/api/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cartItems,
+          currency: currency,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create payment intent");
+      }
+
+      console.log("✅ Secure payment intent created:", data.paymentIntentId);
+      console.log("🔒 Server-calculated totals:", data.totals);
+
+      setClientSecret(data.clientSecret);
+      setPaymentIntentId(data.paymentIntentId);
     } catch (error) {
       console.error("❌ Failed to initialize payment:", error);
-      toast.error("Failed to initialize payment. Please try again.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to initialize payment. Please try again."
+      );
       // Reset on error so user can retry
       paymentIntentCreated.current = false;
     } finally {
       setIsInitializing(false);
     }
-  }, [
-    totalInSelectedCurrency,
-    currency,
-    user?.id,
-    totalItems,
-    clientSecret,
-    isInitializing,
-  ]);
+  }, [items, currency, clientSecret, isInitializing]);
 
   // Trigger payment intent creation only once when ready
   useEffect(() => {

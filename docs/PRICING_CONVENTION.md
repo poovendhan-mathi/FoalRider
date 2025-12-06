@@ -4,6 +4,24 @@
 
 All monetary values in FoalRider are stored in the **smallest currency unit** (paise for INR, cents for USD/EUR/GBP, etc.). This is a common practice in e-commerce applications and aligns with Stripe's requirements.
 
+## Centralized Pricing System
+
+All pricing logic is now centralized in `src/lib/pricing.ts`. This is the **single source of truth** for:
+
+- Currency conversion
+- Price formatting
+- Exchange rate management
+- Stripe amount conversion
+
+### Key Files
+
+| File                               | Purpose                             |
+| ---------------------------------- | ----------------------------------- |
+| `src/lib/pricing.ts`               | Core pricing logic (use this!)      |
+| `src/contexts/CurrencyContext.tsx` | React context for currency state    |
+| `src/components/PriceDisplay.tsx`  | Reusable price display component    |
+| `src/lib/currency.ts`              | DEPRECATED - use pricing.ts instead |
+
 ## Key Convention
 
 | Currency | Smallest Unit | Example                |

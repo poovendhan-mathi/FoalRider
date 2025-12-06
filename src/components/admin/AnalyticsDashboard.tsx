@@ -25,7 +25,7 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
-import { formatPrice } from "@/lib/currency";
+import { formatMainUnitValue } from "@/lib/pricing";
 
 interface AnalyticsData {
   summary: {
@@ -162,7 +162,7 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatPrice(summary.totalRevenue / 100, "INR")}
+              {formatMainUnitValue(summary.totalRevenue, "INR")}
             </div>
             <div className="flex items-center text-xs text-muted-foreground mt-1">
               {summary.revenueGrowth >= 0 ? (
@@ -216,7 +216,7 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatPrice(summary.avgOrderValue / 100, "INR")}
+              {formatMainUnitValue(summary.avgOrderValue, "INR")}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Per completed order
@@ -264,7 +264,7 @@ export default function AnalyticsDashboard() {
                   }
                   formatter={(value: number, name: string) => {
                     if (name === "revenue") {
-                      return [formatPrice(value / 100, "INR"), "Revenue"];
+                      return [formatMainUnitValue(value, "INR"), "Revenue"];
                     }
                     return [value, "Orders"];
                   }}
@@ -310,7 +310,7 @@ export default function AnalyticsDashboard() {
                 <Tooltip
                   formatter={(value: number, name: string) => {
                     if (name === "revenue") {
-                      return [formatPrice(value / 100, "INR"), "Revenue"];
+                      return [formatMainUnitValue(value, "INR"), "Revenue"];
                     }
                     return [value, "Sales"];
                   }}

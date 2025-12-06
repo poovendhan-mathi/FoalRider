@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
+import { calculateOrderTotals, SHIPPING_CONFIG } from "@/lib/pricing";
 
 export default function CartPage() {
   const { items, totalItems, removeFromCart, updateQuantity, clearCart } =
@@ -23,15 +24,14 @@ export default function CartPage() {
   const { formatPrice } = useCurrency();
   const [showClearDialog, setShowClearDialog] = useState(false);
 
+  // Calculate subtotal from cart items
   const subtotal = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
-  // Free shipping over ₹2000 (200000 paise)
-  // Shipping cost is ₹200 (20000 paise)
-  const shipping = subtotal > 200000 ? 0 : 20000;
-  const tax = Math.round(subtotal * 0.18); // 18% GST
-  const total = subtotal + shipping + tax;
+
+  // Use centralized pricing functions for shipping, tax, and total
+  const { shipping, tax, total } = calculateOrderTotals(subtotal);
 
   const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -237,11 +237,13 @@ export default function CartPage() {
                   </span>
                 </div>
 
-                {subtotal < 200000 && (
+                {subtotal < SHIPPING_CONFIG.FREE_SHIPPING_THRESHOLD && (
                   <div className="font-['Montserrat'] text-sm text-[#4B5563] bg-[#C5A572]/10 p-4 rounded-xl mt-4">
                     Add{" "}
                     <span className="font-semibold text-[#C5A572]">
-                      {formatPrice(200000 - subtotal)}
+                      {formatPrice(
+                        SHIPPING_CONFIG.FREE_SHIPPING_THRESHOLD - subtotal
+                      )}
                     </span>{" "}
                     more for free shipping!
                   </div>
