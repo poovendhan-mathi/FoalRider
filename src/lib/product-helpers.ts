@@ -6,27 +6,32 @@
 /**
  * Get product image URL with fallback to placeholder
  */
-export function getProductImageUrl(product: { image_url?: string | null }): string {
-  return product.image_url || '/placeholder.jpg';
+export function getProductImageUrl(product: {
+  image_url?: string | null;
+}): string {
+  return product.image_url || "/placeholder.jpg";
 }
 
 /**
  * Format currency with locale
  */
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
+export function formatCurrency(
+  amount: number,
+  currency: string = "USD"
+): string {
   const currencyMap: Record<string, string> = {
-    'INR': 'en-IN',
-    'SGD': 'en-SG',
-    'USD': 'en-US',
-    'EUR': 'en-EU',
-    'GBP': 'en-GB',
-    'AUD': 'en-AU',
+    INR: "en-IN",
+    SGD: "en-SG",
+    USD: "en-US",
+    EUR: "en-EU",
+    GBP: "en-GB",
+    AUD: "en-AU",
   };
 
-  const locale = currencyMap[currency] || 'en-US';
-  
+  const locale = currencyMap[currency] || "en-US";
+
   return new Intl.NumberFormat(locale, {
-    style: 'currency',
+    style: "currency",
     currency: currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
@@ -43,7 +48,10 @@ export function isProductInStock(inventory: number): boolean {
 /**
  * Check if product has low stock
  */
-export function isProductLowStock(inventory: number, threshold: number = 5): boolean {
+export function isProductLowStock(
+  inventory: number,
+  threshold: number = 5
+): boolean {
   return inventory > 0 && inventory <= threshold;
 }
 
@@ -51,29 +59,29 @@ export function isProductLowStock(inventory: number, threshold: number = 5): boo
  * Get stock status badge
  */
 export function getStockStatus(inventory: number): {
-  status: 'in-stock' | 'low-stock' | 'out-of-stock';
+  status: "in-stock" | "low-stock" | "out-of-stock";
   label: string;
   color: string;
 } {
   if (inventory <= 0) {
     return {
-      status: 'out-of-stock',
-      label: 'Out of Stock',
-      color: 'destructive',
+      status: "out-of-stock",
+      label: "Out of Stock",
+      color: "destructive",
     };
   }
-  
+
   if (inventory <= 5) {
     return {
-      status: 'low-stock',
+      status: "low-stock",
       label: `Only ${inventory} left in stock`,
-      color: 'warning',
+      color: "warning",
     };
   }
-  
+
   return {
-    status: 'in-stock',
-    label: 'In Stock',
-    color: 'success',
+    status: "in-stock",
+    label: "In Stock",
+    color: "success",
   };
 }

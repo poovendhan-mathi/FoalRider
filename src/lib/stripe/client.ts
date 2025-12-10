@@ -71,11 +71,11 @@ export function formatStripeAmount(amount: number, currency: string): string {
 
 /**
  * Convert amount to Stripe format (smallest currency unit)
- * 
+ *
  * @param amount - Amount in currency units (e.g., 78.01 dollars/rupees)
  * @param currency - Currency code (e.g., 'SGD', 'USD', 'INR')
  * @returns Amount in smallest unit (cents/paise)
- * 
+ *
  * NOTE: This function assumes the amount is ALREADY in the correct currency!
  * It only converts from dollars/rupees to cents/paise (multiply by 100).
  * Currency conversion should happen BEFORE calling this function.
