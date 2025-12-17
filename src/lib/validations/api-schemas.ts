@@ -42,6 +42,7 @@ export const createPaymentIntentSchema = z.object({
 /**
  * Product Creation Schema
  * @property price - Product price in PAISE (smallest currency unit). Must be positive.
+ * 🔧 FIX: Allow main_image to be empty string or null for products without images
  */
 export const createProductSchema = z.object({
   name: z.string().min(1, "Product name is required").max(200),
@@ -61,7 +62,14 @@ export const createProductSchema = z.object({
   stock_quantity: z.number().int().min(0).default(0),
   is_active: z.boolean().default(true),
   is_featured: z.boolean().default(false),
-  main_image: z.string().url().optional().nullable().or(z.literal("")),
+  main_image: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? null : val))
+    .refine((val) => !val || z.string().url().safeParse(val).success, {
+      message: "Main image must be a valid URL if provided",
+    }),
   images: z.array(z.string().url()).optional().nullable(),
   variants: z.any().optional().nullable(), // Could be more specific based on your schema
 });
@@ -69,6 +77,7 @@ export const createProductSchema = z.object({
 /**
  * Product Update Schema
  * @property price - Product price in PAISE (smallest currency unit). Must be positive if provided.
+ * 🔧 FIX: Allow main_image to be empty string or null
  */
 export const updateProductSchema = z.object({
   name: z.string().min(1).max(200).optional(),
@@ -87,7 +96,14 @@ export const updateProductSchema = z.object({
   stock_quantity: z.number().int().min(0).optional(),
   is_active: z.boolean().optional(),
   is_featured: z.boolean().optional(),
-  main_image: z.string().url().optional().nullable().or(z.literal("")),
+  main_image: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? null : val))
+    .refine((val) => !val || z.string().url().safeParse(val).success, {
+      message: "Main image must be a valid URL if provided",
+    }),
   images: z.array(z.string().url()).optional().nullable(),
   variants: z.any().optional().nullable(),
 });

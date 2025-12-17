@@ -127,11 +127,6 @@ function CheckoutForm({
             ? `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
             : null;
 
-          console.log("🔍 Debug - Is Guest:", isGuest);
-          console.log("🔍 Debug - User ID:", userId);
-          console.log("🔍 Debug - Guest ID:", guestId);
-          console.log("🔍 Debug - Form Data:", formData);
-
           // Generate unique order number
           const orderNumber = `ORD-${Date.now()}-${Math.random()
             .toString(36)
@@ -152,9 +147,6 @@ function CheckoutForm({
             payment_status: "paid", // Set to paid immediately
             payment_intent_id: paymentIntent.id, // Database uses payment_intent_id NOT stripe_payment_intent_id!
             status: "processing", // Set to processing immediately
-            customer_name: `${formData.firstName} ${formData.lastName}`,
-            customer_email: formData.email,
-            customer_phone: formData.phone,
             shipping_name: `${formData.firstName} ${formData.lastName}`,
             shipping_phone: formData.phone,
             shipping_address: JSON.stringify({
@@ -194,8 +186,8 @@ function CheckoutForm({
             if (
               orderError.message?.includes("guest_email") ||
               orderError.message?.includes("guest_id") ||
-              orderError.message?.includes("customer_name") ||
-              orderError.message?.includes("customer_email")
+              orderError.message?.includes("shipping_name") ||
+              orderError.message?.includes("shipping_address")
             ) {
               toast.error(
                 "Database not configured properly. Please contact support.",
@@ -214,7 +206,7 @@ function CheckoutForm({
           console.log("✅ Order created successfully:", order.id);
 
           // Create order items
-          // Note: Prices are in PAISE (smallest currency unit)
+          // Note: Prices are in cents (smallest currency unit)
           console.log("📦 Creating order items for", items.length, "products");
           const orderItems = items.map((item) => ({
             order_id: order.id,
@@ -222,8 +214,8 @@ function CheckoutForm({
             product_name: item.product.name,
             product_description: item.product.description || null,
             quantity: item.quantity,
-            price: item.product.price, // Price per unit in paise
-            subtotal: item.product.price * item.quantity, // Total in paise
+            unit_price: item.product.price, // Price per unit in cents
+            total_price: item.product.price * item.quantity, // Total in cents
           }));
 
           const { error: orderItemsError } = await supabase
@@ -335,9 +327,7 @@ export default function CheckoutPage() {
   const [stripePromise, setStripePromise] =
     useState<Promise<Stripe | null> | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
-
-  // Use ref to track if payment intent is already being created
-  const paymentIntentCreated = useRef(false);
+  const [paymentError, setPaymentError] = useState<string>("");
 
   const [formData, setFormData] = useState({
     userId: user?.id || "",
@@ -414,70 +404,92 @@ export default function CheckoutPage() {
   }, []);
 
   // Create payment intent - SECURE: Server validates prices from database
-  const initializePayment = useCallback(async () => {
-    // Prevent duplicate creation
-    if (paymentIntentCreated.current || isInitializing || clientSecret) {
-      console.log(
-        "⚠️ Payment intent already created or in progress, skipping..."
-      );
+  // 🔧 CRITICAL FIX: Run effect ONLY ONCE when component mounts with items
+  const initializePaymentCalled = useRef(false);
+  const initializeErrorCount = useRef(0);
+  const MAX_RETRIES = 0; // Don't auto-retry, let user manually retry
+
+  useEffect(() => {
+    // Only run once when cart has items and not already called
+    if (totalItems === 0 || initializePaymentCalled.current) {
       return;
     }
 
-    setIsInitializing(true);
-    paymentIntentCreated.current = true;
+    // Don't run if already initializing or have client secret
+    if (isInitializing || clientSecret) {
+      return;
+    }
 
-    try {
-      // Send only product IDs and quantities - server will fetch prices from database
-      const cartItems = items.map((item) => ({
-        productId: item.product.id,
-        quantity: item.quantity,
-      }));
+    //Check if we've exceeded max retries
+    if (initializeErrorCount.current > MAX_RETRIES) {
+      console.warn("⚠️ Max payment initialization retries exceeded");
+      return;
+    }
 
-      console.log(
-        "🔒 Creating secure payment intent with cart items:",
-        cartItems
-      );
+    const createPaymentIntent = async () => {
+      // Set flag immediately to prevent any re-runs
+      initializePaymentCalled.current = true;
+      setIsInitializing(true);
 
-      const response = await fetch("/api/create-payment-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: cartItems,
-          currency: currency,
-        }),
-      });
+      try {
+        // Send only product IDs and quantities - server will fetch prices from database
+        const cartItems = items.map((item) => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+        }));
 
-      const data = await response.json();
+        console.log(
+          "🔒 Creating secure payment intent with cart items:",
+          cartItems
+        );
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create payment intent");
+        const response = await fetch("/api/create-payment-intent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: cartItems,
+            currency: currency,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error("❌ Payment intent creation failed:", data);
+          throw new Error(data.error || "Failed to create payment intent");
+        }
+
+        console.log("✅ Secure payment intent created:", data.paymentIntentId);
+        console.log("🔒 Server-calculated totals:", data.totals);
+
+        setClientSecret(data.clientSecret);
+        setPaymentIntentId(data.paymentIntentId);
+        // Reset error count on success
+        initializeErrorCount.current = 0;
+      } catch (error) {
+        console.error("❌ Failed to initialize payment:", error);
+        initializeErrorCount.current += 1;
+
+        // Show user-friendly error message
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        setPaymentError(errorMessage);
+        toast.error(`Payment initialization failed: ${errorMessage}`, {
+          duration: 5000,
+        });
+
+        // DO NOT reset flag - this prevents infinite loop on errors
+        // User can refresh page or go back to cart to retry
+      } finally {
+        setIsInitializing(false);
       }
+    };
 
-      console.log("✅ Secure payment intent created:", data.paymentIntentId);
-      console.log("🔒 Server-calculated totals:", data.totals);
-
-      setClientSecret(data.clientSecret);
-      setPaymentIntentId(data.paymentIntentId);
-    } catch (error) {
-      console.error("❌ Failed to initialize payment:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to initialize payment. Please try again."
-      );
-      // Reset on error so user can retry
-      paymentIntentCreated.current = false;
-    } finally {
-      setIsInitializing(false);
-    }
-  }, [items, currency, clientSecret, isInitializing]);
-
-  // Trigger payment intent creation only once when ready
-  useEffect(() => {
-    if (totalItems > 0 && !clientSecret && !isInitializing) {
-      initializePayment();
-    }
-  }, [totalItems, clientSecret, isInitializing, initializePayment]);
+    createPaymentIntent();
+    // 🚨 CRITICAL: Only depend on totalItems to trigger on mount
+    // DO NOT add items, currency, or other changing values
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalItems]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -923,13 +935,50 @@ export default function CheckoutPage() {
               </Elements>
             )}
 
-            {!clientSecret && (
+            {!clientSecret && !paymentError && (
               <Card className="p-6">
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-[#C5A572]" />
                   <span className="ml-3 text-gray-600">
                     Initializing secure payment...
                   </span>
+                </div>
+              </Card>
+            )}
+
+            {!clientSecret && paymentError && (
+              <Card className="p-6">
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-4">
+                    <svg
+                      className="w-8 h-8 text-red-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Payment Initialization Failed
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">{paymentError}</p>
+                  <Button
+                    onClick={() => {
+                      setPaymentError("");
+                      initializePaymentCalled.current = false;
+                      setIsInitializing(false);
+                      window.location.reload();
+                    }}
+                    className="bg-[#C5A572] hover:bg-[#B89968]"
+                  >
+                    Try Again
+                  </Button>
                 </div>
               </Card>
             )}
